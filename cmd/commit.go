@@ -14,8 +14,17 @@ import (
 	"go-llm/pkg/config"
 )
 
+type CommitOptions struct {
+	DryRun        bool
+	ChangelogOnly bool
+}
+
 // Commit implements Phase 3: parse input, append to changelog, git commit, write status
 func Commit(projectPath string) {
+	CommitWithOptions(projectPath, CommitOptions{})
+}
+
+func CommitWithOptions(projectPath string, opts CommitOptions) {
 	// Validate git repository
 	if ok, err := git.IsGitRepository(projectPath); !ok {
 		if err != nil {
@@ -74,32 +83,45 @@ func Commit(projectPath string) {
 		os.Exit(1)
 	}
 
-// Stage all changes so the changelog reflects committed code state
-	if err := git.StageAll(projectPath); err != nil {
-		fmt.Fprintf(os.Stderr, "error: failed to stage changes: %v\n", err)
-		os.Exit(1)
+// Stage changes per options
+	if opts.ChangelogOnly {
+		if err := git.StageFile(projectPath, config.ChangelogFileName); err != nil {
+			fmt.Fprintf(os.Stderr, "error: failed to stage changelog: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		if err := git.StageAll(projectPath); err != nil {
+			fmt.Fprintf(os.Stderr, "error: failed to stage changes: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	// Generate commit message
 	commitMsg := generateCommitMessage(entry)
 
-	// Commit
-	commitHash, err := git.Commit(projectPath, commitMsg)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: failed to commit: %v\n", err)
-		fmt.Fprintf(os.Stderr, "changelog has been appended but not committed\n")
-		os.Exit(1)
+// Commit (unless dry-run)
+	var commitHash string
+	if opts.DryRun {
+		fmt.Printf("[dry-run] Would commit with message:\n%s\n", commitMsg)
+	} else {
+		var err error
+		commitHash, err = git.Commit(projectPath, commitMsg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: failed to commit: %v\n", err)
+			fmt.Fprintf(os.Stderr, "changelog has been appended but not committed\n")
+			os.Exit(1)
+		}
 	}
 
-// Update entry with commit hash
-	entry.CommitHash = commitHash
-
-	// Backfill commit_hash into the last document of the changelog (no re-commit)
-	if err := changelog.UpdateLastDocument(changelogPath, func(e *schema.CheckpointEntry) *schema.CheckpointEntry {
-		e.CommitHash = commitHash
-		return e
-	}); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: failed to backfill commit_hash in changelog: %v\n", err)
+// Update/backfill commit hash if not dry-run
+	if !opts.DryRun {
+		entry.CommitHash = commitHash
+		if err := changelog.UpdateLastDocument(changelogPath, func(e *schema.CheckpointEntry) *schema.CheckpointEntry {
+			e.CommitHash = commitHash
+			return e
+		}); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to backfill commit_hash in changelog: %v\n", err)
+		}
 	}
 
 	// Write status file (for macOS app discovery)

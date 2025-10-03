@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"go-llm/cmd"
 )
@@ -16,10 +17,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	subcommand := os.Args[1]
+subcommand := os.Args[1]
+	args := os.Args[2:]
 	projectPath := "."
-	if len(os.Args) >= 3 {
-		projectPath = os.Args[2]
+	// crude flag parsing: collect known flags, last non-flag is path
+	dryRun := false
+	changelogOnly := false
+	var positional []string
+	for _, a := range args {
+		if a == "-n" || a == "--dry-run" { dryRun = true; continue }
+		if a == "--changelog-only" { changelogOnly = true; continue }
+		if strings.HasPrefix(a, "-") { continue }
+		positional = append(positional, a)
+	}
+	if len(positional) > 0 {
+		projectPath = positional[len(positional)-1]
 	}
 
 	absPath, err := filepath.Abs(projectPath)
@@ -31,8 +43,8 @@ func main() {
 switch subcommand {
 	case "check":
 		cmd.Check(absPath)
-	case "commit":
-		cmd.Commit(absPath)
+case "commit":
+		cmd.CommitWithOptions(absPath, cmd.CommitOptions{DryRun: dryRun, ChangelogOnly: changelogOnly})
 	case "init":
 		cmd.Init(absPath)
 	case "help", "-h", "--help":

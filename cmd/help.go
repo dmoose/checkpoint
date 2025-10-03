@@ -10,7 +10,8 @@ USAGE:
 
 COMMANDS:
   check       Generate input file for LLM (creates .checkpoint-input and .checkpoint-diff)
-  commit      Parse input file, append to .checkpoint-changelog.yaml, stage all changes, and create git commit
+commit      Parse input file, append to .checkpoint-changelog.yaml, stage all changes, and create git commit
+             [flags] [-n|--dry-run] [--changelog-only]
   init        Create CHECKPOINT.md with usage instructions in the project root
   help        Display this help message
   version     Display version information

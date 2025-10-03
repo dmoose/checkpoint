@@ -134,9 +134,10 @@ func indent(s string) string {
 	if s == "" { return s }
 	lines := strings.Split(s, "\n")
 	for i, ln := range lines {
-		if ln != "" {
-			lines[i] = "  " + ln
-		}
+		if ln == "" { continue }
+		// Normalize leading whitespace to avoid YAML block issues
+		trimmed := strings.TrimLeft(ln, " \t")
+		lines[i] = "  " + trimmed
 	}
 	return strings.Join(lines, "\n")
 }

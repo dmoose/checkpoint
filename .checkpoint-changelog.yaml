@@ -45,6 +45,7 @@ changes:
 ---
 schema_version: "1"
 timestamp: "2025-10-22T12:57:49-07:00"
+commit_hash: 9cfea2b624ef2b9b2074d43cfaa17f3cf627e498
 changes:
     - summary: Switched to tracked .checkpoint-changelog.yaml and status .yaml
       details: Renamed files and constants; changelog is tracked, status is ignored for discovery.
@@ -91,3 +92,52 @@ next_steps:
       details: Allow --dry-run and an expert flag to stage-only-changelog when needed.
       priority: med
       scope: cmd/commit
+---
+schema_version: "1"
+timestamp: "2025-10-22T13:08:41-07:00"
+changes:
+    - summary: Add dry-run and changelog-only flags to commit
+      details: Introduced CommitWithOptions, parsed flags in main, updated help; supports -n/--dry-run and --changelog-only.
+      change_type: feature
+      scope: cmd/commit, main, cmd/help
+    - summary: Normalize git_status indentation for YAML safety
+      details: Generator trims leading whitespace and re-indents lines in block scalar to avoid parse errors.
+      change_type: fix
+      scope: internal/schema
+    - summary: Backfill commit_hash into last changelog doc
+      details: Implemented UpdateLastDocument to decode multi-doc YAML and rewrite only the last document atomically.
+      change_type: feature
+      scope: internal/changelog
+    - summary: Stage all by default; helper for add -A
+      details: Added git.StageAll and switched commit path to stage untracked/modified files by default.
+      change_type: feature
+      scope: internal/git, cmd/commit
+    - summary: Track .checkpoint-changelog.yaml; ignore status .yaml
+      details: Standardized filenames; changelog is committed, status remains ignored.
+      change_type: feature
+      scope: pkg/config, repo
+    - summary: Add unit test for changelog backfill
+      details: Test ensures UpdateLastDocument injects commit_hash into the last document without breaking earlier docs.
+      change_type: other
+      scope: tests
+next_steps:
+    - summary: Pre-commit validation
+      details: Fail if changes[] empty, invalid change_type, summary >80 chars, or obvious scope mismatch.
+      priority: high
+      scope: cmd/commit, internal/schema
+    - summary: verify command (changelog lint)
+      details: Parse .checkpoint-changelog.yaml, check schema, timestamps, commit_hash presence (except last), doc separation.
+      priority: high
+      scope: cmd/verify, internal/changelog
+    - summary: Commit message override
+      details: Support --message to supply a custom commit message when needed.
+      priority: med
+      scope: cmd/commit
+    - summary: Template override per repo
+      details: Allow .checkpoint-template.yaml to customize LLM prompt and fields.
+      priority: med
+      scope: internal/schema, cmd/check
+    - summary: Strict mode
+      details: Optional flag to enforce scopes from a configured allowlist and reject unknown change_type/scope.
+      priority: low
+      scope: cmd/verify, config

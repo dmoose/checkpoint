@@ -2,142 +2,160 @@
 schema_version: "1"
 timestamp: "2025-10-22T12:09:48-07:00"
 changes:
-  - summary: Scaffolded checkpoint CLI project structure
-    details: Added main entrypoint, cmd subcommands, internal packages, and pkg/config to form initial CLI layout.
-    change_type: feature
-    scope: cli
-  - summary: Implemented check subcommand
-    details: Generates .checkpoint-input with multi-change schema, embeds git status, and writes .checkpoint-diff (staged+unstaged). Guards against concurrent checkpoints.
-    change_type: feature
-    scope: cmd/check
-  - summary: Implemented commit subcommand (append-only changelog + git commit)
-    details: Parses/validates YAML, renders a single --- delimited document excluding git_status/diff_file, appends to .changelog, stages changelog only, creates git commit, writes .checkpoint-status, and cleans temp files.
-    change_type: feature
-    scope: cmd/commit
-  - summary: Defined v1 multi-change checkpoint schema and input template
-    details: "Per-document: schema_version, timestamp, commit_hash; Per-change: summary, details?, change_type, scope?. Added validation and YAML rendering helpers."
-    change_type: feature
-    scope: internal/schema
-  - summary: Added safe git helpers and robust repo detection
-    details: Used rev-parse --is-inside-work-tree for worktrees; provided staged/unstaged diff gathering; added StageFile and Commit helpers.
-    change_type: refactor
-    scope: internal/git
-  - summary: Append-only changelog writer
-    details: Introduced AppendEntry that ensures newline termination and never rewrites prior content.
-    change_type: feature
-    scope: internal/changelog
-  - summary: File utilities for simple I/O
-    details: ReadFile/WriteFile with error wrapping and Exists helper.
-    change_type: feature
-    scope: internal/file
-  - summary: Configuration constants for checkpoint files
-    details: Standardized filenames for .changelog, .checkpoint-input, .checkpoint-diff, .checkpoint-status, .checkpoint-lock.
-    change_type: feature
-    scope: pkg/config
-  - summary: Unit tests for schema and file utilities
-    details: Template generation contains expected fields; parse/validate happy/negative paths; file read/write/exists behavior.
-    change_type: other
-    scope: tests
-  - summary: Updated .gitignore for checkpoint artifacts
-    details: Ignored .checkpoint-input, .checkpoint-diff, .checkpoint-status, .checkpoint-lock.
-    change_type: docs
-    scope: repo
+    - summary: Scaffolded checkpoint CLI project structure
+      details: Added main entrypoint, cmd subcommands, internal packages, and pkg/config to form initial CLI layout.
+      change_type: feature
+      scope: cli
+    - summary: Implemented check subcommand
+      details: Generates .checkpoint-input with multi-change schema, embeds git status, and writes .checkpoint-diff (staged+unstaged). Guards against concurrent checkpoints.
+      change_type: feature
+      scope: cmd/check
+    - summary: Implemented commit subcommand (append-only changelog + git commit)
+      details: Parses/validates YAML, renders a single --- delimited document excluding git_status/diff_file, appends to .changelog, stages changelog only, creates git commit, writes .checkpoint-status, and cleans temp files.
+      change_type: feature
+      scope: cmd/commit
+    - summary: Defined v1 multi-change checkpoint schema and input template
+      details: 'Per-document: schema_version, timestamp, commit_hash; Per-change: summary, details?, change_type, scope?. Added validation and YAML rendering helpers.'
+      change_type: feature
+      scope: internal/schema
+    - summary: Added safe git helpers and robust repo detection
+      details: Used rev-parse --is-inside-work-tree for worktrees; provided staged/unstaged diff gathering; added StageFile and Commit helpers.
+      change_type: refactor
+      scope: internal/git
+    - summary: Append-only changelog writer
+      details: Introduced AppendEntry that ensures newline termination and never rewrites prior content.
+      change_type: feature
+      scope: internal/changelog
+    - summary: File utilities for simple I/O
+      details: ReadFile/WriteFile with error wrapping and Exists helper.
+      change_type: feature
+      scope: internal/file
+    - summary: Configuration constants for checkpoint files
+      details: Standardized filenames for .changelog, .checkpoint-input, .checkpoint-diff, .checkpoint-status, .checkpoint-lock.
+      change_type: feature
+      scope: pkg/config
+    - summary: Unit tests for schema and file utilities
+      details: Template generation contains expected fields; parse/validate happy/negative paths; file read/write/exists behavior.
+      change_type: other
+      scope: tests
+    - summary: Updated .gitignore for checkpoint artifacts
+      details: Ignored .checkpoint-input, .checkpoint-diff, .checkpoint-status, .checkpoint-lock.
+      change_type: docs
+      scope: repo
 ---
 schema_version: "1"
 timestamp: "2025-10-22T12:57:49-07:00"
 commit_hash: 9cfea2b624ef2b9b2074d43cfaa17f3cf627e498
 changes:
-  - summary: Switched to tracked .checkpoint-changelog.yaml and status .yaml
-    details: Renamed files and constants; changelog is tracked, status is ignored for discovery.
-    change_type: feature
-    scope: pkg/config
-  - summary: Commit stages all changes and backfills commit_hash
-    details: commit now runs git add -A, creates a single commit, then backfills commit_hash into the last changelog document without a second commit.
-    change_type: feature
-    scope: cmd/commit
-  - summary: Added UpdateLastDocument for changelog backfill
-    details: Introduced YAML multi-doc reader/writer to update only the last checkpoint document atomically.
-    change_type: feature
-    scope: internal/changelog
-  - summary: Added StageAll git helper
-    details: Provides git add -A to stage untracked and modified files, respecting .gitignore.
-    change_type: feature
-    scope: internal/git
-  - summary: Extended schema with next_steps and updated template
-    details: Added next_steps[], updated LLM prompt and input template, and included next_steps in changelog rendering.
-    change_type: feature
-    scope: internal/schema
-  - summary: Introduced init command and CHECKPOINT.md
-    details: init writes CHECKPOINT.md with workflow, schema, and LLM guidance to onboard usage.
-    change_type: feature
-    scope: cmd/init
-  - summary: Updated CLI help with commands and files
-    details: Help now lists init and describes the checkpoint files and their roles.
-    change_type: docs
-    scope: cmd/help
-  - summary: Adjusted .gitignore for new filenames
-    details: Ignore .checkpoint-status.yaml and allow committing .checkpoint-changelog.yaml.
-    change_type: other
-    scope: repo
-  - summary: Wired init subcommand in main
-    details: Main dispatch recognizes 'init' and invokes cmd.Init.
-    change_type: other
-    scope: main
+    - summary: Switched to tracked .checkpoint-changelog.yaml and status .yaml
+      details: Renamed files and constants; changelog is tracked, status is ignored for discovery.
+      change_type: feature
+      scope: pkg/config
+    - summary: Commit stages all changes and backfills commit_hash
+      details: commit now runs git add -A, creates a single commit, then backfills commit_hash into the last changelog document without a second commit.
+      change_type: feature
+      scope: cmd/commit
+    - summary: Added UpdateLastDocument for changelog backfill
+      details: Introduced YAML multi-doc reader/writer to update only the last checkpoint document atomically.
+      change_type: feature
+      scope: internal/changelog
+    - summary: Added StageAll git helper
+      details: Provides git add -A to stage untracked and modified files, respecting .gitignore.
+      change_type: feature
+      scope: internal/git
+    - summary: Extended schema with next_steps and updated template
+      details: Added next_steps[], updated LLM prompt and input template, and included next_steps in changelog rendering.
+      change_type: feature
+      scope: internal/schema
+    - summary: Introduced init command and CHECKPOINT.md
+      details: init writes CHECKPOINT.md with workflow, schema, and LLM guidance to onboard usage.
+      change_type: feature
+      scope: cmd/init
+    - summary: Updated CLI help with commands and files
+      details: Help now lists init and describes the checkpoint files and their roles.
+      change_type: docs
+      scope: cmd/help
+    - summary: Adjusted .gitignore for new filenames
+      details: Ignore .checkpoint-status.yaml and allow committing .checkpoint-changelog.yaml.
+      change_type: other
+      scope: repo
+    - summary: Wired init subcommand in main
+      details: Main dispatch recognizes 'init' and invokes cmd.Init.
+      change_type: other
+      scope: main
 next_steps:
-  - summary: Add tests for UpdateLastDocument and commit path
-    details: Cover YAML multi-doc backfill and staging-all behavior with temp repos.
-    priority: high
-    scope: internal/changelog, cmd/commit
-  - summary: Commit flags for dry-run and changelog-only
-    details: Allow --dry-run and an expert flag to stage-only-changelog when needed.
-    priority: med
-    scope: cmd/commit
+    - summary: Add tests for UpdateLastDocument and commit path
+      details: Cover YAML multi-doc backfill and staging-all behavior with temp repos.
+      priority: high
+      scope: internal/changelog, cmd/commit
+    - summary: Commit flags for dry-run and changelog-only
+      details: Allow --dry-run and an expert flag to stage-only-changelog when needed.
+      priority: med
+      scope: cmd/commit
 ---
 schema_version: "1"
 timestamp: "2025-10-22T13:08:41-07:00"
 commit_hash: 878b309aa9670c1281bd8cb13e246e2ca21d1536
 changes:
-  - summary: Add dry-run and changelog-only flags to commit
-    details: Introduced CommitWithOptions, parsed flags in main, updated help; supports -n/--dry-run and --changelog-only.
-    change_type: feature
-    scope: cmd/commit, main, cmd/help
-  - summary: Normalize git_status indentation for YAML safety
-    details: Generator trims leading whitespace and re-indents lines in block scalar to avoid parse errors.
-    change_type: fix
-    scope: internal/schema
-  - summary: Backfill commit_hash into last changelog doc
-    details: Implemented UpdateLastDocument to decode multi-doc YAML and rewrite only the last document atomically.
-    change_type: feature
-    scope: internal/changelog
-  - summary: Stage all by default; helper for add -A
-    details: Added git.StageAll and switched commit path to stage untracked/modified files by default.
-    change_type: feature
-    scope: internal/git, cmd/commit
-  - summary: Track .checkpoint-changelog.yaml; ignore status .yaml
-    details: Standardized filenames; changelog is committed, status remains ignored.
-    change_type: feature
-    scope: pkg/config, repo
-  - summary: Add unit test for changelog backfill
-    details: Test ensures UpdateLastDocument injects commit_hash into the last document without breaking earlier docs.
-    change_type: other
-    scope: tests
+    - summary: Add dry-run and changelog-only flags to commit
+      details: Introduced CommitWithOptions, parsed flags in main, updated help; supports -n/--dry-run and --changelog-only.
+      change_type: feature
+      scope: cmd/commit, main, cmd/help
+    - summary: Normalize git_status indentation for YAML safety
+      details: Generator trims leading whitespace and re-indents lines in block scalar to avoid parse errors.
+      change_type: fix
+      scope: internal/schema
+    - summary: Backfill commit_hash into last changelog doc
+      details: Implemented UpdateLastDocument to decode multi-doc YAML and rewrite only the last document atomically.
+      change_type: feature
+      scope: internal/changelog
+    - summary: Stage all by default; helper for add -A
+      details: Added git.StageAll and switched commit path to stage untracked/modified files by default.
+      change_type: feature
+      scope: internal/git, cmd/commit
+    - summary: Track .checkpoint-changelog.yaml; ignore status .yaml
+      details: Standardized filenames; changelog is committed, status remains ignored.
+      change_type: feature
+      scope: pkg/config, repo
+    - summary: Add unit test for changelog backfill
+      details: Test ensures UpdateLastDocument injects commit_hash into the last document without breaking earlier docs.
+      change_type: other
+      scope: tests
 next_steps:
-  - summary: Pre-commit validation
-    details: Fail if changes[] empty, invalid change_type, summary >80 chars, or obvious scope mismatch.
-    priority: high
-    scope: cmd/commit, internal/schema
-  - summary: verify command (changelog lint)
-    details: Parse .checkpoint-changelog.yaml, check schema, timestamps, commit_hash presence (except last), doc separation.
-    priority: high
-    scope: cmd/verify, internal/changelog
+    - summary: Pre-commit validation
+      details: Fail if changes[] empty, invalid change_type, summary >80 chars, or obvious scope mismatch.
+      priority: high
+      scope: cmd/commit, internal/schema
+    - summary: verify command (changelog lint)
+      details: Parse .checkpoint-changelog.yaml, check schema, timestamps, commit_hash presence (except last), doc separation.
+      priority: high
+      scope: cmd/verify, internal/changelog
 ---
 schema_version: "1"
 timestamp: "2025-10-22T13:51:47-07:00"
+commit_hash: 35eac183a2667922fc014d5d57bf7dfffc9be587
 changes:
     - summary: Add comprehensive Makefile with build, test, and utility targets
       details: Created Makefile with build target that compiles binary to bin/ directory, plus additional targets for testing, cross-compilation, code quality checks, and development workflow
       change_type: feature
       scope: build
+next_steps:
+    - summary: Pre-commit validation
+      details: Fail if changes[] empty, invalid change_type, summary >80 chars, or obvious scope mismatch.
+      priority: high
+      scope: cmd/commit, internal/schema
+    - summary: verify command (changelog lint)
+      details: Parse .checkpoint-changelog.yaml, check schema, timestamps, commit_hash presence (except last), doc separation.
+      priority: high
+      scope: cmd/verify, internal/changelog
+---
+schema_version: "1"
+timestamp: "2025-10-22T13:58:58-07:00"
+changes:
+    - summary: Fix UpdateLastDocument to preserve append-only changelog structure
+      details: Replaced full-file YAML rewrite with precise last-document modification to prevent reformatting of previous entries and maintain true append-only behavior
+      change_type: fix
+      scope: internal/changelog
 next_steps:
     - summary: Pre-commit validation
       details: Fail if changes[] empty, invalid change_type, summary >80 chars, or obvious scope mismatch.

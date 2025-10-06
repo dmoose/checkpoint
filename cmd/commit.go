@@ -57,10 +57,19 @@ func CommitWithOptions(projectPath string, opts CommitOptions) {
 		os.Exit(1)
 	}
 
-	// Validate entry
+// Validate entry (required fields/types)
 	if err := schema.ValidateEntry(entry); err != nil {
 		fmt.Fprintf(os.Stderr, "error: validation failed: %v\n", err)
 		fmt.Fprintf(os.Stderr, "please fill in all required fields\n")
+		os.Exit(1)
+	}
+	// Pre-commit validation for obvious mistakes
+	if verrs := schema.PreCommitValidate(entry); len(verrs) > 0 {
+		fmt.Fprintln(os.Stderr, "error: pre-commit validation failed:")
+		for _, e := range verrs {
+			fmt.Fprintf(os.Stderr, "  - %s\n", e)
+		}
+		fmt.Fprintln(os.Stderr, "please fix the input and try again")
 		os.Exit(1)
 	}
 
@@ -124,7 +133,7 @@ func CommitWithOptions(projectPath string, opts CommitOptions) {
 		}
 	}
 
-	// Write status file (for macOS app discovery)
+// Write status file (for macOS app discovery) and carry-forward next_steps
 	statusPath := filepath.Join(projectPath, config.StatusFileName)
 	statusContent := generateStatusFile(entry, commitMsg)
 	if err := file.WriteFile(statusPath, statusContent); err != nil {
@@ -199,10 +208,24 @@ func generateCommitMessage(entry *schema.CheckpointEntry) string {
 
 // generateStatusFile creates status file content for macOS app discovery
 func generateStatusFile(entry *schema.CheckpointEntry, commitMsg string) string {
-	return fmt.Sprintf(`last_commit_hash: "%s"
-last_commit_timestamp: "%s"
-last_commit_message: "%s"
-status: "success"
-changes_count: %d
-`, entry.CommitHash, entry.Timestamp, commitMsg, len(entry.Changes))
+	// include next_steps to be surfaced in the next check
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("last_commit_hash: \"%s\"\n", entry.CommitHash))
+	b.WriteString(fmt.Sprintf("last_commit_timestamp: \"%s\"\n", entry.Timestamp))
+	b.WriteString(fmt.Sprintf("last_commit_message: \"%s\"\n", commitMsg))
+	b.WriteString("status: \"success\"\n")
+	b.WriteString(fmt.Sprintf("changes_count: %d\n", len(entry.Changes)))
+	if len(entry.NextSteps) > 0 {
+		b.WriteString("next_steps:\n")
+		for _, ns := range entry.NextSteps {
+			b.WriteString("  - summary: \"")
+			b.WriteString(strings.ReplaceAll(ns.Summary, "\"", "'"))
+			b.WriteString("\"\n")
+			if ns.Details != "" { b.WriteString("    details: \""+strings.ReplaceAll(ns.Details, "\"", "'")+"\"\n") }
+			if ns.Priority != "" { b.WriteString("    priority: \""+ns.Priority+"\"\n") }
+			if ns.Scope != "" { b.WriteString("    scope: \""+ns.Scope+"\"\n") }
+			if ns.Owner != "" { b.WriteString("    owner: \""+ns.Owner+"\"\n") }
+		}
+	}
+	return b.String()
 }

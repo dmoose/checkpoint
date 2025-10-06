@@ -13,6 +13,7 @@ COMMANDS:
 commit      Parse input file, append to .checkpoint-changelog.yaml, stage all changes, and create git commit
              [flags] [-n|--dry-run] [--changelog-only]
   init        Create CHECKPOINT.md with usage instructions in the project root
+  clean       Remove .checkpoint-input and .checkpoint-diff to abort and re-run
   help        Display this help message
   version     Display version information
 

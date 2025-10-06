@@ -7,7 +7,7 @@ import (
 
 func TestGenerateInputTemplateContainsFields(t *testing.T) {
 	status := "M main.go\n?? newfile.go"
-	out := GenerateInputTemplate(status, ".checkpoint-diff")
+out := GenerateInputTemplate(status, ".checkpoint-diff", nil)
 	checks := []string{
 		"schema_version: \"1\"",
 		"git_status: |",

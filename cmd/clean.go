@@ -12,20 +12,18 @@ import (
 func Clean(projectPath string) {
 	inputPath := filepath.Join(projectPath, config.InputFileName)
 	diffPath := filepath.Join(projectPath, config.DiffFileName)
+	lockPath := filepath.Join(projectPath, config.LockFileName)
 
+	filesToRemove := []string{inputPath, diffPath, lockPath}
 	removedAny := false
-	if err := os.Remove(inputPath); err == nil {
-		fmt.Printf("Removed %s\n", inputPath)
-		removedAny = true
-	} else if !os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", inputPath, err)
-	}
 
-	if err := os.Remove(diffPath); err == nil {
-		fmt.Printf("Removed %s\n", diffPath)
-		removedAny = true
-	} else if !os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", diffPath, err)
+	for _, filePath := range filesToRemove {
+		if err := os.Remove(filePath); err == nil {
+			fmt.Printf("Removed %s\n", filePath)
+			removedAny = true
+		} else if !os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", filePath, err)
+		}
 	}
 
 	if !removedAny {

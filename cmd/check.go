@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"go-llm/internal/file"
 	"go-llm/internal/git"
@@ -23,11 +24,25 @@ func Check(projectPath string) {
 		os.Exit(1)
 	}
 
+	// Create lock file to prevent concurrent checkpoints
+	lockPath := filepath.Join(projectPath, config.LockFileName)
+	if file.Exists(lockPath) {
+		fmt.Fprintf(os.Stderr, "error: checkpoint lock file exists at %s\n", lockPath)
+		fmt.Fprintf(os.Stderr, "another checkpoint is in progress; run 'checkpoint commit %s' or 'checkpoint clean %s' to resolve\n", projectPath, projectPath)
+		os.Exit(1)
+	}
+
 	// Prevent overwriting an in-progress checkpoint
 	inputPath := filepath.Join(projectPath, config.InputFileName)
 	if file.Exists(inputPath) {
 		fmt.Fprintf(os.Stderr, "error: input file already exists at %s\n", inputPath)
-		fmt.Fprintf(os.Stderr, "another checkpoint may be in progress; run 'checkpoint commit %s' or remove the file\n", projectPath)
+		fmt.Fprintf(os.Stderr, "another checkpoint may be in progress; run 'checkpoint commit %s' or 'checkpoint clean %s' to resolve\n", projectPath, projectPath)
+		os.Exit(1)
+	}
+
+	// Create lock file
+	if err := file.WriteFile(lockPath, fmt.Sprintf("pid=%d\ntimestamp=%s\n", os.Getpid(), time.Now().Format(time.RFC3339))); err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to create lock file: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -62,6 +77,7 @@ func Check(projectPath string) {
 	if err := file.WriteFile(inputPath, inputContent); err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to write input file: %v\n", err)
 		_ = os.Remove(diffPath)
+		_ = os.Remove(lockPath) // Clean up lock file on failure
 		os.Exit(1)
 	}
 

@@ -29,8 +29,10 @@ func CommitWithOptions(projectPath string, opts CommitOptions) {
 	if ok, err := git.IsGitRepository(projectPath); !ok {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: git repository check failed: %v\n", err)
+			fmt.Fprintf(os.Stderr, "hint: ensure you're in a git repository and have proper permissions\n")
 		} else {
 			fmt.Fprintf(os.Stderr, "error: %s is not a git repository\n", projectPath)
+			fmt.Fprintf(os.Stderr, "hint: run 'git init' to initialize a repository\n")
 		}
 		os.Exit(1)
 	}
@@ -39,7 +41,8 @@ func CommitWithOptions(projectPath string, opts CommitOptions) {
 	inputPath := filepath.Join(projectPath, config.InputFileName)
 	if !file.Exists(inputPath) {
 		fmt.Fprintf(os.Stderr, "error: input file not found at %s\n", inputPath)
-		fmt.Fprintf(os.Stderr, "run 'checkpoint check %s' first\n", projectPath)
+		fmt.Fprintf(os.Stderr, "hint: run 'checkpoint check %s' to generate the input file\n", projectPath)
+		fmt.Fprintf(os.Stderr, "or run 'checkpoint clean %s' to restart if needed\n", projectPath)
 		os.Exit(1)
 	}
 
@@ -47,29 +50,22 @@ func CommitWithOptions(projectPath string, opts CommitOptions) {
 	inputContent, err := file.ReadFile(inputPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to read input file: %v\n", err)
+		fmt.Fprintf(os.Stderr, "hint: check file permissions or try running 'checkpoint check %s' again\n", projectPath)
 		os.Exit(1)
 	}
 
 	entry, err := schema.ParseInputFile(inputContent)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to parse input file: %v\n", err)
-		fmt.Fprintf(os.Stderr, "please fix the YAML and try again\n")
+		fmt.Fprintf(os.Stderr, "hint: check YAML syntax in %s\n", inputPath)
+		fmt.Fprintf(os.Stderr, "or run 'checkpoint clean %s' to restart\n", projectPath)
 		os.Exit(1)
 	}
 
-// Validate entry (required fields/types)
+	// Validate entry (comprehensive validation)
 	if err := schema.ValidateEntry(entry); err != nil {
 		fmt.Fprintf(os.Stderr, "error: validation failed: %v\n", err)
-		fmt.Fprintf(os.Stderr, "please fill in all required fields\n")
-		os.Exit(1)
-	}
-	// Pre-commit validation for obvious mistakes
-	if verrs := schema.PreCommitValidate(entry); len(verrs) > 0 {
-		fmt.Fprintln(os.Stderr, "error: pre-commit validation failed:")
-		for _, e := range verrs {
-			fmt.Fprintf(os.Stderr, "  - %s\n", e)
-		}
-		fmt.Fprintln(os.Stderr, "please fix the input and try again")
+		fmt.Fprintf(os.Stderr, "hint: edit %s to fix the issues above\n", inputPath)
 		os.Exit(1)
 	}
 
@@ -84,64 +80,73 @@ func CommitWithOptions(projectPath string, opts CommitOptions) {
 		fmt.Fprintf(os.Stderr, "error: failed to render changelog document: %v\n", err)
 		os.Exit(1)
 	}
+	// Generate commit message
+	commitMsg := generateCommitMessage(entry)
+
+	// Handle dry-run before making any changes
+	if opts.DryRun {
+		fmt.Printf("[dry-run] Would commit with message:\n%s\n", commitMsg)
+		fmt.Printf("\n[dry-run] Files that would be staged:\n")
+		if opts.ChangelogOnly {
+			fmt.Printf("  - %s\n", config.ChangelogFileName)
+		} else {
+			fmt.Printf("  - All modified and untracked files (git add -A)\n")
+		}
+		return
+	}
 
 	// Append to changelog (append-only)
 	changelogPath := filepath.Join(projectPath, config.ChangelogFileName)
 	if err := changelog.AppendEntry(changelogPath, doc); err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to append to changelog: %v\n", err)
+		fmt.Fprintf(os.Stderr, "hint: check write permissions for %s\n", changelogPath)
 		os.Exit(1)
 	}
 
-// Stage changes per options
+	// Stage changes per options
 	if opts.ChangelogOnly {
 		if err := git.StageFile(projectPath, config.ChangelogFileName); err != nil {
 			fmt.Fprintf(os.Stderr, "error: failed to stage changelog: %v\n", err)
+			fmt.Fprintf(os.Stderr, "hint: ensure git is working and the repository is not corrupted\n")
 			os.Exit(1)
 		}
 	} else {
 		if err := git.StageAll(projectPath); err != nil {
 			fmt.Fprintf(os.Stderr, "error: failed to stage changes: %v\n", err)
+			fmt.Fprintf(os.Stderr, "hint: check for git issues or run 'git status' to see what's wrong\n")
 			os.Exit(1)
 		}
 	}
 
-	// Generate commit message
-	commitMsg := generateCommitMessage(entry)
-
-// Commit (unless dry-run)
+	// Commit
 	var commitHash string
-	if opts.DryRun {
-		fmt.Printf("[dry-run] Would commit with message:\n%s\n", commitMsg)
-	} else {
-		var err error
-		commitHash, err = git.Commit(projectPath, commitMsg)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: failed to commit: %v\n", err)
-			fmt.Fprintf(os.Stderr, "changelog has been appended but not committed\n")
-			os.Exit(1)
-		}
+	commitHash, err = git.Commit(projectPath, commitMsg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to commit: %v\n", err)
+		fmt.Fprintf(os.Stderr, "warning: changelog has been appended but not committed\n")
+		fmt.Fprintf(os.Stderr, "hint: fix git issues and run 'checkpoint commit %s' again\n", projectPath)
+		os.Exit(1)
 	}
 
-// Update/backfill commit hash if not dry-run
-	if !opts.DryRun {
-		entry.CommitHash = commitHash
-		if err := changelog.UpdateLastDocument(changelogPath, func(e *schema.CheckpointEntry) *schema.CheckpointEntry {
-			e.CommitHash = commitHash
-			return e
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: failed to backfill commit_hash in changelog: %v\n", err)
-		}
+	// Update/backfill commit hash
+	entry.CommitHash = commitHash
+	if err := changelog.UpdateLastDocument(changelogPath, func(e *schema.CheckpointEntry) *schema.CheckpointEntry {
+		e.CommitHash = commitHash
+		return e
+	}); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to backfill commit_hash in changelog: %v\n", err)
+		fmt.Fprintf(os.Stderr, "hint: the commit succeeded, but you may need to manually add the commit hash\n")
 	}
 
-// Write status file (for macOS app discovery) and carry-forward next_steps
+	// Write status file (for macOS app discovery) and carry-forward next_steps
 	statusPath := filepath.Join(projectPath, config.StatusFileName)
 	statusContent := generateStatusFile(entry, commitMsg)
 	if err := file.WriteFile(statusPath, statusContent); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to write status file: %v\n", err)
-		// Non-fatal; status file is informational
+		fmt.Fprintf(os.Stderr, "hint: this is non-fatal, but the macOS app may not discover this project\n")
 	}
 
-	// Clean up input and diff files
+	// Clean up input, diff, and lock files
 	if err := os.Remove(inputPath); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to remove input file: %v\n", err)
 	}
@@ -149,6 +154,12 @@ func CommitWithOptions(projectPath string, opts CommitOptions) {
 	if file.Exists(diffPath) {
 		if err := os.Remove(diffPath); err != nil {
 			fmt.Fprintf(os.Stderr, "warning: failed to remove diff file: %v\n", err)
+		}
+	}
+	lockPath := filepath.Join(projectPath, config.LockFileName)
+	if file.Exists(lockPath) {
+		if err := os.Remove(lockPath); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to remove lock file: %v\n", err)
 		}
 	}
 
@@ -221,10 +232,15 @@ func generateStatusFile(entry *schema.CheckpointEntry, commitMsg string) string 
 			b.WriteString("  - summary: \"")
 			b.WriteString(strings.ReplaceAll(ns.Summary, "\"", "'"))
 			b.WriteString("\"\n")
-			if ns.Details != "" { b.WriteString("    details: \""+strings.ReplaceAll(ns.Details, "\"", "'")+"\"\n") }
-			if ns.Priority != "" { b.WriteString("    priority: \""+ns.Priority+"\"\n") }
-			if ns.Scope != "" { b.WriteString("    scope: \""+ns.Scope+"\"\n") }
-			if ns.Owner != "" { b.WriteString("    owner: \""+ns.Owner+"\"\n") }
+			if ns.Details != "" {
+				b.WriteString("    details: \"" + strings.ReplaceAll(ns.Details, "\"", "'") + "\"\n")
+			}
+			if ns.Priority != "" {
+				b.WriteString("    priority: \"" + ns.Priority + "\"\n")
+			}
+			if ns.Scope != "" {
+				b.WriteString("    scope: \"" + ns.Scope + "\"\n")
+			}
 		}
 	}
 	return b.String()

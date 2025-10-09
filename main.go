@@ -17,7 +17,7 @@ func main() {
 		os.Exit(1)
 	}
 
-subcommand := os.Args[1]
+	subcommand := os.Args[1]
 	args := os.Args[2:]
 	projectPath := "."
 	// crude flag parsing: collect known flags, last non-flag is path
@@ -25,9 +25,17 @@ subcommand := os.Args[1]
 	changelogOnly := false
 	var positional []string
 	for _, a := range args {
-		if a == "-n" || a == "--dry-run" { dryRun = true; continue }
-		if a == "--changelog-only" { changelogOnly = true; continue }
-		if strings.HasPrefix(a, "-") { continue }
+		if a == "-n" || a == "--dry-run" {
+			dryRun = true
+			continue
+		}
+		if a == "--changelog-only" {
+			changelogOnly = true
+			continue
+		}
+		if strings.HasPrefix(a, "-") {
+			continue
+		}
 		positional = append(positional, a)
 	}
 	if len(positional) > 0 {
@@ -40,18 +48,20 @@ subcommand := os.Args[1]
 		os.Exit(1)
 	}
 
-switch subcommand {
+	switch subcommand {
 	case "check":
 		cmd.Check(absPath)
-case "commit":
+	case "commit":
 		cmd.CommitWithOptions(absPath, cmd.CommitOptions{DryRun: dryRun, ChangelogOnly: changelogOnly})
-case "init":
+	case "init":
 		cmd.Init(absPath)
-case "clean":
+	case "clean":
 		cmd.Clean(absPath)
-case "help", "-h", "--help":
+	case "lint":
+		cmd.Lint(absPath)
+	case "help", "-h", "--help":
 		cmd.Help()
-case "version", "-v", "--version":
+	case "version", "-v", "--version":
 		fmt.Printf("checkpoint version %s\n", version)
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n", subcommand)

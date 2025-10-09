@@ -1,4 +1,5 @@
 ---
+---
 schema_version: "1"
 timestamp: "2025-10-22T12:09:48-07:00"
 changes:
@@ -169,6 +170,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2025-10-22T14:26:51-07:00"
+commit_hash: f735c7a0eba340352c69d35c29fbc7ae1e040789
 changes:
     - summary: Fix validation inconsistencies across summary length limits
       details: Consolidated validation to use 80 chars consistently, removed redundant PreCommitValidate, fixed placeholder detection in basic validation
@@ -207,3 +209,19 @@ next_steps:
       details: Parse .checkpoint-changelog.yaml, check schema, timestamps, commit_hash presence (except last), doc separation.
       priority: high
       scope: cmd/verify, internal/changelog
+---
+schema_version: "1"
+timestamp: "2025-10-22T14:48:22-07:00"
+changes:
+    - summary: Add concrete examples and guidelines to LLM prompt template
+      details: Enhanced checkpoint input template with good/bad examples and specific guidelines to help LLM generate better structured change entries
+      change_type: feature
+      scope: internal/schema
+    - summary: Add lint command to catch obvious mistakes before commit
+      details: Created checkpoint lint command that detects placeholder text, vague summaries, validation errors, and suggests improvements
+      change_type: feature
+      scope: cmd/lint
+    - summary: Update help documentation to include lint command
+      details: Added lint command to help text with description and usage examples
+      change_type: docs
+      scope: cmd/help

@@ -50,7 +50,11 @@ next_steps:
 - Run: `checkpoint check [path]`
 - Edit `.checkpoint-input`: describe all changes in `changes[]` and any `next_steps[]`
 
-2) Commit
+2) Check your work (optional but recommended)
+
+- Run: `checkpoint lint [path]` to catch obvious mistakes before commit
+
+3) Commit
 
 - Run: `checkpoint commit [flags] [path]`
   - Stages all changes (`git add -A`)
@@ -79,6 +83,10 @@ next_steps:
 
 - `checkpoint clean [path]`
   - Removes `.checkpoint-input` and `.checkpoint-diff` to abort and restart
+
+- `checkpoint lint [path]`
+  - Check checkpoint input for obvious mistakes and issues before commit
+  - Validates input file and catches placeholder text, vague summaries, validation errors
 
 ## Validation
 

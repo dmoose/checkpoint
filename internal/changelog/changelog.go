@@ -53,110 +53,65 @@ func AppendEntry(path, doc string) error {
 	return nil
 }
 
-// UpdateLastDocument preserves append-only structure by only modifying the last document
+// UpdateLastDocument modifies the last document by re-rendering it
 func UpdateLastDocument(path string, fn func(*schema.CheckpointEntry) *schema.CheckpointEntry) error {
-	// Get file info for consistency check
-	info, err := os.Stat(path)
-	if err != nil {
-		return fmt.Errorf("stat changelog: %w", err)
-	}
-	originalSize := info.Size()
-	originalModTime := info.ModTime()
-
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("read changelog: %w", err)
 	}
 
-	// Verify file hasn't changed since we started
-	if int64(len(content)) != originalSize {
-		return fmt.Errorf("file size changed during read (expected %d, got %d)", originalSize, len(content))
-	}
-
-	// Split content by document separators while preserving them
 	contentStr := string(content)
-	docs := strings.Split(contentStr, "\n---\n")
-	if len(docs) < 2 {
-		// Try alternative separator (file might start with ---)
-		docs = strings.Split(contentStr, "---\n")
-		if len(docs) < 2 {
-			return fmt.Errorf("no YAML documents found")
-		}
+
+	// Find the start of the last document
+	lastSepIndex := strings.LastIndex(contentStr, "\n---\n")
+	var beforeLastDoc, lastDocContent string
+
+	if lastSepIndex != -1 {
+		// There's a separator, so split there
+		beforeLastDoc = contentStr[:lastSepIndex+1]  // Keep the newline before ---
+		lastDocContent = contentStr[lastSepIndex+5:] // Skip "\n---\n"
+	} else if strings.HasPrefix(contentStr, "---\n") {
+		// File starts with ---, this is the only/first document
+		beforeLastDoc = ""
+		lastDocContent = contentStr[4:] // Skip "---\n"
+	} else {
+		return fmt.Errorf("no YAML document separators found")
 	}
 
-	// Find the last non-empty document
-	var lastDocIndex = -1
-	for i := len(docs) - 1; i >= 0; i-- {
-		if strings.TrimSpace(docs[i]) != "" {
-			lastDocIndex = i
-			break
-		}
-	}
-
-	if lastDocIndex == -1 {
-		return fmt.Errorf("no non-empty documents found")
-	}
-
-	// Parse only the last document
-	lastDoc := docs[lastDocIndex]
-	// Remove leading --- if present
-	lastDoc = strings.TrimPrefix(lastDoc, "---\n")
-
+	// Parse the last document
 	var entry schema.CheckpointEntry
-	if err := yaml.Unmarshal([]byte(lastDoc), &entry); err != nil {
+	if err := yaml.Unmarshal([]byte(lastDocContent), &entry); err != nil {
 		return fmt.Errorf("decode last document: %w", err)
 	}
 
-	// Apply the function to update the entry
+	// Apply the update function
 	updatedEntry := fn(&entry)
 
-	// Render only the updated last document
+	// Re-render the updated document
 	updatedDoc, err := schema.RenderChangelogDocument(updatedEntry)
 	if err != nil {
 		return fmt.Errorf("render updated document: %w", err)
 	}
 
-	// Remove the leading --- from rendered doc since we'll add it back
-	updatedDoc = strings.TrimPrefix(updatedDoc, "---\n")
-
-	// Replace the last document in the original content
-	docs[lastDocIndex] = updatedDoc
-
-	// Reconstruct the file content
-	var result strings.Builder
-	for i, doc := range docs {
-		if i == 0 {
-			// First document might not have leading ---
-			if strings.HasPrefix(contentStr, "---\n") {
-				result.WriteString("---\n")
-			}
-		} else {
-			result.WriteString("\n---\n")
-		}
-		result.WriteString(doc)
+	// Reconstruct the file: everything before + updated last document
+	var newContent string
+	if beforeLastDoc == "" {
+		// This was the only document
+		newContent = updatedDoc
+	} else {
+		// Remove trailing newline from updatedDoc since RenderChangelogDocument includes "---\n"
+		newContent = beforeLastDoc + strings.TrimSuffix(updatedDoc, "\n")
 	}
 
 	// Ensure file ends with newline
-	resultStr := result.String()
-	if !strings.HasSuffix(resultStr, "\n") {
-		resultStr += "\n"
+	if !strings.HasSuffix(newContent, "\n") {
+		newContent += "\n"
 	}
 
-	// Write atomically with additional consistency checks
+	// Write atomically
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, []byte(resultStr), 0644); err != nil {
+	if err := os.WriteFile(tmp, []byte(newContent), 0644); err != nil {
 		return fmt.Errorf("write tmp: %w", err)
-	}
-
-	// Verify the original file hasn't been modified while we were working
-	currentInfo, err := os.Stat(path)
-	if err != nil {
-		os.Remove(tmp) // Clean up
-		return fmt.Errorf("stat original file before rename: %w", err)
-	}
-	if !currentInfo.ModTime().Equal(originalModTime) || currentInfo.Size() != originalSize {
-		os.Remove(tmp) // Clean up
-		return fmt.Errorf("original file was modified during update operation")
 	}
 
 	if err := os.Rename(tmp, path); err != nil {

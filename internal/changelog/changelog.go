@@ -1,10 +1,14 @@
 package changelog
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/oklog/ulid/v2"
 	"gopkg.in/yaml.v3"
 
 	"go-llm/internal/schema"
@@ -53,7 +57,100 @@ func AppendEntry(path, doc string) error {
 	return nil
 }
 
-// UpdateLastDocument modifies the last document by re-rendering it
+// MetaDocument represents the initial metadata document in the changelog
+type MetaDocument struct {
+	SchemaVersion string `yaml:"schema_version"`
+	DocumentType  string `yaml:"document_type"`
+	ProjectID     string `yaml:"project_id"`
+	PathHash      string `yaml:"path_hash"`
+	CreatedAt     string `yaml:"created_at"`
+	ToolVersion   string `yaml:"tool_version"`
+}
+
+// InitializeChangelog creates the changelog file with a meta document if it doesn't exist
+func InitializeChangelog(changelogPath, toolVersion string) error {
+	// Check if file already exists
+	if _, err := os.Stat(changelogPath); err == nil {
+		// File exists, check if it has a meta document
+		content, err := os.ReadFile(changelogPath)
+		if err != nil {
+			return fmt.Errorf("read existing changelog: %w", err)
+		}
+
+		contentStr := string(content)
+		if strings.Contains(contentStr, "document_type: meta") {
+			// Meta document already exists, nothing to do
+			return nil
+		}
+
+		// File exists but no meta document, prepend one
+		return prependMetaDocument(changelogPath, toolVersion, contentStr)
+	}
+
+	// File doesn't exist, create it with meta document
+	return createChangelogWithMeta(changelogPath, toolVersion)
+}
+
+// createChangelogWithMeta creates a new changelog file with just the meta document
+func createChangelogWithMeta(changelogPath, toolVersion string) error {
+	meta, err := createMetaDocument(changelogPath, toolVersion)
+	if err != nil {
+		return fmt.Errorf("create meta document: %w", err)
+	}
+
+	metaYAML, err := yaml.Marshal(meta)
+	if err != nil {
+		return fmt.Errorf("marshal meta document: %w", err)
+	}
+
+	content := "---\n" + string(metaYAML)
+	return os.WriteFile(changelogPath, []byte(content), 0644)
+}
+
+// prependMetaDocument adds a meta document to the beginning of an existing file
+func prependMetaDocument(changelogPath, toolVersion, existingContent string) error {
+	meta, err := createMetaDocument(changelogPath, toolVersion)
+	if err != nil {
+		return fmt.Errorf("create meta document: %w", err)
+	}
+
+	metaYAML, err := yaml.Marshal(meta)
+	if err != nil {
+		return fmt.Errorf("marshal meta document: %w", err)
+	}
+
+	newContent := "---\n" + string(metaYAML) + existingContent
+	return os.WriteFile(changelogPath, []byte(newContent), 0644)
+}
+
+// createMetaDocument creates a new meta document with project metadata
+func createMetaDocument(changelogPath, toolVersion string) (*MetaDocument, error) {
+	// Get absolute path of the working directory
+	workDir := filepath.Dir(changelogPath)
+	absPath, err := filepath.Abs(workDir)
+	if err != nil {
+		return nil, fmt.Errorf("get absolute path: %w", err)
+	}
+
+	// Generate project ID (ULID)
+	projectID := ulid.Make().String()
+
+	// Generate path hash (truncated SHA256 of absolute path)
+	hasher := sha256.New()
+	hasher.Write([]byte(absPath))
+	pathHash := fmt.Sprintf("%x", hasher.Sum(nil))[:16] // First 16 chars
+
+	return &MetaDocument{
+		SchemaVersion: "1",
+		DocumentType:  "meta",
+		ProjectID:     projectID,
+		PathHash:      pathHash,
+		CreatedAt:     time.Now().Format(time.RFC3339),
+		ToolVersion:   toolVersion,
+	}, nil
+}
+
+// UpdateLastDocument finds the last commit_hash line and updates it
 func UpdateLastDocument(path string, fn func(*schema.CheckpointEntry) *schema.CheckpointEntry) error {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -62,62 +159,40 @@ func UpdateLastDocument(path string, fn func(*schema.CheckpointEntry) *schema.Ch
 
 	contentStr := string(content)
 
-	// Find the start of the last document
+	// Parse to get the hash value from the function
 	lastSepIndex := strings.LastIndex(contentStr, "\n---\n")
-	var beforeLastDoc, lastDocContent string
-
+	var lastDocContent string
 	if lastSepIndex != -1 {
-		// There's a separator, so split there
-		beforeLastDoc = contentStr[:lastSepIndex+1]  // Keep the newline before ---
-		lastDocContent = contentStr[lastSepIndex+5:] // Skip "\n---\n"
+		lastDocContent = contentStr[lastSepIndex+5:]
 	} else if strings.HasPrefix(contentStr, "---\n") {
-		// File starts with ---, this is the only/first document
-		beforeLastDoc = ""
-		lastDocContent = contentStr[4:] // Skip "---\n"
+		lastDocContent = contentStr[4:]
 	} else {
 		return fmt.Errorf("no YAML document separators found")
 	}
 
-	// Parse the last document
 	var entry schema.CheckpointEntry
 	if err := yaml.Unmarshal([]byte(lastDocContent), &entry); err != nil {
 		return fmt.Errorf("decode last document: %w", err)
 	}
 
-	// Apply the update function
 	updatedEntry := fn(&entry)
-
-	// Re-render the updated document
-	updatedDoc, err := schema.RenderChangelogDocument(updatedEntry)
-	if err != nil {
-		return fmt.Errorf("render updated document: %w", err)
+	if updatedEntry.CommitHash == "" {
+		return nil
 	}
 
-	// Reconstruct the file: everything before + updated last document
-	var newContent string
-	if beforeLastDoc == "" {
-		// This was the only document
-		newContent = updatedDoc
-	} else {
-		// Remove trailing newline from updatedDoc since RenderChangelogDocument includes "---\n"
-		newContent = beforeLastDoc + strings.TrimSuffix(updatedDoc, "\n")
+	// Find the last occurrence of "commit_hash:" in the file
+	lastCommitHashIndex := strings.LastIndex(contentStr, "commit_hash:")
+	if lastCommitHashIndex == -1 {
+		return fmt.Errorf("no commit_hash field found in changelog")
 	}
 
-	// Ensure file ends with newline
-	if !strings.HasSuffix(newContent, "\n") {
-		newContent += "\n"
+	// Replace the commit_hash line
+	lineEnd := strings.Index(contentStr[lastCommitHashIndex:], "\n")
+	if lineEnd == -1 {
+		lineEnd = len(contentStr) - lastCommitHashIndex
 	}
+	newCommitHashLine := "commit_hash: " + updatedEntry.CommitHash
+	newContent := contentStr[:lastCommitHashIndex] + newCommitHashLine + contentStr[lastCommitHashIndex+lineEnd:]
 
-	// Write atomically
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, []byte(newContent), 0644); err != nil {
-		return fmt.Errorf("write tmp: %w", err)
-	}
-
-	if err := os.Rename(tmp, path); err != nil {
-		os.Remove(tmp) // Clean up on failure
-		return fmt.Errorf("rename tmp: %w", err)
-	}
-
-	return nil
+	return os.WriteFile(path, []byte(newContent), 0644)
 }

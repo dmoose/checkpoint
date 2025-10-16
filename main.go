@@ -52,9 +52,9 @@ func main() {
 	case "check":
 		cmd.Check(absPath)
 	case "commit":
-		cmd.CommitWithOptions(absPath, cmd.CommitOptions{DryRun: dryRun, ChangelogOnly: changelogOnly})
+		cmd.CommitWithOptions(absPath, cmd.CommitOptions{DryRun: dryRun, ChangelogOnly: changelogOnly}, version)
 	case "init":
-		cmd.Init(absPath)
+		cmd.Init(absPath, version)
 	case "clean":
 		cmd.Clean(absPath)
 	case "lint":

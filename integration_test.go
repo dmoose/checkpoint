@@ -76,7 +76,7 @@ func TestCompleteWorkflow(t *testing.T) {
 	}
 
 	// Step 3: Run checkpoint commit
-	cmd.Commit(tmpDir)
+	cmd.Commit(tmpDir, "test-version")
 
 	// Verify changelog was created and contains our change
 	changelogPath := filepath.Join(tmpDir, config.ChangelogFileName)
@@ -161,7 +161,7 @@ func TestDryRunWorkflow(t *testing.T) {
 	file.WriteFile(inputPath, editedContent)
 
 	// Run commit with dry-run
-	cmd.CommitWithOptions(tmpDir, cmd.CommitOptions{DryRun: true})
+	cmd.CommitWithOptions(tmpDir, cmd.CommitOptions{DryRun: true}, "test-version")
 
 	// Verify no actual commit was made
 	output := runGitCmd(t, tmpDir, "log", "--oneline")
@@ -296,7 +296,7 @@ func TestInitWorkflow(t *testing.T) {
 	setupGitRepo(t, tmpDir)
 
 	// Run init command
-	cmd.Init(tmpDir)
+	cmd.Init(tmpDir, "test-version")
 
 	// Verify CHECKPOINT.md was created
 	checkpointMdPath := filepath.Join(tmpDir, config.CheckpointMdFileName)

@@ -20,11 +20,11 @@ type CommitOptions struct {
 }
 
 // Commit implements Phase 3: parse input, append to changelog, git commit, write status
-func Commit(projectPath string) {
-	CommitWithOptions(projectPath, CommitOptions{})
+func Commit(projectPath string, version string) {
+	CommitWithOptions(projectPath, CommitOptions{}, version)
 }
 
-func CommitWithOptions(projectPath string, opts CommitOptions) {
+func CommitWithOptions(projectPath string, opts CommitOptions, version string) {
 	// Validate git repository
 	if ok, err := git.IsGitRepository(projectPath); !ok {
 		if err != nil {
@@ -95,8 +95,14 @@ func CommitWithOptions(projectPath string, opts CommitOptions) {
 		return
 	}
 
-	// Append to changelog (append-only)
+	// Initialize changelog with meta document if it doesn't exist
 	changelogPath := filepath.Join(projectPath, config.ChangelogFileName)
+	if err := changelog.InitializeChangelog(changelogPath, version); err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to initialize changelog: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Append to changelog (append-only)
 	if err := changelog.AppendEntry(changelogPath, doc); err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to append to changelog: %v\n", err)
 		fmt.Fprintf(os.Stderr, "hint: check write permissions for %s\n", changelogPath)

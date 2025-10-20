@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"go-llm/internal/language"
+	"go-llm/internal/schema"
+
 	"github.com/oklog/ulid/v2"
 	"gopkg.in/yaml.v3"
-
-	"go-llm/internal/schema"
 )
 
 // AppendEntry appends the rendered YAML document to the changelog (append-only)
@@ -59,12 +60,13 @@ func AppendEntry(path, doc string) error {
 
 // MetaDocument represents the initial metadata document in the changelog
 type MetaDocument struct {
-	SchemaVersion string `yaml:"schema_version"`
-	DocumentType  string `yaml:"document_type"`
-	ProjectID     string `yaml:"project_id"`
-	PathHash      string `yaml:"path_hash"`
-	CreatedAt     string `yaml:"created_at"`
-	ToolVersion   string `yaml:"tool_version"`
+	SchemaVersion string              `yaml:"schema_version"`
+	DocumentType  string              `yaml:"document_type"` // "meta"
+	ProjectID     string              `yaml:"project_id"`
+	PathHash      string              `yaml:"path_hash"`
+	CreatedAt     string              `yaml:"created_at"`
+	ToolVersion   string              `yaml:"tool_version"`
+	Languages     []language.Language `yaml:"languages,omitempty"`
 }
 
 // InitializeChangelog creates the changelog file with a meta document if it doesn't exist
@@ -140,6 +142,9 @@ func createMetaDocument(changelogPath, toolVersion string) (*MetaDocument, error
 	hasher.Write([]byte(absPath))
 	pathHash := fmt.Sprintf("%x", hasher.Sum(nil))[:16] // First 16 chars
 
+	// Detect project languages
+	languages, _ := language.DetectLanguages(workDir) // tolerate errors in language detection
+
 	return &MetaDocument{
 		SchemaVersion: "1",
 		DocumentType:  "meta",
@@ -147,6 +152,7 @@ func createMetaDocument(changelogPath, toolVersion string) (*MetaDocument, error
 		PathHash:      pathHash,
 		CreatedAt:     time.Now().Format(time.RFC3339),
 		ToolVersion:   toolVersion,
+		Languages:     languages,
 	}, nil
 }
 

@@ -293,47 +293,91 @@ schema_version: "1"
 timestamp: "2025-10-23T07:31:36-07:00"
 commit_hash: 250634b3bb0e707a06b21271e7448844fab312a9
 changes:
-    - summary: Integrate meta document creation into init and commit commands
-      details: Added InitializeChangelog calls to both init and commit commands to ensure changelog always has meta document with project metadata
-      change_type: feature
-      scope: cmd/init, cmd/commit
-    - summary: Add version parameter to command functions
-      details: Refactored Init and CommitWithOptions to accept version parameter for meta document creation, updated all callers
-      change_type: refactor
-      scope: cmd/init, cmd/commit, main
-    - summary: Add comprehensive tests for meta document functionality
-      details: Created extensive test suite covering meta document creation, changelog initialization, path hashing, and project ID uniqueness
-      change_type: feature
-      scope: internal/changelog
+  - summary: Integrate meta document creation into init and commit commands
+    details: Added InitializeChangelog calls to both init and commit commands to ensure changelog always has meta document with project metadata
+    change_type: feature
+    scope: cmd/init, cmd/commit
+  - summary: Add version parameter to command functions
+    details: Refactored Init and CommitWithOptions to accept version parameter for meta document creation, updated all callers
+    change_type: refactor
+    scope: cmd/init, cmd/commit, main
+  - summary: Add comprehensive tests for meta document functionality
+    details: Created extensive test suite covering meta document creation, changelog initialization, path hashing, and project ID uniqueness
+    change_type: feature
+    scope: internal/changelog
 ---
 schema_version: "1"
 timestamp: "2025-10-23T07:38:46-07:00"
 commit_hash: 9048b1fc622d73148914889b3b5a623168d98ff6
 changes:
-    - summary: Remove omitempty from next_steps field in changelog schema
-      details: Ensures next_steps array always appears in changelog output even when empty for schema consistency
-      change_type: fix
-      scope: internal/schema
+  - summary: Remove omitempty from next_steps field in changelog schema
+    details: Ensures next_steps array always appears in changelog output even when empty for schema consistency
+    change_type: fix
+    scope: internal/schema
 ---
 schema_version: "1"
 timestamp: "2025-10-23T13:14:00-07:00"
+commit_hash: a55099844d29bd9b879f4d5eb6b20bc66b2325f1
+files_changed:
+  - path: .checkpoint-changelog.yaml
+    additions: 1
+    deletions: 1
+  - path: cmd/check.go
+    additions: 18
+    deletions: 1
+  - path: internal/git/git.go
+    additions: 30
+    deletions: 0
+  - path: internal/schema/schema.go
+    additions: 102
+    deletions: 14
+  - path: internal/schema/schema_test.go
+    additions: 86
+    deletions: 2
+languages:
+  - name: Go
+    indicators:
+      - go.mod
+      - go.sum
+changes:
+  - summary: Add language detection module with reliable project file indicators
+    details: Created internal/language package with simple heuristic-based detection using only definitive project files (go.mod, package.json, Cargo.toml, etc.) to avoid false positives
+    change_type: feature
+    scope: internal/language
+  - summary: Add git diff --numstat support for file change statistics
+    details: Extended git module with GetDiffNumStat and GetStagedDiffNumStat functions plus ParseNumStat utility to capture quantitative file change data
+    change_type: feature
+    scope: internal/git
+  - summary: Extend schema to include file statistics and language metadata
+    details: Added FileChange struct for tracking additions/deletions per file and integrated language detection results into checkpoint entries
+    change_type: feature
+    scope: internal/schema
+  - summary: Integrate metadata collection into check command
+    details: Modified check command to collect file statistics and detect project languages, including this contextual information in the input template for LLM analysis
+    change_type: feature
+    scope: cmd/check
+  - summary: Add comprehensive tests for new functionality
+    details: Created test suites for language detection with various project structures and numstat parsing with edge cases like binary files and filenames with spaces
+    change_type: feature
+    scope: tests
+next_steps:
+---
+schema_version: "1"
+timestamp: "2025-10-24T07:15:37-07:00"
 commit_hash: ""
 files_changed:
     - path: .checkpoint-changelog.yaml
-      additions: 1
-      deletions: 1
+      additions: 56
+      deletions: 64
     - path: cmd/check.go
-      additions: 18
-      deletions: 1
-    - path: internal/git/git.go
-      additions: 30
-      deletions: 0
+      additions: 1
+      deletions: 5
+    - path: internal/changelog/changelog.go
+      additions: 14
+      deletions: 8
     - path: internal/schema/schema.go
-      additions: 102
-      deletions: 14
-    - path: internal/schema/schema_test.go
-      additions: 86
-      deletions: 2
+      additions: 14
+      deletions: 17
 languages:
     - name: Go
       indicators:
@@ -348,24 +392,20 @@ changes:
       details: Extended git module with GetDiffNumStat and GetStagedDiffNumStat functions plus ParseNumStat utility to capture quantitative file change data
       change_type: feature
       scope: internal/git
-    - summary: Extend schema to include file statistics and language metadata
-      details: Added FileChange struct for tracking additions/deletions per file and integrated language detection results into checkpoint entries
+    - summary: Extend schema to include file statistics metadata
+      details: Added FileChange struct for tracking additions/deletions per file in checkpoint entries
       change_type: feature
       scope: internal/schema
-    - summary: Integrate metadata collection into check command
-      details: Modified check command to collect file statistics and detect project languages, including this contextual information in the input template for LLM analysis
+    - summary: Integrate file statistics collection into check command
+      details: Modified check command to collect and include file change statistics in the input template for LLM analysis
       change_type: feature
       scope: cmd/check
+    - summary: Move language detection to changelog meta document
+      details: Relocated project language detection from individual checkpoints to the initial meta document where it belongs as a project characteristic
+      change_type: refactor
+      scope: internal/changelog
     - summary: Add comprehensive tests for new functionality
       details: Created test suites for language detection with various project structures and numstat parsing with edge cases like binary files and filenames with spaces
       change_type: feature
       scope: tests
-next_steps:
-    - summary: Consider adding file statistics to changelog output
-      details: Evaluate whether to include quantitative file change data in the final changelog documents for historical analysis
-      priority: low
-      scope: internal/schema
-    - summary: Add more reliable language indicators as patterns emerge
-      details: Expand detection for additional ecosystems like .NET (*.sln), Maven variants, or other definitive project markers
-      priority: low
-      scope: internal/language
+next_steps: []

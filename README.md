@@ -26,6 +26,7 @@ It pairs a Go CLI with a simple YAML schema. Each "checkpoint" is one Git commit
 
 One YAML document per checkpoint:
 
+```yaml
 ---
 schema_version: "1"
 timestamp: "2025-10-22T16:00:00Z"
@@ -39,6 +40,8 @@ next_steps:
   - summary: "Plan follow-up work"
     details: "Optional"
     priority: "low|med|high"
+    scope: "affected component"
+```
 
 ## Workflow
 
@@ -63,15 +66,19 @@ next_steps:
 
 - `checkpoint check [path]`
   - Generates `.checkpoint-input` and `.checkpoint-diff`
+  - Guards against concurrent checkpoints with lock files
 
 - `checkpoint commit [path]`
   - Validates input, appends to `.checkpoint-changelog.yaml`, commits, and back-fills commit hash
   - Flags:
-    - `-n, --dry-run`       Show the commit message and exit without committing
+    - `-n, --dry-run`       Show the commit message and staged files without committing
     - `--changelog-only`    Stage only the changelog instead of all changes
 
 - `checkpoint init [path]`
   - Writes `CHECKPOINT.md` with usage guidance
+
+- `checkpoint clean [path]`
+  - Removes `.checkpoint-input` and `.checkpoint-diff` to abort and restart
 
 ## Validation
 
@@ -80,7 +87,7 @@ Before committing, the tool validates:
 - `change_type` must be one of: feature, fix, refactor, docs, perf, other
 - Obvious mistakes:
   - Placeholder text like `[FILL IN ...]`
-  - Overlong summaries (>100 chars)
+  - Overlong summaries (>80 chars)
   - Invalid `next_steps[].priority` (must be low|med|high)
 
 If validation fails, errors are printed and the commit is aborted.
@@ -91,6 +98,14 @@ If validation fails, errors are printed and the commit is aborted.
 - Backfill commit hash: the hash is a convenience written into the last document after the commit (without another commit)
 - Stage-all by default: the changelog reflects exactly what was committed
 - Minimal dependencies: standard library + `yaml.v3`
+
+## Error Handling
+
+The tool provides helpful error messages with hints for common issues:
+- Missing input files suggest running `checkpoint check` first
+- YAML parsing errors suggest checking syntax or running `checkpoint clean` to restart
+- Git repository issues provide specific hints for resolution
+- File permission problems indicate which files need attention
 
 ## Typical .gitignore entries
 
@@ -108,3 +123,4 @@ The changelog (`.checkpoint-changelog.yaml`) is intentionally tracked.
 - Optional strict mode (scope allowlist)
 - Template override per repo for prompts and fields
 - TOML support if needed
+test change

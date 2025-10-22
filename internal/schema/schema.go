@@ -26,8 +26,9 @@ type CheckpointEntry struct {
 }
 
 const (
-	SchemaVersion = "1"
-	LLMPrompt     = `# INSTRUCTIONS FOR LLM:
+	SchemaVersion    = "1"
+	MaxSummaryLength = 80
+	LLMPrompt        = `# INSTRUCTIONS FOR LLM:
 # This is a checkpoint input. Fill the changes array with all changes in this checkpoint.
 # Each change has: summary (required), details (optional), change_type (required), scope (optional).
 # Allowed change_type values: feature, fix, refactor, docs, perf, other.
@@ -36,6 +37,7 @@ const (
 # If previous next_steps are present, remove items completed in this checkpoint, keep unfinished ones, and add new items as needed.
 # Do not alter schema_version/timestamp; leave commit_hash empty.
 `
+	ValidChangeTypes = "feature, fix, refactor, docs, perf, other"
 )
 
 type NextStep struct {
@@ -43,12 +45,11 @@ type NextStep struct {
 	Details  string `yaml:"details,omitempty"`
 	Priority string `yaml:"priority,omitempty"` // low|med|high
 	Scope    string `yaml:"scope,omitempty"`
-	Owner    string `yaml:"owner,omitempty"`
 }
 
 func GenerateInputTemplate(gitStatus, diffFileName string, prevNextSteps []NextStep) string {
 	ts := time.Now().Format(time.RFC3339)
-prev := renderNextStepsYAML(prevNextSteps)
+	prev := renderNextStepsYAML(prevNextSteps)
 	return fmt.Sprintf(`%s
 schema_version: "%s"
 timestamp: "%s"
@@ -89,17 +90,22 @@ func ExtractNextStepsFromStatus(statusYAML string) []NextStep {
 
 func renderNextStepsYAML(steps []NextStep) string {
 	if len(steps) == 0 {
-		return "#  - summary: \"[FILL IN: next action]\"\n#    details: \"[OPTIONAL: context]\"\n#    priority: \"[OPTIONAL: low|med|high]\"\n#    scope: \"[OPTIONAL: affected component]\"\n#    owner: \"[OPTIONAL: who]\"\n"
+		return "#  - summary: \"[FILL IN: next action]\"\n#    details: \"[OPTIONAL: context]\"\n#    priority: \"[OPTIONAL: low|med|high]\"\n#    scope: \"[OPTIONAL: affected component]\"\n"
 	}
 	var b strings.Builder
 	for _, s := range steps {
 		b.WriteString("  - summary: \"")
 		b.WriteString(strings.ReplaceAll(s.Summary, "\"", "'"))
 		b.WriteString("\"\n")
-		if s.Details != "" { b.WriteString("    details: \""+strings.ReplaceAll(s.Details, "\"", "'")+"\"\n") }
-		if s.Priority != "" { b.WriteString("    priority: \""+s.Priority+"\"\n") }
-		if s.Scope != "" { b.WriteString("    scope: \""+s.Scope+"\"\n") }
-		if s.Owner != "" { b.WriteString("    owner: \""+s.Owner+"\"\n") }
+		if s.Details != "" {
+			b.WriteString("    details: \"" + strings.ReplaceAll(s.Details, "\"", "'") + "\"\n")
+		}
+		if s.Priority != "" {
+			b.WriteString("    priority: \"" + s.Priority + "\"\n")
+		}
+		if s.Scope != "" {
+			b.WriteString("    scope: \"" + s.Scope + "\"\n")
+		}
 	}
 	return b.String()
 }
@@ -115,61 +121,72 @@ func ParseInputFile(content string) (*CheckpointEntry, error) {
 
 func ValidateEntry(e *CheckpointEntry) error {
 	var missing []string
-	if e.SchemaVersion == "" { missing = append(missing, "schema_version") }
-	if e.Timestamp == "" { missing = append(missing, "timestamp") }
-	if len(e.Changes) == 0 { missing = append(missing, "changes[>=1]") }
+	if e.SchemaVersion == "" {
+		missing = append(missing, "schema_version")
+	}
+	if e.Timestamp == "" {
+		missing = append(missing, "timestamp")
+	}
+	if len(e.Changes) == 0 {
+		missing = append(missing, "changes[>=1]")
+	}
 	if len(missing) > 0 {
 		return fmt.Errorf("missing required fields: %s", strings.Join(missing, ", "))
 	}
-	valid := map[string]struct{}{ "feature":{}, "fix":{}, "refactor":{}, "docs":{}, "perf":{}, "other":{} }
+
+	valid := map[string]struct{}{"feature": {}, "fix": {}, "refactor": {}, "docs": {}, "perf": {}, "other": {}}
 	for i, c := range e.Changes {
-		if strings.TrimSpace(c.Summary) == "" {
+		summary := strings.TrimSpace(c.Summary)
+		if summary == "" {
 			return fmt.Errorf("change[%d]: summary required", i)
 		}
+		if isPlaceholder(summary) {
+			return fmt.Errorf("change[%d]: summary contains placeholder text", i)
+		}
 		if _, ok := valid[c.ChangeType]; !ok {
-			return fmt.Errorf("change[%d]: invalid change_type '%s'", i, c.ChangeType)
-		}
-	}
-	return nil
-}
-
-// PreCommitValidate performs extra checks and returns a list of descriptive errors
-func PreCommitValidate(e *CheckpointEntry) []string {
-	var errs []string
-	// placeholder detection helper
-	isPlaceholder := func(s string) bool {
-		s = strings.TrimSpace(strings.ToLower(s))
-		return strings.HasPrefix(s, "[fill in") || strings.Contains(s, "[fill in")
-	}
-	// validate changes
-	for i, c := range e.Changes {
-		s := strings.TrimSpace(c.Summary)
-		if s == "" || isPlaceholder(s) {
-			errs = append(errs, fmt.Sprintf("change[%d]: summary is empty or placeholder", i))
-		}
-		if l := len([]rune(s)); l > 100 {
-			errs = append(errs, fmt.Sprintf("change[%d]: summary too long (%d > 100 chars)", i, l))
+			return fmt.Errorf("change[%d]: invalid change_type '%s' (valid: %s)", i, c.ChangeType, ValidChangeTypes)
 		}
 		if isPlaceholder(c.ChangeType) {
-			errs = append(errs, fmt.Sprintf("change[%d]: change_type contains placeholder", i))
+			return fmt.Errorf("change[%d]: change_type contains placeholder text", i)
 		}
-		if c.Scope != "" && isPlaceholder(c.Scope) {
-			errs = append(errs, fmt.Sprintf("change[%d]: scope contains placeholder", i))
+		if len([]rune(summary)) > MaxSummaryLength {
+			return fmt.Errorf("change[%d]: summary too long (%d > %d chars)", i, len([]rune(summary)), MaxSummaryLength)
 		}
 	}
-	// validate next_steps priorities
+
+	// Validate next_steps
 	for i, n := range e.NextSteps {
-		s := strings.TrimSpace(n.Summary)
-		if s == "" || isPlaceholder(s) {
-			errs = append(errs, fmt.Sprintf("next_steps[%d]: summary is empty or placeholder", i))
+		summary := strings.TrimSpace(n.Summary)
+		if summary == "" {
+			return fmt.Errorf("next_steps[%d]: summary required", i)
+		}
+		if isPlaceholder(summary) {
+			return fmt.Errorf("next_steps[%d]: summary contains placeholder text", i)
 		}
 		if n.Priority != "" {
 			p := strings.ToLower(n.Priority)
 			if p != "low" && p != "med" && p != "high" {
-				errs = append(errs, fmt.Sprintf("next_steps[%d]: priority must be low|med|high", i))
+				return fmt.Errorf("next_steps[%d]: priority must be low|med|high (got: %s)", i, n.Priority)
 			}
 		}
 	}
+
+	return nil
+}
+
+// isPlaceholder detects placeholder text in input fields
+func isPlaceholder(s string) bool {
+	s = strings.TrimSpace(strings.ToLower(s))
+	return strings.HasPrefix(s, "[fill in") || strings.Contains(s, "[fill in") || strings.HasPrefix(s, "[optional")
+}
+
+// PreCommitValidate performs additional scope and consistency checks
+func PreCommitValidate(e *CheckpointEntry) []string {
+	var errs []string
+
+	// Additional scope consistency checks could go here
+	// For now, this is mainly for future extensibility
+
 	return errs
 }
 
@@ -196,10 +213,14 @@ func RenderChangelogDocument(e *CheckpointEntry) (string, error) {
 }
 
 func indent(s string) string {
-	if s == "" { return s }
+	if s == "" {
+		return s
+	}
 	lines := strings.Split(s, "\n")
 	for i, ln := range lines {
-		if ln == "" { continue }
+		if ln == "" {
+			continue
+		}
 		// Normalize leading whitespace to avoid YAML block issues
 		trimmed := strings.TrimLeft(ln, " \t")
 		lines[i] = "  " + trimmed

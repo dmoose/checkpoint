@@ -16,7 +16,15 @@ func IsGitRepository(path string) (bool, error) {
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
-		return false, nil
+		// Check if it's just "not a git repository" vs a real error
+		stderr := out.String()
+		if strings.Contains(stderr, "not a git repository") ||
+			strings.Contains(stderr, "Not a git repository") ||
+			strings.Contains(stderr, "fatal: not a git repository") {
+			return false, nil // This is expected for non-git directories
+		}
+		// This is a real error (permissions, path doesn't exist, etc.)
+		return false, fmt.Errorf("git check failed: %w", err)
 	}
 	return strings.TrimSpace(out.String()) == "true", nil
 }
@@ -29,6 +37,29 @@ func GetStatus(path string) (string, error) {
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("git status: %w", err)
+	}
+	return out.String(), nil
+}
+
+// GetDiff returns git diff output for staged or unstaged changes
+func GetDiff(path string, staged bool) (string, error) {
+	var args []string
+	if staged {
+		args = []string{"diff", "--staged"}
+	} else {
+		args = []string{"diff"}
+	}
+
+	cmd := exec.Command("git", args...)
+	cmd.Dir = path
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		// Don't fail on no changes or no HEAD
+		if !isNoHeadError(err) {
+			return "", fmt.Errorf("git diff: %w", err)
+		}
 	}
 	return out.String(), nil
 }

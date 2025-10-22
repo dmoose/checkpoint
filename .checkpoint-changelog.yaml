@@ -151,6 +151,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2025-10-22T13:58:58-07:00"
+commit_hash: cd0ec7819c8442baa0dbbdb82c7c46fb2f86fecb
 changes:
     - summary: Fix UpdateLastDocument to preserve append-only changelog structure
       details: Replaced full-file YAML rewrite with precise last-document modification to prevent reformatting of previous entries and maintain true append-only behavior
@@ -161,6 +162,47 @@ next_steps:
       details: Fail if changes[] empty, invalid change_type, summary >80 chars, or obvious scope mismatch.
       priority: high
       scope: cmd/commit, internal/schema
+    - summary: verify command (changelog lint)
+      details: Parse .checkpoint-changelog.yaml, check schema, timestamps, commit_hash presence (except last), doc separation.
+      priority: high
+      scope: cmd/verify, internal/changelog
+---
+schema_version: "1"
+timestamp: "2025-10-22T14:26:51-07:00"
+changes:
+    - summary: Fix validation inconsistencies across summary length limits
+      details: Consolidated validation to use 80 chars consistently, removed redundant PreCommitValidate, fixed placeholder detection in basic validation
+      change_type: fix
+      scope: internal/schema
+    - summary: Implement proper lock file mechanism for concurrent checkpoint prevention
+      details: Added lock file creation in check command with PID and timestamp, proper cleanup in commit and clean commands, clear error messages for conflicts
+      change_type: feature
+      scope: cmd/check, cmd/commit, cmd/clean
+    - summary: Fix git repository error handling to distinguish system errors
+      details: Updated IsGitRepository to properly return errors for permission issues and non-existent paths vs normal non-git directories
+      change_type: fix
+      scope: internal/git
+    - summary: Add comprehensive test coverage for all packages
+      details: Added tests for cmd, git, and config packages, plus integration tests covering complete workflow, validation, and error scenarios
+      change_type: feature
+      scope: tests
+    - summary: Fix README documentation inconsistencies and document clean command
+      details: Corrected summary length limits, added clean command documentation, improved help text with examples and better formatting
+      change_type: docs
+      scope: README, cmd/help
+    - summary: Improve error messages and dry-run functionality
+      details: Added helpful hints for common errors, fixed dry-run to avoid file modifications, better staging information display
+      change_type: fix
+      scope: cmd/commit
+    - summary: Add data consistency checks to prevent changelog corruption
+      details: Added file size and modification time checks in changelog operations to detect concurrent modifications and race conditions
+      change_type: fix
+      scope: internal/changelog
+    - summary: Clean up code style and import ordering consistency
+      details: Standardized import order, improved code formatting, removed unused struct fields, added constants for magic numbers
+      change_type: refactor
+      scope: internal/schema, internal/changelog
+next_steps:
     - summary: verify command (changelog lint)
       details: Parse .checkpoint-changelog.yaml, check schema, timestamps, commit_hash presence (except last), doc separation.
       priority: high

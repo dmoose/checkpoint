@@ -12,15 +12,26 @@ import (
 
 // ProjectDocument represents the main curated project context
 type ProjectDocument struct {
-	SchemaVersion       string           `yaml:"schema_version"`
-	ProjectName         string           `yaml:"project_name"`
-	LastUpdated         string           `yaml:"last_updated"`
-	KeyInsights         []Insight        `yaml:"key_insights,omitempty"`
-	EstablishedPatterns []Pattern        `yaml:"established_patterns,omitempty"`
-	FailedApproaches    []FailedApproach `yaml:"failed_approaches,omitempty"`
-	DesignPrinciples    []Principle      `yaml:"design_principles,omitempty"`
-	IntegrationPoints   []Integration    `yaml:"integration_points,omitempty"`
-	CodePatterns        []CodePattern    `yaml:"code_patterns,omitempty"`
+	SchemaVersion             string                     `yaml:"schema_version"`
+	ProjectName               string                     `yaml:"project_name"`
+	LastUpdated               string                     `yaml:"last_updated"`
+	KeyInsights               []Insight                  `yaml:"key_insights,omitempty"`
+	EstablishedPatterns       []Pattern                  `yaml:"established_patterns,omitempty"`
+	FailedApproaches          []FailedApproach           `yaml:"failed_approaches,omitempty"`
+	DesignPrinciples          []Principle                `yaml:"design_principles,omitempty"`
+	IntegrationPoints         []Integration              `yaml:"integration_points,omitempty"`
+	CodePatterns              []CodePattern              `yaml:"code_patterns,omitempty"`
+	Dependencies              []Dependency               `yaml:"dependencies,omitempty"`
+	LanguageRequirements      []LanguageRequirement      `yaml:"language_requirements,omitempty"`
+	DeploymentTargets         []DeploymentTarget         `yaml:"deployment_targets,omitempty"`
+	TestingMethodologies      []TestingMethodology       `yaml:"testing_methodologies,omitempty"`
+	DevelopmentRoles          []DevelopmentRole          `yaml:"development_roles,omitempty"`
+	ErrorHandlingPatterns     []ErrorHandlingPattern     `yaml:"error_handling_patterns,omitempty"`
+	CompatibilityStrategy     []CompatibilityStrategy    `yaml:"compatibility_strategy,omitempty"`
+	FileManagement            []FileManagement           `yaml:"file_management,omitempty"`
+	SecurityConsiderations    []SecurityConsideration    `yaml:"security_considerations,omitempty"`
+	PerformanceConsiderations []PerformanceConsideration `yaml:"performance_considerations,omitempty"`
+	CrossCuttingConcerns      []CrossCuttingConcern      `yaml:"cross_cutting_concerns,omitempty"`
 }
 
 type Insight struct {
@@ -62,6 +73,78 @@ type CodePattern struct {
 	Examples   string `yaml:"examples,omitempty"`
 }
 
+type Dependency struct {
+	Name                   string `yaml:"name"`
+	Purpose                string `yaml:"purpose,omitempty"`
+	VersionConstraint      string `yaml:"version_constraint,omitempty"`
+	Rationale              string `yaml:"rationale,omitempty"`
+	AlternativesConsidered string `yaml:"alternatives_considered,omitempty"`
+}
+
+type LanguageRequirement struct {
+	Language       string `yaml:"language"`
+	MinimumVersion string `yaml:"minimum_version"`
+	Rationale      string `yaml:"rationale,omitempty"`
+}
+
+type DeploymentTarget struct {
+	Platform       string   `yaml:"platform"`
+	MinimumVersion string   `yaml:"minimum_version,omitempty"`
+	Architectures  []string `yaml:"architectures,omitempty"`
+	Rationale      string   `yaml:"rationale,omitempty"`
+}
+
+type TestingMethodology struct {
+	Approach       string `yaml:"approach"`
+	Rationale      string `yaml:"rationale,omitempty"`
+	Examples       string `yaml:"examples,omitempty"`
+	CoverageTarget string `yaml:"coverage_target,omitempty"`
+}
+
+type DevelopmentRole struct {
+	Role             string `yaml:"role"`
+	Responsibilities string `yaml:"responsibilities"`
+	Workflow         string `yaml:"workflow,omitempty"`
+}
+
+type ErrorHandlingPattern struct {
+	Pattern   string `yaml:"pattern"`
+	Rationale string `yaml:"rationale,omitempty"`
+	Examples  string `yaml:"examples,omitempty"`
+}
+
+type CompatibilityStrategy struct {
+	Principle     string `yaml:"principle"`
+	Rationale     string `yaml:"rationale,omitempty"`
+	MigrationPath string `yaml:"migration_path,omitempty"`
+}
+
+type FileManagement struct {
+	File         string `yaml:"file"`
+	Lifecycle    string `yaml:"lifecycle"`
+	Ownership    string `yaml:"ownership"`
+	TrackedInGit bool   `yaml:"tracked_in_git"`
+}
+
+type SecurityConsideration struct {
+	Concern    string `yaml:"concern"`
+	Mitigation string `yaml:"mitigation"`
+	Guidance   string `yaml:"guidance,omitempty"`
+}
+
+type PerformanceConsideration struct {
+	Aspect     string `yaml:"aspect"`
+	Impact     string `yaml:"impact"`
+	Mitigation string `yaml:"mitigation"`
+	Threshold  string `yaml:"threshold,omitempty"`
+}
+
+type CrossCuttingConcern struct {
+	Concern   string `yaml:"concern"`
+	Approach  string `yaml:"approach"`
+	Rationale string `yaml:"rationale,omitempty"`
+}
+
 // RecommendationsDocument represents LLM-generated suggestions
 type RecommendationsDocument struct {
 	SchemaVersion        string            `yaml:"schema_version"`
@@ -73,21 +156,43 @@ type RecommendationsDocument struct {
 }
 
 type ProjectAdditions struct {
-	KeyInsights         []Insight        `yaml:"key_insights,omitempty"`
-	EstablishedPatterns []Pattern        `yaml:"established_patterns,omitempty"`
-	FailedApproaches    []FailedApproach `yaml:"failed_approaches,omitempty"`
-	DesignPrinciples    []Principle      `yaml:"design_principles,omitempty"`
-	IntegrationPoints   []Integration    `yaml:"integration_points,omitempty"`
-	CodePatterns        []CodePattern    `yaml:"code_patterns,omitempty"`
+	KeyInsights               []Insight                  `yaml:"key_insights,omitempty"`
+	EstablishedPatterns       []Pattern                  `yaml:"established_patterns,omitempty"`
+	FailedApproaches          []FailedApproach           `yaml:"failed_approaches,omitempty"`
+	DesignPrinciples          []Principle                `yaml:"design_principles,omitempty"`
+	IntegrationPoints         []Integration              `yaml:"integration_points,omitempty"`
+	CodePatterns              []CodePattern              `yaml:"code_patterns,omitempty"`
+	Dependencies              []Dependency               `yaml:"dependencies,omitempty"`
+	LanguageRequirements      []LanguageRequirement      `yaml:"language_requirements,omitempty"`
+	DeploymentTargets         []DeploymentTarget         `yaml:"deployment_targets,omitempty"`
+	TestingMethodologies      []TestingMethodology       `yaml:"testing_methodologies,omitempty"`
+	DevelopmentRoles          []DevelopmentRole          `yaml:"development_roles,omitempty"`
+	ErrorHandlingPatterns     []ErrorHandlingPattern     `yaml:"error_handling_patterns,omitempty"`
+	CompatibilityStrategy     []CompatibilityStrategy    `yaml:"compatibility_strategy,omitempty"`
+	FileManagement            []FileManagement           `yaml:"file_management,omitempty"`
+	SecurityConsiderations    []SecurityConsideration    `yaml:"security_considerations,omitempty"`
+	PerformanceConsiderations []PerformanceConsideration `yaml:"performance_considerations,omitempty"`
+	CrossCuttingConcerns      []CrossCuttingConcern      `yaml:"cross_cutting_concerns,omitempty"`
 }
 
 type ProjectUpdates struct {
-	KeyInsights         []InsightUpdate        `yaml:"key_insights,omitempty"`
-	EstablishedPatterns []PatternUpdate        `yaml:"established_patterns,omitempty"`
-	FailedApproaches    []FailedApproachUpdate `yaml:"failed_approaches,omitempty"`
-	DesignPrinciples    []PrincipleUpdate      `yaml:"design_principles,omitempty"`
-	IntegrationPoints   []IntegrationUpdate    `yaml:"integration_points,omitempty"`
-	CodePatterns        []CodePatternUpdate    `yaml:"code_patterns,omitempty"`
+	KeyInsights               []InsightUpdate                  `yaml:"key_insights,omitempty"`
+	EstablishedPatterns       []PatternUpdate                  `yaml:"established_patterns,omitempty"`
+	FailedApproaches          []FailedApproachUpdate           `yaml:"failed_approaches,omitempty"`
+	DesignPrinciples          []PrincipleUpdate                `yaml:"design_principles,omitempty"`
+	IntegrationPoints         []IntegrationUpdate              `yaml:"integration_points,omitempty"`
+	CodePatterns              []CodePatternUpdate              `yaml:"code_patterns,omitempty"`
+	Dependencies              []DependencyUpdate               `yaml:"dependencies,omitempty"`
+	LanguageRequirements      []LanguageRequirementUpdate      `yaml:"language_requirements,omitempty"`
+	DeploymentTargets         []DeploymentTargetUpdate         `yaml:"deployment_targets,omitempty"`
+	TestingMethodologies      []TestingMethodologyUpdate       `yaml:"testing_methodologies,omitempty"`
+	DevelopmentRoles          []DevelopmentRoleUpdate          `yaml:"development_roles,omitempty"`
+	ErrorHandlingPatterns     []ErrorHandlingPatternUpdate     `yaml:"error_handling_patterns,omitempty"`
+	CompatibilityStrategy     []CompatibilityStrategyUpdate    `yaml:"compatibility_strategy,omitempty"`
+	FileManagement            []FileManagementUpdate           `yaml:"file_management,omitempty"`
+	SecurityConsiderations    []SecurityConsiderationUpdate    `yaml:"security_considerations,omitempty"`
+	PerformanceConsiderations []PerformanceConsiderationUpdate `yaml:"performance_considerations,omitempty"`
+	CrossCuttingConcerns      []CrossCuttingConcernUpdate      `yaml:"cross_cutting_concerns,omitempty"`
 }
 
 type InsightUpdate struct {
@@ -116,6 +221,61 @@ type IntegrationUpdate struct {
 }
 
 type CodePatternUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type DependencyUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type LanguageRequirementUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type DeploymentTargetUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type TestingMethodologyUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type DevelopmentRoleUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type ErrorHandlingPatternUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type CompatibilityStrategyUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type FileManagementUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type SecurityConsiderationUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type PerformanceConsiderationUpdate struct {
+	Existing string `yaml:"existing"`
+	Updated  string `yaml:"updated"`
+}
+
+type CrossCuttingConcernUpdate struct {
 	Existing string `yaml:"existing"`
 	Updated  string `yaml:"updated"`
 }
@@ -181,6 +341,89 @@ func InitializeProjectFile(projectPath, projectName string, languages []language
 				Preference: "Add code style preferences here",
 				Rationale:  "Example: Explicit error handling over silent failures",
 				Examples:   "Example: git command failures, file I/O operations",
+			},
+		},
+		Dependencies: []Dependency{
+			{
+				Name:                   "Add external dependencies here",
+				Purpose:                "Example: YAML parsing for multi-document files",
+				VersionConstraint:      "Example: v3.0.1 or compatible",
+				Rationale:              "Example: Must support multi-document format",
+				AlternativesConsidered: "Example: Standard library (lacks feature X)",
+			},
+		},
+		LanguageRequirements: []LanguageRequirement{
+			{
+				Language:       "Add language requirements here",
+				MinimumVersion: "Example: 1.21",
+				Rationale:      "Example: Uses newer standard library features",
+			},
+		},
+		DeploymentTargets: []DeploymentTarget{
+			{
+				Platform:       "Add deployment targets here",
+				MinimumVersion: "Example: 12.0",
+				Architectures:  []string{"Example: arm64", "amd64"},
+				Rationale:      "Example: Requires modern platform features",
+			},
+		},
+		TestingMethodologies: []TestingMethodology{
+			{
+				Approach:       "Add testing approaches here",
+				Rationale:      "Example: Comprehensive coverage with minimal duplication",
+				Examples:       "Example: See test files in package X",
+				CoverageTarget: "Example: 80%+ for core packages",
+			},
+		},
+		DevelopmentRoles: []DevelopmentRole{
+			{
+				Role:             "Add development roles here",
+				Responsibilities: "Example: Run commands, maintain quality",
+				Workflow:         "Example: Initiates process, reviews output",
+			},
+		},
+		ErrorHandlingPatterns: []ErrorHandlingPattern{
+			{
+				Pattern:   "Add error handling patterns here",
+				Rationale: "Example: User-facing tool needs graceful degradation",
+				Examples:  "Example: File I/O errors, command failures",
+			},
+		},
+		CompatibilityStrategy: []CompatibilityStrategy{
+			{
+				Principle:     "Add compatibility strategies here",
+				Rationale:     "Example: Enables future migrations and multi-version support",
+				MigrationPath: "Example: Read old versions, write current version",
+			},
+		},
+		FileManagement: []FileManagement{
+			{
+				File:         "Add file management policies here",
+				Lifecycle:    "Example: Created by init, appended by commit",
+				Ownership:    "Example: Tool-managed, human readable",
+				TrackedInGit: true,
+			},
+		},
+		SecurityConsiderations: []SecurityConsideration{
+			{
+				Concern:    "Add security considerations here",
+				Mitigation: "Example: Files are git-tracked; avoid sensitive data",
+				Guidance:   "Example: Review before commit; use environment variables",
+			},
+		},
+		PerformanceConsiderations: []PerformanceConsideration{
+			{
+				Aspect:     "Add performance considerations here",
+				Impact:     "Example: Linear growth with item count",
+				Mitigation: "Example: Recent-only loading keeps memory bounded",
+				Threshold:  "Example: Acceptable up to ~1000 items",
+			},
+		},
+		CrossCuttingConcerns: []CrossCuttingConcern{
+			{
+				Concern:   "Add cross-cutting concerns here",
+				Approach:  "Example: Always use RFC3339 with timezone",
+				Rationale: "Example: Enables correlation across contexts",
 			},
 		},
 	}

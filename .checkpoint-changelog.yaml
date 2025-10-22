@@ -412,7 +412,7 @@ next_steps: []
 ---
 schema_version: "1"
 timestamp: "2025-10-24T10:24:53-07:00"
-commit_hash: ""
+commit_hash: 9560e096cd9aa97f909a3e2e43cda7aa6f4cbd51
 files_changed:
     - path: .checkpoint-changelog.yaml
       additions: 1
@@ -473,6 +473,64 @@ next_steps:
       details: Add guidance on reviewing project recommendations and maintaining the main project document
       priority: med
       scope: docs
+    - summary: Add context search/query capabilities
+      details: Enable finding relevant past decisions and patterns across checkpoint history
+      priority: low
+      scope: internal/context
+---
+schema_version: "1"
+timestamp: "2025-10-24T10:57:48-07:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: .checkpoint-project.yml
+      additions: 170
+      deletions: 42
+    - path: cmd/commit.go
+      additions: 0
+      deletions: 5
+    - path: internal/context/context.go
+      additions: 36
+      deletions: 41
+    - path: internal/project/project.go
+      additions: 264
+      deletions: 21
+changes:
+    - summary: Remove commit_hash from context entries
+      details: Removed commit_hash field from ContextEntry schema and eliminated UpdateContextEntryHash function as context entries only need timestamp for correlation with changelog
+      change_type: fix
+      scope: internal/context
+    - summary: Remove context hash backfill from commit command
+      details: Eliminated unnecessary backfill call since only changelog needs commit_hash, context and project files link by timestamp
+      change_type: fix
+      scope: cmd/commit
+    - summary: Extend project schema with 10 new structured sections
+      details: Added dependencies, language_requirements, deployment_targets, testing_methodologies, development_roles, error_handling_patterns, compatibility_strategy, file_management, security_considerations, performance_considerations, and cross_cutting_concerns to ProjectDocument
+      change_type: feature
+      scope: internal/project
+    - summary: Backport complete schema to existing project file
+      details: Populated checkpoint project file with all new fields and checkpoint-specific values for dependencies, language requirements, deployment targets, and all other new sections
+      change_type: feature
+      scope: .checkpoint-project.yml
+    - summary: Enhance context template with detailed instructions
+      details: Added comprehensive explanation of scope fields, project recommendations workflow, complete list of 17 project sections, and inline examples for checkpoint vs project scoped items
+      change_type: feature
+      scope: internal/context
+next_steps:
+    - summary: Test complete workflow with extended schema
+      details: Verify all new project sections are captured correctly, recommendations generated properly, and LLM receives complete project context
+      priority: high
+      scope: all
+    - summary: Document context curation workflow for humans
+      details: Add guidance on reviewing project recommendations and maintaining the main project document with new sections
+      priority: med
+      scope: docs
+    - summary: Add validation for new project schema fields
+      details: Ensure dependencies, deployment_targets, and other new sections have appropriate validation rules
+      priority: med
+      scope: internal/project
     - summary: Add context search/query capabilities
       details: Enable finding relevant past decisions and patterns across checkpoint history
       priority: low

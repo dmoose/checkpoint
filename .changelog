@@ -1,0 +1,44 @@
+---
+schema_version: "1"
+timestamp: "2025-10-22T12:09:48-07:00"
+changes:
+    - summary: Scaffolded checkpoint CLI project structure
+      details: Added main entrypoint, cmd subcommands, internal packages, and pkg/config to form initial CLI layout.
+      change_type: feature
+      scope: cli
+    - summary: Implemented check subcommand
+      details: Generates .checkpoint-input with multi-change schema, embeds git status, and writes .checkpoint-diff (staged+unstaged). Guards against concurrent checkpoints.
+      change_type: feature
+      scope: cmd/check
+    - summary: Implemented commit subcommand (append-only changelog + git commit)
+      details: Parses/validates YAML, renders a single --- delimited document excluding git_status/diff_file, appends to .changelog, stages changelog only, creates git commit, writes .checkpoint-status, and cleans temp files.
+      change_type: feature
+      scope: cmd/commit
+    - summary: Defined v1 multi-change checkpoint schema and input template
+      details: 'Per-document: schema_version, timestamp, commit_hash; Per-change: summary, details?, change_type, scope?. Added validation and YAML rendering helpers.'
+      change_type: feature
+      scope: internal/schema
+    - summary: Added safe git helpers and robust repo detection
+      details: Used rev-parse --is-inside-work-tree for worktrees; provided staged/unstaged diff gathering; added StageFile and Commit helpers.
+      change_type: refactor
+      scope: internal/git
+    - summary: Append-only changelog writer
+      details: Introduced AppendEntry that ensures newline termination and never rewrites prior content.
+      change_type: feature
+      scope: internal/changelog
+    - summary: File utilities for simple I/O
+      details: ReadFile/WriteFile with error wrapping and Exists helper.
+      change_type: feature
+      scope: internal/file
+    - summary: Configuration constants for checkpoint files
+      details: Standardized filenames for .changelog, .checkpoint-input, .checkpoint-diff, .checkpoint-status, .checkpoint-lock.
+      change_type: feature
+      scope: pkg/config
+    - summary: Unit tests for schema and file utilities
+      details: Template generation contains expected fields; parse/validate happy/negative paths; file read/write/exists behavior.
+      change_type: other
+      scope: tests
+    - summary: Updated .gitignore for checkpoint artifacts
+      details: Ignored .checkpoint-input, .checkpoint-diff, .checkpoint-status, .checkpoint-lock.
+      change_type: docs
+      scope: repo

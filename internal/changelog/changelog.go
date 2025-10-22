@@ -2,12 +2,12 @@ package changelog
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	"go-llm/internal/schema"
+
+	"gopkg.in/yaml.v3"
 )
 
 // AppendEntry appends the rendered YAML document to the changelog (append-only)
@@ -30,49 +30,85 @@ func AppendEntry(path, doc string) error {
 	return nil
 }
 
-// UpdateLastDocument reads all YAML documents, applies fn to the last, and rewrites the file
+// UpdateLastDocument preserves append-only structure by only modifying the last document
 func UpdateLastDocument(path string, fn func(*schema.CheckpointEntry) *schema.CheckpointEntry) error {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("read changelog: %w", err)
 	}
-	dec := yaml.NewDecoder(strings.NewReader(string(content)))
-	var entries []*schema.CheckpointEntry
-	for {
-		var e schema.CheckpointEntry
-		if err := dec.Decode(&e); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return fmt.Errorf("decode changelog: %w", err)
-		}
-		// Skip zero docs
-		if e.SchemaVersion == "" && e.Timestamp == "" && len(e.Changes) == 0 && len(e.NextSteps) == 0 {
-			continue
-		}
-		entries = append(entries, &e)
-	}
-	if len(entries) == 0 {
-		return fmt.Errorf("no documents to update")
-	}
-	entries[len(entries)-1] = fn(entries[len(entries)-1])
 
-	// Re-encode all docs
-	var b strings.Builder
-	for _, e := range entries {
-		out, err := schema.RenderChangelogDocument(e)
-		if err != nil {
-			return fmt.Errorf("render doc: %w", err)
+	// Split content by document separators while preserving them
+	contentStr := string(content)
+	docs := strings.Split(contentStr, "\n---\n")
+	if len(docs) < 2 {
+		// Try alternative separator (file might start with ---)
+		docs = strings.Split(contentStr, "---\n")
+		if len(docs) < 2 {
+			return fmt.Errorf("no YAML documents found")
 		}
-		b.WriteString(out)
-		if !strings.HasSuffix(out, "\n") {
-			b.WriteString("\n")
+	}
+
+	// Find the last non-empty document
+	var lastDocIndex = -1
+	for i := len(docs) - 1; i >= 0; i-- {
+		if strings.TrimSpace(docs[i]) != "" {
+			lastDocIndex = i
+			break
 		}
+	}
+
+	if lastDocIndex == -1 {
+		return fmt.Errorf("no non-empty documents found")
+	}
+
+	// Parse only the last document
+	lastDoc := docs[lastDocIndex]
+	// Remove leading --- if present
+	lastDoc = strings.TrimPrefix(lastDoc, "---\n")
+
+	var entry schema.CheckpointEntry
+	if err := yaml.Unmarshal([]byte(lastDoc), &entry); err != nil {
+		return fmt.Errorf("decode last document: %w", err)
+	}
+
+	// Apply the function to update the entry
+	updatedEntry := fn(&entry)
+
+	// Render only the updated last document
+	updatedDoc, err := schema.RenderChangelogDocument(updatedEntry)
+	if err != nil {
+		return fmt.Errorf("render updated document: %w", err)
+	}
+
+	// Remove the leading --- from rendered doc since we'll add it back
+	updatedDoc = strings.TrimPrefix(updatedDoc, "---\n")
+
+	// Replace the last document in the original content
+	docs[lastDocIndex] = updatedDoc
+
+	// Reconstruct the file content
+	var result strings.Builder
+	for i, doc := range docs {
+		if i == 0 {
+			// First document might not have leading ---
+			if strings.HasPrefix(contentStr, "---\n") {
+				result.WriteString("---\n")
+			}
+		} else {
+			result.WriteString("\n---\n")
+		}
+		result.WriteString(doc)
+	}
+
+	// Ensure file ends with newline
+	resultStr := result.String()
+	if !strings.HasSuffix(resultStr, "\n") {
+		resultStr += "\n"
 	}
 
 	// Write atomically
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, []byte(b.String()), 0644); err != nil {
+	if err := os.WriteFile(tmp, []byte(resultStr), 0644); err != nil {
 		return fmt.Errorf("write tmp: %w", err)
 	}
 	if err := os.Rename(tmp, path); err != nil {

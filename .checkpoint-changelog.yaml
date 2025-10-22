@@ -42,3 +42,52 @@ changes:
       details: Ignored .checkpoint-input, .checkpoint-diff, .checkpoint-status, .checkpoint-lock.
       change_type: docs
       scope: repo
+---
+schema_version: "1"
+timestamp: "2025-10-22T12:57:49-07:00"
+changes:
+    - summary: Switched to tracked .checkpoint-changelog.yaml and status .yaml
+      details: Renamed files and constants; changelog is tracked, status is ignored for discovery.
+      change_type: feature
+      scope: pkg/config
+    - summary: Commit stages all changes and backfills commit_hash
+      details: commit now runs git add -A, creates a single commit, then backfills commit_hash into the last changelog document without a second commit.
+      change_type: feature
+      scope: cmd/commit
+    - summary: Added UpdateLastDocument for changelog backfill
+      details: Introduced YAML multi-doc reader/writer to update only the last checkpoint document atomically.
+      change_type: feature
+      scope: internal/changelog
+    - summary: Added StageAll git helper
+      details: Provides git add -A to stage untracked and modified files, respecting .gitignore.
+      change_type: feature
+      scope: internal/git
+    - summary: Extended schema with next_steps and updated template
+      details: Added next_steps[], updated LLM prompt and input template, and included next_steps in changelog rendering.
+      change_type: feature
+      scope: internal/schema
+    - summary: Introduced init command and CHECKPOINT.md
+      details: init writes CHECKPOINT.md with workflow, schema, and LLM guidance to onboard usage.
+      change_type: feature
+      scope: cmd/init
+    - summary: Updated CLI help with commands and files
+      details: Help now lists init and describes the checkpoint files and their roles.
+      change_type: docs
+      scope: cmd/help
+    - summary: Adjusted .gitignore for new filenames
+      details: Ignore .checkpoint-status.yaml and allow committing .checkpoint-changelog.yaml.
+      change_type: other
+      scope: repo
+    - summary: Wired init subcommand in main
+      details: Main dispatch recognizes 'init' and invokes cmd.Init.
+      change_type: other
+      scope: main
+next_steps:
+    - summary: Add tests for UpdateLastDocument and commit path
+      details: Cover YAML multi-doc backfill and staging-all behavior with temp repos.
+      priority: high
+      scope: internal/changelog, cmd/commit
+    - summary: Commit flags for dry-run and changelog-only
+      details: Allow --dry-run and an expert flag to stage-only-changelog when needed.
+      priority: med
+      scope: cmd/commit

@@ -33,7 +33,8 @@ const (
 # Allowed change_type values: feature, fix, refactor, docs, perf, other.
 # Keep summaries concise (<80 chars), present tense; use consistent scope names.
 # Derive distinct changes from git_status/diff context where possible.
-# Optionally propose next_steps (planned work) below; do not alter schema_version/timestamp; leave commit_hash empty.
+# If previous next_steps are present, remove items completed in this checkpoint, keep unfinished ones, and add new items as needed.
+# Do not alter schema_version/timestamp; leave commit_hash empty.
 `
 )
 
@@ -45,8 +46,9 @@ type NextStep struct {
 	Owner    string `yaml:"owner,omitempty"`
 }
 
-func GenerateInputTemplate(gitStatus, diffFileName string) string {
+func GenerateInputTemplate(gitStatus, diffFileName string, prevNextSteps []NextStep) string {
 	ts := time.Now().Format(time.RFC3339)
+prev := renderNextStepsYAML(prevNextSteps)
 	return fmt.Sprintf(`%s
 schema_version: "%s"
 timestamp: "%s"
@@ -70,13 +72,36 @@ changes:
 #    scope: "[FILL IN]"
 
 # Planned next steps (optional)
+# If previous next steps are present below, update by removing completed items and keeping unfinished ones.
 next_steps:
-#  - summary: "[FILL IN: next action]"
-#    details: "[OPTIONAL: context]"
-#    priority: "[OPTIONAL: low|med|high]"
-#    scope: "[OPTIONAL: affected component]"
-#    owner: "[OPTIONAL: who]"
-`, LLMPrompt, SchemaVersion, ts, indent(gitStatus), diffFileName)
+%s
+`, LLMPrompt, SchemaVersion, ts, indent(gitStatus), diffFileName, prev)
+}
+
+// ExtractNextStepsFromStatus parses a status YAML and returns next_steps if present
+func ExtractNextStepsFromStatus(statusYAML string) []NextStep {
+	var aux struct {
+		NextSteps []NextStep `yaml:"next_steps"`
+	}
+	_ = yaml.Unmarshal([]byte(statusYAML), &aux)
+	return aux.NextSteps
+}
+
+func renderNextStepsYAML(steps []NextStep) string {
+	if len(steps) == 0 {
+		return "#  - summary: \"[FILL IN: next action]\"\n#    details: \"[OPTIONAL: context]\"\n#    priority: \"[OPTIONAL: low|med|high]\"\n#    scope: \"[OPTIONAL: affected component]\"\n#    owner: \"[OPTIONAL: who]\"\n"
+	}
+	var b strings.Builder
+	for _, s := range steps {
+		b.WriteString("  - summary: \"")
+		b.WriteString(strings.ReplaceAll(s.Summary, "\"", "'"))
+		b.WriteString("\"\n")
+		if s.Details != "" { b.WriteString("    details: \""+strings.ReplaceAll(s.Details, "\"", "'")+"\"\n") }
+		if s.Priority != "" { b.WriteString("    priority: \""+s.Priority+"\"\n") }
+		if s.Scope != "" { b.WriteString("    scope: \""+s.Scope+"\"\n") }
+		if s.Owner != "" { b.WriteString("    owner: \""+s.Owner+"\"\n") }
+	}
+	return b.String()
 }
 
 func ParseInputFile(content string) (*CheckpointEntry, error) {
@@ -106,6 +131,46 @@ func ValidateEntry(e *CheckpointEntry) error {
 		}
 	}
 	return nil
+}
+
+// PreCommitValidate performs extra checks and returns a list of descriptive errors
+func PreCommitValidate(e *CheckpointEntry) []string {
+	var errs []string
+	// placeholder detection helper
+	isPlaceholder := func(s string) bool {
+		s = strings.TrimSpace(strings.ToLower(s))
+		return strings.HasPrefix(s, "[fill in") || strings.Contains(s, "[fill in")
+	}
+	// validate changes
+	for i, c := range e.Changes {
+		s := strings.TrimSpace(c.Summary)
+		if s == "" || isPlaceholder(s) {
+			errs = append(errs, fmt.Sprintf("change[%d]: summary is empty or placeholder", i))
+		}
+		if l := len([]rune(s)); l > 100 {
+			errs = append(errs, fmt.Sprintf("change[%d]: summary too long (%d > 100 chars)", i, l))
+		}
+		if isPlaceholder(c.ChangeType) {
+			errs = append(errs, fmt.Sprintf("change[%d]: change_type contains placeholder", i))
+		}
+		if c.Scope != "" && isPlaceholder(c.Scope) {
+			errs = append(errs, fmt.Sprintf("change[%d]: scope contains placeholder", i))
+		}
+	}
+	// validate next_steps priorities
+	for i, n := range e.NextSteps {
+		s := strings.TrimSpace(n.Summary)
+		if s == "" || isPlaceholder(s) {
+			errs = append(errs, fmt.Sprintf("next_steps[%d]: summary is empty or placeholder", i))
+		}
+		if n.Priority != "" {
+			p := strings.ToLower(n.Priority)
+			if p != "low" && p != "med" && p != "high" {
+				errs = append(errs, fmt.Sprintf("next_steps[%d]: priority must be low|med|high", i))
+			}
+		}
+	}
+	return errs
 }
 
 // RenderChangelogDocument renders only the persisted fields (omits git_status/diff_file)

@@ -45,11 +45,13 @@ switch subcommand {
 		cmd.Check(absPath)
 case "commit":
 		cmd.CommitWithOptions(absPath, cmd.CommitOptions{DryRun: dryRun, ChangelogOnly: changelogOnly})
-	case "init":
+case "init":
 		cmd.Init(absPath)
-	case "help", "-h", "--help":
+case "clean":
+		cmd.Clean(absPath)
+case "help", "-h", "--help":
 		cmd.Help()
-	case "version", "-v", "--version":
+case "version", "-v", "--version":
 		fmt.Printf("checkpoint version %s\n", version)
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n", subcommand)

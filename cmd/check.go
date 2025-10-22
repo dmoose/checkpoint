@@ -46,8 +46,19 @@ func Check(projectPath string) {
 		os.Exit(1)
 	}
 
+	// Load previous next_steps from status (if present)
+	var prevNextSteps []schema.NextStep
+	statusPath := filepath.Join(projectPath, config.StatusFileName)
+	if file.Exists(statusPath) {
+		if content, err := file.ReadFile(statusPath); err == nil {
+			if ns := schema.ExtractNextStepsFromStatus(content); len(ns) > 0 {
+				prevNextSteps = ns
+			}
+		}
+	}
+
 	// Generate input file content (multi-change schema)
-	inputContent := schema.GenerateInputTemplate(status, config.DiffFileName)
+	inputContent := schema.GenerateInputTemplate(status, config.DiffFileName, prevNextSteps)
 	if err := file.WriteFile(inputPath, inputContent); err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to write input file: %v\n", err)
 		_ = os.Remove(diffPath)

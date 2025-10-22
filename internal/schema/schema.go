@@ -29,12 +29,15 @@ const (
 	SchemaVersion    = "1"
 	MaxSummaryLength = 80
 	LLMPrompt        = `# INSTRUCTIONS FOR LLM:
-# This is a checkpoint input. Fill the changes array with all changes in this checkpoint.
+# 1. Fill the changes array with all changes in this checkpoint
+# 2. Run 'checkpoint lint' to check your work
+# 3. Human will review and edit before running 'checkpoint commit'
+#
 # Each change has: summary (required), details (optional), change_type (required), scope (optional).
 # Allowed change_type values: feature, fix, refactor, docs, perf, other.
 # Keep summaries concise (<80 chars), present tense; use consistent scope names.
-# Derive distinct changes from git_status/diff context where possible.
-# If previous next_steps are present, remove items completed in this checkpoint, keep unfinished ones, and add new items as needed.
+# Derive distinct changes from git_status/diff context - group related file changes into logical units.
+# If previous next_steps are present, remove completed items, keep unfinished ones, add new items as needed.
 # Do not alter schema_version/timestamp; leave commit_hash empty.
 
 # EXAMPLES OF GOOD CHANGES:
@@ -63,6 +66,7 @@ const (
 # - Use present tense, active voice ("Add", "Fix", "Update")
 # - Details should explain WHY, not just WHAT
 # - Be specific in summaries - avoid vague words like "improve" or "update"
+# - After filling, run 'checkpoint lint' to catch obvious mistakes
 `
 	ValidChangeTypes = "feature, fix, refactor, docs, perf, other"
 )

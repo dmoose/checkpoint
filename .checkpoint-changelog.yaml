@@ -227,3 +227,19 @@ changes:
       details: Added lint command to help text with description and usage examples
       change_type: docs
       scope: cmd/help
+---
+schema_version: "1"
+timestamp: "2025-10-22T14:59:05-07:00"
+changes:
+    - summary: Clarify human-LLM workflow in CHECKPOINT.md documentation
+      details: Updated workflow steps to explicitly show human runs check, LLM fills input and runs lint, human reviews and commits
+      change_type: docs
+      scope: CHECKPOINT.md
+    - summary: Add lint command documentation to README workflow section
+      details: Added optional lint step to workflow and documented the new lint command in commands section
+      change_type: docs
+      scope: README.md
+    - summary: Improve LLM instructions in checkpoint input template
+      details: Enhanced instructions to clarify the three-step process and emphasize human review phase
+      change_type: docs
+      scope: internal/schema

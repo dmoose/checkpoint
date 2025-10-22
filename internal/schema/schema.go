@@ -36,6 +36,33 @@ const (
 # Derive distinct changes from git_status/diff context where possible.
 # If previous next_steps are present, remove items completed in this checkpoint, keep unfinished ones, and add new items as needed.
 # Do not alter schema_version/timestamp; leave commit_hash empty.
+
+# EXAMPLES OF GOOD CHANGES:
+# - summary: "Add user authentication endpoint"
+#   details: "Implemented JWT-based auth with login/logout routes and middleware"
+#   change_type: "feature"
+#   scope: "api"
+#
+# - summary: "Fix memory leak in connection pool"
+#   details: "Connections were not being properly closed after timeout"
+#   change_type: "fix"
+#   scope: "database"
+#
+# - summary: "Refactor validation logic into separate module"
+#   details: "Moved input validation from handlers to dedicated validator package"
+#   change_type: "refactor"
+#   scope: "internal/validator"
+#
+# - summary: "Update API documentation for v2 endpoints"
+#   change_type: "docs"
+#   scope: "api"
+
+# GUIDELINES:
+# - One change = one logical unit (feature/fix/refactor)
+# - Group related file changes into single entries
+# - Use present tense, active voice ("Add", "Fix", "Update")
+# - Details should explain WHY, not just WHAT
+# - Be specific in summaries - avoid vague words like "improve" or "update"
 `
 	ValidChangeTypes = "feature, fix, refactor, docs, perf, other"
 )
@@ -188,6 +215,76 @@ func PreCommitValidate(e *CheckpointEntry) []string {
 	// For now, this is mainly for future extensibility
 
 	return errs
+}
+
+// LintEntry performs simple checks to catch obvious mistakes
+func LintEntry(e *CheckpointEntry) []string {
+	var issues []string
+
+	// Check for placeholder text
+	placeholderPatterns := []string{
+		"[fill in", "[FILL IN", "[optional", "[OPTIONAL",
+	}
+
+	for i, c := range e.Changes {
+		summary := strings.ToLower(c.Summary)
+		details := strings.ToLower(c.Details)
+		changeType := strings.ToLower(c.ChangeType)
+		scope := strings.ToLower(c.Scope)
+
+		// Check for placeholders
+		for _, pattern := range placeholderPatterns {
+			if strings.Contains(summary, pattern) {
+				issues = append(issues, fmt.Sprintf("change[%d]: summary contains placeholder text", i))
+				break
+			}
+		}
+		for _, pattern := range placeholderPatterns {
+			if strings.Contains(details, pattern) {
+				issues = append(issues, fmt.Sprintf("change[%d]: details contains placeholder text", i))
+				break
+			}
+		}
+		for _, pattern := range placeholderPatterns {
+			if strings.Contains(changeType, pattern) {
+				issues = append(issues, fmt.Sprintf("change[%d]: change_type contains placeholder text", i))
+				break
+			}
+		}
+		for _, pattern := range placeholderPatterns {
+			if strings.Contains(scope, pattern) {
+				issues = append(issues, fmt.Sprintf("change[%d]: scope contains placeholder text", i))
+				break
+			}
+		}
+
+		// Check for vague summaries
+		vagueWords := []string{"improve", "update", "enhance", "optimize", "various", "misc", "stuff"}
+		for _, vague := range vagueWords {
+			if strings.Contains(summary, vague) && len(strings.Fields(c.Summary)) < 5 {
+				issues = append(issues, fmt.Sprintf("change[%d]: summary may be too vague (contains '%s')", i, vague))
+				break
+			}
+		}
+
+		// Check for overly long entries that might need splitting
+		if strings.Count(c.Summary, " and ") > 1 {
+			issues = append(issues, fmt.Sprintf("change[%d]: summary contains multiple 'and' - consider splitting into separate changes", i))
+		}
+	}
+
+	// Check next_steps for placeholders
+	for i, n := range e.NextSteps {
+		summary := strings.ToLower(n.Summary)
+		for _, pattern := range placeholderPatterns {
+			if strings.Contains(summary, pattern) {
+				issues = append(issues, fmt.Sprintf("next_steps[%d]: summary contains placeholder text", i))
+				break
+			}
+		}
+	}
+
+	return issues
 }
 
 // RenderChangelogDocument renders only the persisted fields (omits git_status/diff_file)

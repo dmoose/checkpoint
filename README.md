@@ -116,11 +116,3 @@ The tool provides helpful error messages with hints for common issues:
 ```
 
 The changelog (`.checkpoint-changelog.yaml`) is intentionally tracked.
-
-## Future work
-
-- `verify` command to lint the changelog and report issues
-- Optional strict mode (scope allowlist)
-- Template override per repo for prompts and fields
-- TOML support if needed
-test change

@@ -27,6 +27,10 @@ COMMANDS:
               Deletes .checkpoint-input and .checkpoint-diff files
               Use when you need to start over or resolve conflicts
 
+  lint        Check checkpoint input for obvious mistakes and issues
+              Validates input file and suggests improvements before commit
+              Catches placeholder text, vague summaries, and common errors
+
   help        Display this help message
   version     Display version information
 
@@ -42,6 +46,7 @@ ARGUMENTS:
 
 EXAMPLES:
   checkpoint check                    # Generate input files in current directory
+  checkpoint lint                     # Check input for issues before committing
   checkpoint commit --dry-run         # Preview what would be committed
   checkpoint commit --changelog-only  # Only stage the changelog file
   checkpoint init ~/my-project        # Initialize checkpoint in specific directory

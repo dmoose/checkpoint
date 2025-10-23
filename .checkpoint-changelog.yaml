@@ -291,7 +291,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2025-10-23T07:31:36-07:00"
-commit_hash: ""
+commit_hash: 250634b3bb0e707a06b21271e7448844fab312a9
 changes:
     - summary: Integrate meta document creation into init and commit commands
       details: Added InitializeChangelog calls to both init and commit commands to ensure changelog always has meta document with project metadata
@@ -305,3 +305,12 @@ changes:
       details: Created extensive test suite covering meta document creation, changelog initialization, path hashing, and project ID uniqueness
       change_type: feature
       scope: internal/changelog
+---
+schema_version: "1"
+timestamp: "2025-10-23T07:38:46-07:00"
+commit_hash: ""
+changes:
+    - summary: Remove omitempty from next_steps field in changelog schema
+      details: Ensures next_steps array always appears in changelog output even when empty for schema consistency
+      change_type: fix
+      scope: internal/schema

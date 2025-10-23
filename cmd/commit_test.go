@@ -214,7 +214,7 @@ changes:
 	os.Stdout = w
 
 	// Run dry-run
-	CommitWithOptions(tmpDir, CommitOptions{DryRun: true})
+	CommitWithOptions(tmpDir, CommitOptions{DryRun: true}, "test-version")
 
 	// Restore and read output
 	w.Close()

@@ -4,10 +4,20 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"go-llm/internal/changelog"
+	"go-llm/pkg/config"
 )
 
 // Init creates a CHECKPOINT.md file with practical instructions and theory
-func Init(projectPath string) {
+func Init(projectPath string, version string) {
+	// Initialize changelog with meta document
+	changelogPath := filepath.Join(projectPath, config.ChangelogFileName)
+	if err := changelog.InitializeChangelog(changelogPath, version); err != nil {
+		fmt.Fprintf(os.Stderr, "error initializing changelog: %v\n", err)
+		os.Exit(1)
+	}
+
 	path := filepath.Join(projectPath, "CHECKPOINT.md")
 	if _, err := os.Stat(path); err == nil {
 		fmt.Printf("CHECKPOINT.md already exists at %s\n", path)

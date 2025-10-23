@@ -296,7 +296,7 @@ func RenderChangelogDocument(e *CheckpointEntry) (string, error) {
 	out := struct {
 		SchemaVersion string     `yaml:"schema_version"`
 		Timestamp     string     `yaml:"timestamp"`
-		CommitHash    string     `yaml:"commit_hash,omitempty"`
+		CommitHash    string     `yaml:"commit_hash"`
 		Changes       []Change   `yaml:"changes"`
 		NextSteps     []NextStep `yaml:"next_steps,omitempty"`
 	}{

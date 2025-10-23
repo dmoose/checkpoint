@@ -16,6 +16,7 @@ func TestUpdateLastDocumentBackfillsHash(t *testing.T) {
 	doc1 := `---
  schema_version: "1"
  timestamp: "2025-10-22T00:00:00Z"
+ commit_hash: ""
  changes:
    - summary: "first"
      change_type: "feature"
@@ -23,6 +24,7 @@ func TestUpdateLastDocumentBackfillsHash(t *testing.T) {
 	doc2 := `---
  schema_version: "1"
  timestamp: "2025-10-22T01:00:00Z"
+ commit_hash: ""
  changes:
    - summary: "second"
      change_type: "fix"
@@ -38,7 +40,9 @@ func TestUpdateLastDocumentBackfillsHash(t *testing.T) {
 		t.Fatalf("UpdateLastDocument: %v", err)
 	}
 	b, err := os.ReadFile(p)
-	if err != nil { t.Fatalf("read: %v", err) }
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
 	if got := string(b); !containsAll(got, []string{"deadbeef", "first", "second"}) {
 		t.Fatalf("unexpected content: %s", got)
 	}
@@ -46,7 +50,9 @@ func TestUpdateLastDocumentBackfillsHash(t *testing.T) {
 
 func containsAll(s string, subs []string) bool {
 	for _, sub := range subs {
-		if !strings.Contains(s, sub) { return false }
+		if !strings.Contains(s, sub) {
+			return false
+		}
 	}
 	return true
 }

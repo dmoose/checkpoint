@@ -87,6 +87,36 @@ func GetCombinedDiff(path string) (string, error) {
 	return b.String(), nil
 }
 
+// GetDiffNumStat returns file statistics for changes (additions, deletions, filename)
+func GetDiffNumStat(path string) (string, error) {
+	cmd := exec.Command("git", "diff", "--numstat", "HEAD")
+	cmd.Dir = path
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		if !isNoHeadError(err) {
+			return "", fmt.Errorf("git diff --numstat: %w", err)
+		}
+	}
+	return out.String(), nil
+}
+
+// GetStagedDiffNumStat returns file statistics for staged changes
+func GetStagedDiffNumStat(path string) (string, error) {
+	cmd := exec.Command("git", "diff", "--numstat", "--staged")
+	cmd.Dir = path
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		if !isNoHeadError(err) {
+			return "", fmt.Errorf("git diff --numstat --staged: %w", err)
+		}
+	}
+	return out.String(), nil
+}
+
 func runGit(path string, args []string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = path

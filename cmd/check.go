@@ -8,6 +8,7 @@ import (
 
 	"go-llm/internal/file"
 	"go-llm/internal/git"
+	"go-llm/internal/language"
 	"go-llm/internal/schema"
 	"go-llm/pkg/config"
 )
@@ -54,6 +55,22 @@ func Check(projectPath string) {
 	}
 	diffText, _ := git.GetCombinedDiff(projectPath) // tolerate no HEAD or empty repo
 
+	// Collect file change statistics
+	numstat, _ := git.GetDiffNumStat(projectPath) // tolerate no HEAD or empty repo
+	stagedNumstat, _ := git.GetStagedDiffNumStat(projectPath)
+
+	// Parse file statistics
+	var filesChanged []schema.FileChange
+	if numstat != "" {
+		filesChanged = append(filesChanged, schema.ParseNumStat(numstat)...)
+	}
+	if stagedNumstat != "" {
+		filesChanged = append(filesChanged, schema.ParseNumStat(stagedNumstat)...)
+	}
+
+	// Detect project languages
+	languages, _ := language.DetectLanguages(projectPath) // tolerate errors in language detection
+
 	// Write diff file
 	diffPath := filepath.Join(projectPath, config.DiffFileName)
 	if err := file.WriteFile(diffPath, diffText); err != nil {
@@ -73,7 +90,7 @@ func Check(projectPath string) {
 	}
 
 	// Generate input file content (multi-change schema)
-	inputContent := schema.GenerateInputTemplate(status, config.DiffFileName, prevNextSteps)
+	inputContent := schema.GenerateInputTemplateWithMetadata(status, config.DiffFileName, prevNextSteps, filesChanged, languages)
 	if err := file.WriteFile(inputPath, inputContent); err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to write input file: %v\n", err)
 		_ = os.Remove(diffPath)

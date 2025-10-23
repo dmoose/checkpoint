@@ -2,11 +2,20 @@ package schema
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"go-llm/internal/language"
 )
+
+type FileChange struct {
+	Path      string `yaml:"path"`
+	Additions int    `yaml:"additions"`
+	Deletions int    `yaml:"deletions"`
+}
 
 type Change struct {
 	Summary    string `yaml:"summary"`
@@ -16,13 +25,15 @@ type Change struct {
 }
 
 type CheckpointEntry struct {
-	SchemaVersion string     `yaml:"schema_version"`
-	Timestamp     string     `yaml:"timestamp"`
-	CommitHash    string     `yaml:"commit_hash,omitempty"`
-	GitStatus     string     `yaml:"git_status,omitempty"`
-	DiffFile      string     `yaml:"diff_file,omitempty"`
-	Changes       []Change   `yaml:"changes"`
-	NextSteps     []NextStep `yaml:"next_steps,omitempty"`
+	SchemaVersion string              `yaml:"schema_version"`
+	Timestamp     string              `yaml:"timestamp"`
+	CommitHash    string              `yaml:"commit_hash,omitempty"`
+	GitStatus     string              `yaml:"git_status,omitempty"`
+	DiffFile      string              `yaml:"diff_file,omitempty"`
+	FilesChanged  []FileChange        `yaml:"files_changed,omitempty"`
+	Languages     []language.Language `yaml:"languages,omitempty"`
+	Changes       []Change            `yaml:"changes"`
+	NextSteps     []NextStep          `yaml:"next_steps,omitempty"`
 }
 
 const (
@@ -79,8 +90,38 @@ type NextStep struct {
 }
 
 func GenerateInputTemplate(gitStatus, diffFileName string, prevNextSteps []NextStep) string {
+	return GenerateInputTemplateWithMetadata(gitStatus, diffFileName, prevNextSteps, nil, nil)
+}
+
+func GenerateInputTemplateWithMetadata(gitStatus, diffFileName string, prevNextSteps []NextStep, filesChanged []FileChange, languages []language.Language) string {
 	ts := time.Now().Format(time.RFC3339)
 	prev := renderNextStepsYAML(prevNextSteps)
+
+	// Build file changes section
+	filesSection := ""
+	if len(filesChanged) > 0 {
+		filesSection = "\n# File changes (informational):\nfiles_changed:\n"
+		for _, file := range filesChanged {
+			filesSection += fmt.Sprintf("  - path: \"%s\"\n    additions: %d\n    deletions: %d\n",
+				file.Path, file.Additions, file.Deletions)
+		}
+	}
+
+	// Build languages section
+	languagesSection := ""
+	if len(languages) > 0 {
+		languagesSection = "\n# Detected languages (informational):\nlanguages:\n"
+		for _, lang := range languages {
+			languagesSection += fmt.Sprintf("  - name: \"%s\"\n", lang.Name)
+			if len(lang.Indicators) > 0 {
+				languagesSection += "    indicators:\n"
+				for _, indicator := range lang.Indicators {
+					languagesSection += fmt.Sprintf("      - \"%s\"\n", indicator)
+				}
+			}
+		}
+	}
+
 	return fmt.Sprintf(`%s
 schema_version: "%s"
 timestamp: "%s"
@@ -91,7 +132,7 @@ git_status: |
 %s
 
 # Reference to diff context (path to git diff output):
-diff_file: "%s"
+diff_file: "%s"%s%s
 
 # List all changes made in this checkpoint
 changes:
@@ -107,7 +148,7 @@ changes:
 # If previous next steps are present below, update by removing completed items and keeping unfinished ones.
 next_steps:
 %s
-`, LLMPrompt, SchemaVersion, ts, indent(gitStatus), diffFileName, prev)
+`, LLMPrompt, SchemaVersion, ts, indent(gitStatus), diffFileName, filesSection, languagesSection, prev)
 }
 
 // ExtractNextStepsFromStatus parses a status YAML and returns next_steps if present
@@ -294,15 +335,19 @@ func LintEntry(e *CheckpointEntry) []string {
 // RenderChangelogDocument renders only the persisted fields (omits git_status/diff_file)
 func RenderChangelogDocument(e *CheckpointEntry) (string, error) {
 	out := struct {
-		SchemaVersion string     `yaml:"schema_version"`
-		Timestamp     string     `yaml:"timestamp"`
-		CommitHash    string     `yaml:"commit_hash"`
-		Changes       []Change   `yaml:"changes"`
-		NextSteps     []NextStep `yaml:"next_steps"`
+		SchemaVersion string              `yaml:"schema_version"`
+		Timestamp     string              `yaml:"timestamp"`
+		CommitHash    string              `yaml:"commit_hash"`
+		FilesChanged  []FileChange        `yaml:"files_changed,omitempty"`
+		Languages     []language.Language `yaml:"languages,omitempty"`
+		Changes       []Change            `yaml:"changes"`
+		NextSteps     []NextStep          `yaml:"next_steps"`
 	}{
 		SchemaVersion: e.SchemaVersion,
 		Timestamp:     e.Timestamp,
 		CommitHash:    e.CommitHash,
+		FilesChanged:  e.FilesChanged,
+		Languages:     e.Languages,
 		Changes:       e.Changes,
 		NextSteps:     e.NextSteps,
 	}
@@ -327,6 +372,49 @@ func indent(s string) string {
 		lines[i] = "  " + trimmed
 	}
 	return strings.Join(lines, "\n")
+}
+
+// ParseNumStat parses git diff --numstat output into FileChange structs
+func ParseNumStat(numstat string) []FileChange {
+	var files []FileChange
+	lines := strings.Split(strings.TrimSpace(numstat), "\n")
+
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		parts := strings.Fields(line)
+		if len(parts) < 3 {
+			continue
+		}
+
+		additions := 0
+		deletions := 0
+
+		// Handle binary files (marked with "-")
+		if parts[0] != "-" {
+			if add, err := strconv.Atoi(parts[0]); err == nil {
+				additions = add
+			}
+		}
+		if parts[1] != "-" {
+			if del, err := strconv.Atoi(parts[1]); err == nil {
+				deletions = del
+			}
+		}
+
+		// Join remaining parts as filename (handles spaces in filenames)
+		filename := strings.Join(parts[2:], " ")
+
+		files = append(files, FileChange{
+			Path:      filename,
+			Additions: additions,
+			Deletions: deletions,
+		})
+	}
+
+	return files
 }
 
 func stripPrompt(content string) string {

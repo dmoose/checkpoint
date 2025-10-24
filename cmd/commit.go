@@ -163,11 +163,6 @@ func CommitWithOptions(projectPath string, opts CommitOptions, version string) {
 		fmt.Fprintf(os.Stderr, "hint: the commit succeeded, but you may need to manually add the commit hash\n")
 	}
 
-	// Update/backfill commit hash in context
-	if err := context.UpdateContextEntryHash(contextPath, commitHash); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: failed to backfill commit_hash in context: %v\n", err)
-	}
-
 	// Write status file (for macOS app discovery) and carry-forward next_steps
 	statusPath := filepath.Join(projectPath, config.StatusFileName)
 	statusContent := generateStatusFile(entry, commitMsg)

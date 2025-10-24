@@ -3,50 +3,204 @@ schema_version: "1"
 project_name: checkpoint
 last_updated: "2025-10-24T10:26:14-07:00"
 key_insights:
-  - insight: Add project-wide insights here that affect all development
-    rationale: "Example: Minimal dependencies philosophy drives architectural decisions"
+  - insight: Minimal dependencies philosophy drives most architectural decisions
+    rationale: Maintains tool reliability and reduces external failure points
+  - insight: Context discontinuity is the primary challenge in LLM-assisted development
+    rationale: Capturing 'why' decisions were made enables effective session resumption
+  - insight: Two-tier context (point-in-time + project-wide) manages LLM context window size
+    rationale: Project file stays small while checkpoint context preserves full history
 established_patterns:
-  - pattern: Add project-wide patterns and conventions here
-    rationale: "Example: Use table-driven tests for multiple scenario validation"
-    examples: "Example: See language detection tests, numstat parsing tests"
+  - pattern: Append-only file structures for all historical data
+    rationale: Prevents corruption, enables incremental processing, maintains complete history
+    examples: changelog, context files, project recommendations
+  - pattern: Multi-document YAML for consumption doc + recommendation queue
+    rationale: First document stays clean for LLM consumption, subsequent docs provide suggestions
+    examples: .checkpoint-project.yml structure
+  - pattern: Table-driven tests for scenario coverage
+    rationale: Comprehensive testing with minimal code duplication
+    examples: language detection tests, numstat parsing tests
 failed_approaches:
-  - approach: Document anti-patterns and failed approaches here
-    why_failed: "Example: Added complexity without providing clear value"
-    lessons_learned: "Example: Simpler solutions often outperform complex ones"
+  - approach: Using confidence scoring for language detection
+    why_failed: Added complexity without providing clear value to users
+    lessons_learned: Binary detection (present/absent) sufficient for this use case
+  - approach: Including weak indicators like Makefiles for language detection
+    why_failed: Too many false positives - Makefiles used across ecosystems
+    lessons_learned: Prioritize precision over recall for automatic detection
 design_principles:
-  - principle: Add core design principles here
-    rationale: "Example: Append-only file structures prevent corruption and maintain history"
-    applies_to: "Example: changelog, context files, any historical data"
+  - principle: Separate temporary files from tracked files
+    rationale: Clean git history, clear intent about data lifecycle
+    applies_to: input files (temp), output files (tracked)
+  - principle: Human curation for project-level context
+    rationale: Automated aggregation creates noise; human judgment maintains signal
+    applies_to: project document maintenance
+  - principle: Explicit error handling over silent failures
+    rationale: CLI tools need clear error reporting for user troubleshooting
+    applies_to: all command implementations
 integration_points:
-  - system: Add external system integrations here
-    interaction: "Example: Reads changelog files for daily summaries"
-    requirements: "Example: YAML multi-document format, consistent schema versions"
-    constraints: "Example: Files must be parseable independently"
+  - system: macOS Swift app
+    interaction: Reads changelog and context files for daily summaries
+    requirements: YAML multi-document format, consistent schema versions
+    constraints: Files must be parseable independently of Go CLI
 code_patterns:
-  - preference: Add code style preferences here
-    rationale: "Example: Explicit error handling over silent failures"
-    examples: "Example: git command failures, file I/O operations"
+  - preference: Struct-based configuration over global variables
+    rationale: Testability and clear data flow
+    examples: CheckpointEntry, MetaDocument, Language structs
+  - preference: Explicit error returns with helpful hints
+    rationale: Users need actionable guidance when things fail
+    examples: All command error messages include hints
+dependencies:
+  - name: gopkg.in/yaml.v3
+    purpose: YAML parsing for multi-document files
+    version_constraint: v3.0.1 or compatible
+    rationale: Must support multi-document format for append-only files
+    alternatives_considered: Standard library encoding/yaml (lacks multi-doc support)
+  - name: github.com/oklog/ulid/v2
+    purpose: Generate unique sortable project IDs
+    version_constraint: v2.1.1 or compatible
+    rationale: Time-ordered unique IDs for project identification
+    alternatives_considered: UUID (not time-sortable), timestamps (collision risk)
+language_requirements:
+  - language: Go
+    minimum_version: "1.21"
+    rationale: Uses newer standard library features and modern error handling patterns
+deployment_targets:
+  - platform: macOS
+    minimum_version: "10.15"
+    architectures: ["arm64", "amd64"]
+    rationale: CLI tool targets modern macOS for M1/M2 and Intel Macs
+  - platform: Linux
+    minimum_version: "kernel 3.10+"
+    architectures: ["amd64", "arm64"]
+    rationale: Should run on common Linux servers and development machines
+  - platform: Windows
+    minimum_version: "10"
+    architectures: ["amd64"]
+    rationale: Support Windows developers with WSL or native execution
+testing_methodologies:
+  - approach: Table-driven tests for multiple scenarios
+    rationale: Comprehensive coverage with minimal code duplication
+    examples: language detection, numstat parsing, validation
+    coverage_target: "80%+ for core packages"
+  - approach: Integration tests with temporary git repositories
+    rationale: Verify complete workflow in realistic conditions
+    examples: complete workflow test, concurrent checkpoint prevention
+  - approach: Unit tests for all packages
+    rationale: Fast feedback on isolated functionality
+    examples: schema validation, file operations, git commands
+development_roles:
+  - role: Human Developer
+    responsibilities: Run check/commit commands, curate project file, review LLM suggestions
+    workflow: Initiates checkpoints, maintains project context quality, reviews recommendations
+  - role: LLM Agent
+    responsibilities: Fill checkpoint input including context section, generate project recommendations
+    workflow: Analyzes changes, captures reasoning, suggests project-level patterns
+  - role: macOS App
+    responsibilities: Discover projects, read changelog/context files, generate daily summaries
+    workflow: Passive consumer of checkpoint data for visualization and reporting
+error_handling_patterns:
+  - pattern: Explicit error returns with context, no panics in CLI commands
+    rationale: User-facing tool needs graceful degradation and helpful messages
+    examples: File I/O errors, git command failures, validation errors
+  - pattern: Tolerate missing optional files (context, project) for progressive enhancement
+    rationale: Tool works even without full context, enabling gradual adoption
+    examples: check command works without existing context files
+  - pattern: Provide hints in error messages for resolution
+    rationale: Users need actionable guidance to fix issues
+    examples: All error messages include hint field with suggested actions
+compatibility_strategy:
+  - principle: Schema version field in all documents
+    rationale: Enables future migrations and multi-version support
+    migration_path: Read old versions, write current version, migrate on write
+  - principle: Additive changes only to YAML schemas
+    rationale: New fields use omitempty; old readers ignore unknown fields
+    migration_path: Never remove fields, only add with backward-compatible defaults
+  - principle: Maintain append-only semantics
+    rationale: Historical data never modified, only appended
+    migration_path: New schema versions append, never rewrite history
+file_management:
+  - file: .checkpoint-changelog.yaml
+    lifecycle: Created by init, appended by commit, never deleted
+    ownership: Tool-managed, human readable
+    tracked_in_git: true
+  - file: .checkpoint-context.yml
+    lifecycle: Created on first commit, appended per checkpoint
+    ownership: Tool-managed, human readable
+    tracked_in_git: true
+  - file: .checkpoint-project.yml
+    lifecycle: Created by init, recommendations appended by commit, main doc human-curated
+    ownership: Human-curated with tool assistance
+    tracked_in_git: true
+  - file: .checkpoint-input
+    lifecycle: Generated per checkpoint, deleted after commit
+    ownership: Tool-generated, LLM/human edited
+    tracked_in_git: false
+  - file: .checkpoint-diff
+    lifecycle: Generated per checkpoint, deleted after commit
+    ownership: Tool-generated, informational only
+    tracked_in_git: false
+  - file: .checkpoint-status.yaml
+    lifecycle: Updated per commit for macOS app discovery
+    ownership: Tool-managed
+    tracked_in_git: false
+security_considerations:
+  - concern: No sensitive data in tracked changelog/context files
+    mitigation: Files are git-tracked; users must not include credentials or PII
+    guidance: Review checkpoint input before commit; use environment variables for secrets
+  - concern: File permissions for checkpoint artifacts
+    mitigation: Standard 0644 permissions; rely on filesystem security
+    guidance: Ensure repository access controls are properly configured
+  - concern: Command injection through git operations
+    mitigation: Use exec.Command with separate arguments, never shell interpolation
+    guidance: All git commands use array arguments, not string concatenation
+performance_considerations:
+  - aspect: Context file growth over time
+    impact: Linear growth with checkpoint count, O(n) file size
+    mitigation: Recent-only loading (last 4 entries) keeps memory bounded
+    threshold: Acceptable up to ~1000 checkpoints before considering archival
+  - aspect: Project file size with uncurated recommendations
+    impact: Grows with each checkpoint if recommendations not curated
+    mitigation: Human regularly reviews and prunes recommendation queue
+    threshold: Review when recommendations exceed 20-30 entries
+  - aspect: Language detection filesystem traversal
+    impact: O(n) where n is number of files in project
+    mitigation: Skip common ignore patterns (node_modules, vendor, .git)
+    threshold: Acceptable for projects up to 100k files
+cross_cutting_concerns:
+  - concern: Timezone handling
+    approach: Always use RFC3339 with timezone; preserve local time
+    rationale: Enables correlation across time zones for distributed teams
+  - concern: File encoding
+    approach: UTF-8 for all files
+    rationale: Universal support, handles international characters in context
+  - concern: Line endings
+    approach: Unix LF, let git handle conversion via autocrlf
+    rationale: Standard for CLI tools, git handles platform differences
+  - concern: YAML formatting
+    approach: Use yaml.v3 with default formatting
+    rationale: Consistent formatting across all checkpoint files
 ---
 schema_version: "1"
 document_type: recommendations
-timestamp: "2025-10-24T10:24:53-07:00"
+timestamp: "2025-10-24T10:57:48-07:00"
 recommended_additions:
     key_insights:
-        - insight: Context discontinuity is the primary challenge in LLM-assisted development
-          rationale: Capturing 'why' decisions were made enables effective session resumption and consistent decision-making
-        - insight: Two-tier context (point-in-time + project-wide) manages LLM context window size
-          rationale: Project file stays small and focused while checkpoint context preserves full history
-        - insight: Human curation is essential for project-level context quality
-          rationale: Automated aggregation would create noise; human judgment maintains signal
+        - insight: Commit hash is only needed in changelog, not context or project files
+          rationale: Simplifies correlation model - timestamp alone links entries across all files
+        - insight: Comprehensive project schema enables complete project understanding
+          rationale: 'All aspects of project captured: dependencies, targets, testing, roles, constraints'
+        - insight: Explicit examples in templates guide LLM behavior effectively
+          rationale: Inline examples prevent confusion about checkpoint vs project scope
     established_patterns:
-        - pattern: Multi-document YAML for consumption doc + recommendation queue
-          rationale: First document stays clean for LLM consumption, subsequent docs provide curation suggestions
-          examples: .checkpoint-project.yml structure with main doc followed by recommendations per checkpoint
-        - pattern: Context items marked with scope field to indicate checkpoint vs project applicability
-          rationale: Enables automatic extraction of project-level recommendations while keeping checkpoint-specific details separate
-          examples: key_insights, decisions_made, failed_approaches, established_patterns all support scope field
+        - pattern: Comprehensive structured schemas with inline examples in templates
+          rationale: Reduces LLM confusion by providing explicit guidance and examples for each field
+          examples: Context template now includes examples of checkpoint vs project scope for each field type
+        - pattern: Timestamp-based correlation across append-only files
+          rationale: Single source of truth (timestamp) links entries without complex backfill mechanisms
+          examples: Changelog, context, and project files all use matching timestamps to correlate entries
+    failed_approaches:
+        - approach: Initially included commit_hash in context entries
+          why_failed: Unnecessary complexity - only changelog needs hash since it's the only file staged/committed
+          lessons_learned: Correlation mechanism should match the actual workflow, not add unnecessary fields
     design_principles:
-        - principle: Split context into checkpoint-specific and project-wide files
-          rationale: Keeps LLM context manageable (project + recent entries) while preserving full historical detail
-        - principle: Use append-only recommendations queue in project file
-          rationale: Avoids automation complexity while providing helpful suggestions that human can review and incorporate
+        - principle: Use timestamp-only correlation instead of backfilling hashes to multiple files
+          rationale: Only changelog participates in git commit, so only it needs the hash; timestamp is sufficient for linking across files

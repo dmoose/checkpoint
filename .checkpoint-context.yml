@@ -52,3 +52,59 @@ context:
           outcome: Context uses .yml extension with relaxed line lengths for detailed explanations
         - exchange: Identified that language detection belongs in meta document as project characteristic
           outcome: Led to understanding that some context is project-level, some is checkpoint-level
+---
+schema_version: "1"
+timestamp: "2025-10-24T10:57:48-07:00"
+context:
+    problem_statement: Completing project schema with comprehensive structured fields and fixing context correlation mechanism
+    key_insights:
+        - insight: Commit hash is only needed in changelog, not context or project files
+          impact: Simplifies correlation model - timestamp alone links entries across all files
+          scope: project
+        - insight: Comprehensive project schema enables complete project understanding
+          impact: 'All aspects of project captured: dependencies, targets, testing, roles, constraints'
+          scope: project
+        - insight: Explicit examples in templates guide LLM behavior effectively
+          impact: Inline examples prevent confusion about checkpoint vs project scope
+          scope: project
+    decisions_made:
+        - decision: Use timestamp-only correlation instead of backfilling hashes to multiple files
+          rationale: Only changelog participates in git commit, so only it needs the hash; timestamp is sufficient for linking across files
+          alternatives_considered:
+            - Backfill commit hash to all three files
+            - Use ULID or other correlation ID
+          constraints_that_influenced: Context and project files don't stage/commit with changelog, making hash backfill complex
+          scope: project
+        - decision: Add all 10 new schema sections in single checkpoint
+          rationale: Complete schema provides full project characterization; partial implementation would leave gaps
+          alternatives_considered:
+            - Implement sections incrementally
+            - Wait to see which sections are actually needed
+          constraints_that_influenced: Schema should be comprehensive from the start for LLM understanding
+          scope: checkpoint
+        - decision: Backport complete schema to existing project file
+          rationale: Existing project file should demonstrate the full schema with real checkpoint-specific values
+          scope: checkpoint
+    failed_approaches:
+        - approach: Initially included commit_hash in context entries
+          why_failed: Unnecessary complexity - only changelog needs hash since it's the only file staged/committed
+          lessons_learned: Correlation mechanism should match the actual workflow, not add unnecessary fields
+          scope: project
+    established_patterns:
+        - pattern: Comprehensive structured schemas with inline examples in templates
+          rationale: Reduces LLM confusion by providing explicit guidance and examples for each field
+          examples: Context template now includes examples of checkpoint vs project scope for each field type
+          scope: project
+        - pattern: Timestamp-based correlation across append-only files
+          rationale: Single source of truth (timestamp) links entries without complex backfill mechanisms
+          examples: Changelog, context, and project files all use matching timestamps to correlate entries
+          scope: project
+    conversation_context:
+        - exchange: Identified that commit_hash was incorrectly added to context entries
+          outcome: Removed hash from context schema and eliminated backfill code - only changelog needs it
+        - exchange: Discussed which project schema sections are most valuable
+          outcome: Implemented all 10 suggested sections for comprehensive project characterization
+        - exchange: Questioned whether LLM would understand new fields without context
+          outcome: Added detailed instructions, complete section list, and inline examples to context template
+        - exchange: Considered whether to backport new schema to existing project file
+          outcome: Updated existing file with all new fields and checkpoint-specific real values

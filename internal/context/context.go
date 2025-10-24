@@ -11,7 +11,6 @@ import (
 type ContextEntry struct {
 	SchemaVersion string            `yaml:"schema_version"`
 	Timestamp     string            `yaml:"timestamp"`
-	CommitHash    string            `yaml:"commit_hash,omitempty"`
 	Context       CheckpointContext `yaml:"context"`
 }
 
@@ -143,9 +142,32 @@ func GenerateContextTemplate() string {
 # Capture the reasoning and decision-making process for this checkpoint.
 # This helps maintain continuity across development sessions with LLM agents.
 #
-# For each field, consider whether it's specific to this checkpoint (scope: checkpoint)
-# or represents a project-wide pattern/principle (scope: project).
-# Project-scoped items will be suggested for inclusion in .checkpoint-project.yml.
+# SCOPE FIELD EXPLANATION:
+# - scope: checkpoint = Specific to this change, stored in context history
+# - scope: project = Project-wide pattern/principle, becomes recommendation in .checkpoint-project.yml
+#
+# PROJECT RECOMMENDATIONS:
+# Items marked with scope:project are extracted and appended as recommendations to .checkpoint-project.yml.
+# These appear as separate YAML documents after the main project document for human review.
+# The human curator later reviews these recommendations and incorporates relevant ones into the main
+# project document, or deletes them if not applicable.
+#
+# Project-scoped items can suggest additions to any project document section:
+# - key_insights: Project-wide learnings affecting all development
+# - established_patterns: Code/design patterns to follow throughout project
+# - failed_approaches: Anti-patterns to avoid project-wide
+# - design_principles: Core architectural principles
+# - dependencies: External libraries/tools the project relies on
+# - language_requirements: Minimum language/runtime versions needed
+# - deployment_targets: Platforms and architectures the project supports
+# - testing_methodologies: Testing approaches used across the project
+# - development_roles: Who does what in the development workflow
+# - error_handling_patterns: How errors are handled project-wide
+# - compatibility_strategy: How backward compatibility is maintained
+# - file_management: Lifecycle and ownership of project files
+# - security_considerations: Security concerns and mitigations
+# - performance_considerations: Performance characteristics and constraints
+# - cross_cutting_concerns: Encoding, timezones, formatting standards
 
 context:
   problem_statement: "[REQUIRED: What problem is this checkpoint solving?]"
@@ -154,6 +176,8 @@ context:
     - insight: "[REQUIRED: What did you learn during implementation?]"
       impact: "[OPTIONAL: How does this affect future development?]"
       scope: "[OPTIONAL: checkpoint|project - default is checkpoint]"
+      # Example project scope: "Minimal dependencies reduce external failure points"
+      # Example checkpoint scope: "This specific optimization improved performance by 50%"
 
   decisions_made:
     - decision: "[REQUIRED: Significant architectural/implementation choice]"
@@ -162,22 +186,30 @@ context:
         - "[OPTIONAL: Other approaches evaluated]"
       constraints_that_influenced: "[OPTIONAL: Limitations that drove this choice]"
       scope: "[OPTIONAL: checkpoint|project - default is checkpoint]"
+      # Example project scope: "Use append-only files for all historical data"
+      # Example checkpoint scope: "Used specific algorithm for this feature"
 
   failed_approaches:
     - approach: "[OPTIONAL: What was tried but didn't work?]"
       why_failed: "[OPTIONAL: Specific reason for failure]"
       lessons_learned: "[OPTIONAL: What to avoid in future]"
       scope: "[OPTIONAL: checkpoint|project - default is checkpoint]"
+      # Example project scope: "Automated aggregation creates noise; prefer human curation"
+      # Example checkpoint scope: "Tried optimization X but it degraded readability"
 
   established_patterns:
     - pattern: "[OPTIONAL: New convention established]"
       rationale: "[OPTIONAL: Why this pattern works for this codebase]"
       examples: "[OPTIONAL: Where this pattern should be applied]"
       scope: "[REQUIRED if present: checkpoint|project]"
+      # Example project scope: "Table-driven tests for scenario coverage"
+      # Example checkpoint scope: "New helper function pattern for this module"
 
   conversation_context:
     - exchange: "[OPTIONAL: Key discussion points that influenced decisions]"
       outcome: "[OPTIONAL: How this shaped the implementation]"
+      # These capture nuances from discussions that influenced the implementation
+      # Example: "Discussed whether to use library X - decided against due to size"
 `
 }
 
@@ -196,41 +228,4 @@ func CreateContextEntry(timestamp string, ctx CheckpointContext) *ContextEntry {
 		Timestamp:     timestamp,
 		Context:       ctx,
 	}
-}
-
-// UpdateContextEntryHash updates the commit hash in the last context entry
-func UpdateContextEntryHash(contextPath, commitHash string) error {
-	content, err := os.ReadFile(contextPath)
-	if err != nil {
-		return fmt.Errorf("read context file: %w", err)
-	}
-
-	contentStr := string(content)
-
-	// Find the last occurrence of "commit_hash: " (empty or with value)
-	lastHashIdx := -1
-	searchStr := "commit_hash:"
-	for i := len(contentStr) - len(searchStr); i >= 0; i-- {
-		if contentStr[i:i+len(searchStr)] == searchStr {
-			lastHashIdx = i
-			break
-		}
-	}
-
-	if lastHashIdx == -1 {
-		return fmt.Errorf("could not find commit_hash field in last entry")
-	}
-
-	// Find the end of this line
-	lineEnd := lastHashIdx
-	for lineEnd < len(contentStr) && contentStr[lineEnd] != '\n' {
-		lineEnd++
-	}
-
-	// Replace the line
-	newLine := fmt.Sprintf("commit_hash: %s", commitHash)
-	newContent := contentStr[:lastHashIdx] + newLine + contentStr[lineEnd:]
-
-	// Write back
-	return os.WriteFile(contextPath, []byte(newContent), 0644)
 }

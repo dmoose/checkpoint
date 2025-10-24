@@ -9,6 +9,10 @@ USAGE:
   checkpoint <command> [flags] [path]
 
 COMMANDS:
+  start       Validate readiness and show next steps
+              Checks git status, checkpoint initialization, and displays
+              planned work from last checkpoint
+
   check       Generate input file for LLM
               Creates .checkpoint-input and .checkpoint-diff files
               Guards against concurrent checkpoints with lock files
@@ -45,6 +49,7 @@ ARGUMENTS:
   [path]      Path to git repository (optional; defaults to current directory)
 
 EXAMPLES:
+  checkpoint start                    # Check readiness and see what's next
   checkpoint check                    # Generate input files in current directory
   checkpoint lint                     # Check input for issues before committing
   checkpoint commit --dry-run         # Preview what would be committed

@@ -8,7 +8,6 @@ import (
 
 	"go-llm/internal/file"
 	"go-llm/internal/git"
-	"go-llm/internal/language"
 	"go-llm/internal/schema"
 	"go-llm/pkg/config"
 )
@@ -68,9 +67,6 @@ func Check(projectPath string) {
 		filesChanged = append(filesChanged, schema.ParseNumStat(stagedNumstat)...)
 	}
 
-	// Detect project languages
-	languages, _ := language.DetectLanguages(projectPath) // tolerate errors in language detection
-
 	// Write diff file
 	diffPath := filepath.Join(projectPath, config.DiffFileName)
 	if err := file.WriteFile(diffPath, diffText); err != nil {
@@ -90,7 +86,7 @@ func Check(projectPath string) {
 	}
 
 	// Generate input file content (multi-change schema)
-	inputContent := schema.GenerateInputTemplateWithMetadata(status, config.DiffFileName, prevNextSteps, filesChanged, languages)
+	inputContent := schema.GenerateInputTemplateWithMetadata(status, config.DiffFileName, prevNextSteps, filesChanged, nil)
 	if err := file.WriteFile(inputPath, inputContent); err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to write input file: %v\n", err)
 		_ = os.Remove(diffPath)

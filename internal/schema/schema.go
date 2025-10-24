@@ -25,15 +25,14 @@ type Change struct {
 }
 
 type CheckpointEntry struct {
-	SchemaVersion string              `yaml:"schema_version"`
-	Timestamp     string              `yaml:"timestamp"`
-	CommitHash    string              `yaml:"commit_hash,omitempty"`
-	GitStatus     string              `yaml:"git_status,omitempty"`
-	DiffFile      string              `yaml:"diff_file,omitempty"`
-	FilesChanged  []FileChange        `yaml:"files_changed,omitempty"`
-	Languages     []language.Language `yaml:"languages,omitempty"`
-	Changes       []Change            `yaml:"changes"`
-	NextSteps     []NextStep          `yaml:"next_steps,omitempty"`
+	SchemaVersion string       `yaml:"schema_version"`
+	Timestamp     string       `yaml:"timestamp"`
+	CommitHash    string       `yaml:"commit_hash,omitempty"`
+	GitStatus     string       `yaml:"git_status,omitempty"`
+	DiffFile      string       `yaml:"diff_file,omitempty"`
+	FilesChanged  []FileChange `yaml:"files_changed,omitempty"`
+	Changes       []Change     `yaml:"changes"`
+	NextSteps     []NextStep   `yaml:"next_steps,omitempty"`
 }
 
 const (
@@ -335,19 +334,17 @@ func LintEntry(e *CheckpointEntry) []string {
 // RenderChangelogDocument renders only the persisted fields (omits git_status/diff_file)
 func RenderChangelogDocument(e *CheckpointEntry) (string, error) {
 	out := struct {
-		SchemaVersion string              `yaml:"schema_version"`
-		Timestamp     string              `yaml:"timestamp"`
-		CommitHash    string              `yaml:"commit_hash"`
-		FilesChanged  []FileChange        `yaml:"files_changed,omitempty"`
-		Languages     []language.Language `yaml:"languages,omitempty"`
-		Changes       []Change            `yaml:"changes"`
-		NextSteps     []NextStep          `yaml:"next_steps"`
+		SchemaVersion string       `yaml:"schema_version"`
+		Timestamp     string       `yaml:"timestamp"`
+		CommitHash    string       `yaml:"commit_hash"`
+		FilesChanged  []FileChange `yaml:"files_changed,omitempty"`
+		Changes       []Change     `yaml:"changes"`
+		NextSteps     []NextStep   `yaml:"next_steps"`
 	}{
 		SchemaVersion: e.SchemaVersion,
 		Timestamp:     e.Timestamp,
 		CommitHash:    e.CommitHash,
 		FilesChanged:  e.FilesChanged,
-		Languages:     e.Languages,
 		Changes:       e.Changes,
 		NextSteps:     e.NextSteps,
 	}

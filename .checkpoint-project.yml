@@ -20,12 +20,6 @@ established_patterns:
     rationale: Comprehensive testing with minimal code duplication
     examples: language detection tests, numstat parsing tests
 failed_approaches:
-  - approach: Using confidence scoring for language detection
-    why_failed: Added complexity without providing clear value to users
-    lessons_learned: Binary detection (present/absent) sufficient for this use case
-  - approach: Including weak indicators like Makefiles for language detection
-    why_failed: Too many false positives - Makefiles used across ecosystems
-    lessons_learned: Prioritize precision over recall for automatic detection
 design_principles:
   - principle: Separate temporary files from tracked files
     rationale: Clean git history, clear intent about data lifecycle
@@ -61,7 +55,7 @@ dependencies:
     alternatives_considered: UUID (not time-sortable), timestamps (collision risk)
 language_requirements:
   - language: Go
-    minimum_version: "1.21"
+    minimum_version: "1.25"
     rationale: Uses newer standard library features and modern error handling patterns
 deployment_targets:
   - platform: macOS
@@ -88,6 +82,12 @@ testing_methodologies:
     rationale: Fast feedback on isolated functionality
     examples: schema validation, file operations, git commands
 development_roles:
+  - role: Human Developer
+    responsibilities: System architecture and design decisions
+    workflow: Requests analysis and recomendations from llm, approves plan, reviews results
+  - role: LLM Agent
+    responsibilities: Competent Senior software engineer
+    workflow: Comprehensive analysis of existing code and requirements, report to developer, respond to feedback with implementation plan, when approved execute plan, at appropriate points stop to allow developer to provide feedback and check/commit current state
   - role: Human Developer
     responsibilities: Run check/commit commands, curate project file, review LLM suggestions
     workflow: Initiates checkpoints, maintains project context quality, reviews recommendations
@@ -183,24 +183,24 @@ schema_version: "1"
 document_type: recommendations
 timestamp: "2025-10-24T10:57:48-07:00"
 recommended_additions:
-    key_insights:
-        - insight: Commit hash is only needed in changelog, not context or project files
-          rationale: Simplifies correlation model - timestamp alone links entries across all files
-        - insight: Comprehensive project schema enables complete project understanding
-          rationale: 'All aspects of project captured: dependencies, targets, testing, roles, constraints'
-        - insight: Explicit examples in templates guide LLM behavior effectively
-          rationale: Inline examples prevent confusion about checkpoint vs project scope
-    established_patterns:
-        - pattern: Comprehensive structured schemas with inline examples in templates
-          rationale: Reduces LLM confusion by providing explicit guidance and examples for each field
-          examples: Context template now includes examples of checkpoint vs project scope for each field type
-        - pattern: Timestamp-based correlation across append-only files
-          rationale: Single source of truth (timestamp) links entries without complex backfill mechanisms
-          examples: Changelog, context, and project files all use matching timestamps to correlate entries
-    failed_approaches:
-        - approach: Initially included commit_hash in context entries
-          why_failed: Unnecessary complexity - only changelog needs hash since it's the only file staged/committed
-          lessons_learned: Correlation mechanism should match the actual workflow, not add unnecessary fields
-    design_principles:
-        - principle: Use timestamp-only correlation instead of backfilling hashes to multiple files
-          rationale: Only changelog participates in git commit, so only it needs the hash; timestamp is sufficient for linking across files
+  key_insights:
+    - insight: Commit hash is only needed in changelog, not context or project files
+      rationale: Simplifies correlation model - timestamp alone links entries across all files
+    - insight: Comprehensive project schema enables complete project understanding
+      rationale: "All aspects of project captured: dependencies, targets, testing, roles, constraints"
+    - insight: Explicit examples in templates guide LLM behavior effectively
+      rationale: Inline examples prevent confusion about checkpoint vs project scope
+  established_patterns:
+    - pattern: Comprehensive structured schemas with inline examples in templates
+      rationale: Reduces LLM confusion by providing explicit guidance and examples for each field
+      examples: Context template now includes examples of checkpoint vs project scope for each field type
+    - pattern: Timestamp-based correlation across append-only files
+      rationale: Single source of truth (timestamp) links entries without complex backfill mechanisms
+      examples: Changelog, context, and project files all use matching timestamps to correlate entries
+  failed_approaches:
+    - approach: Initially included commit_hash in context entries
+      why_failed: Unnecessary complexity - only changelog needs hash since it's the only file staged/committed
+      lessons_learned: Correlation mechanism should match the actual workflow, not add unnecessary fields
+  design_principles:
+    - principle: Use timestamp-only correlation instead of backfilling hashes to multiple files
+      rationale: Only changelog participates in git commit, so only it needs the hash; timestamp is sufficient for linking across files

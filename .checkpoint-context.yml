@@ -1,0 +1,54 @@
+---
+schema_version: "1"
+timestamp: "2025-10-24T10:24:53-07:00"
+context:
+    problem_statement: Implementing two-tier context system to maintain LLM development continuity
+    key_insights:
+        - insight: Context discontinuity is the primary challenge in LLM-assisted development
+          impact: Capturing 'why' decisions were made enables effective session resumption and consistent decision-making
+          scope: project
+        - insight: Two-tier context (point-in-time + project-wide) manages LLM context window size
+          impact: Project file stays small and focused while checkpoint context preserves full history
+          scope: project
+        - insight: Human curation is essential for project-level context quality
+          impact: Automated aggregation would create noise; human judgment maintains signal
+          scope: project
+    decisions_made:
+        - decision: Split context into checkpoint-specific and project-wide files
+          rationale: Keeps LLM context manageable (project + recent entries) while preserving full historical detail
+          alternatives_considered:
+            - Single aggregated context file
+            - Automated context summarization
+          constraints_that_influenced: LLM context window limits and need for both detail and manageability
+          scope: project
+        - decision: Use append-only recommendations queue in project file
+          rationale: Avoids automation complexity while providing helpful suggestions that human can review and incorporate
+          alternatives_considered:
+            - Automated merging of project-scoped items
+            - Separate recommendations file
+          constraints_that_influenced: Human responsibility for curation quality, need for simple workflow
+          scope: project
+        - decision: Include commit_hash in context entries for linking
+          rationale: Allows correlation between context, changelog, and git history
+          scope: checkpoint
+        - decision: Pre-populate all project document fields with examples
+          rationale: Provides clear structure and guidance for human curators
+          scope: checkpoint
+    established_patterns:
+        - pattern: Multi-document YAML for consumption doc + recommendation queue
+          rationale: First document stays clean for LLM consumption, subsequent docs provide curation suggestions
+          examples: .checkpoint-project.yml structure with main doc followed by recommendations per checkpoint
+          scope: project
+        - pattern: Context items marked with scope field to indicate checkpoint vs project applicability
+          rationale: Enables automatic extraction of project-level recommendations while keeping checkpoint-specific details separate
+          examples: key_insights, decisions_made, failed_approaches, established_patterns all support scope field
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether context belongs in changelog or separate file - decided separate
+          outcome: Context has different lifecycle and consumption pattern than changelog; separation maintains clarity
+        - exchange: Questioned whether to automate project file updates - decided against
+          outcome: Human curation is essential for quality; tool provides recommendations as queue for review
+        - exchange: Debated context file format and line length restrictions
+          outcome: Context uses .yml extension with relaxed line lengths for detailed explanations
+        - exchange: Identified that language detection belongs in meta document as project characteristic
+          outcome: Led to understanding that some context is project-level, some is checkpoint-level

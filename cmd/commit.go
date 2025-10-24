@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"go-llm/internal/changelog"
+	"go-llm/internal/context"
 	"go-llm/internal/file"
 	"go-llm/internal/git"
+	"go-llm/internal/project"
 	"go-llm/internal/schema"
 	"go-llm/pkg/config"
 )
@@ -109,6 +111,23 @@ func CommitWithOptions(projectPath string, opts CommitOptions, version string) {
 		os.Exit(1)
 	}
 
+	// Append context entry
+	contextPath := filepath.Join(projectPath, config.ContextFileName)
+	contextEntry := context.CreateContextEntry(entry.Timestamp, entry.Context)
+	if err := context.AppendContextEntry(contextPath, contextEntry); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to append context entry: %v\n", err)
+	}
+
+	// Generate project recommendations from context
+	projectFilePath := filepath.Join(projectPath, config.ProjectFileName)
+	recommendations := generateProjectRecommendations(entry.Context)
+	if recommendations != nil {
+		if err := project.AppendRecommendations(projectFilePath, entry.Timestamp,
+			recommendations.Additions, recommendations.Updates, recommendations.Deletions); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to append project recommendations: %v\n", err)
+		}
+	}
+
 	// Stage changes per options
 	if opts.ChangelogOnly {
 		if err := git.StageFile(projectPath, config.ChangelogFileName); err != nil {
@@ -134,7 +153,7 @@ func CommitWithOptions(projectPath string, opts CommitOptions, version string) {
 		os.Exit(1)
 	}
 
-	// Update/backfill commit hash
+	// Update/backfill commit hash in changelog
 	entry.CommitHash = commitHash
 	if err := changelog.UpdateLastDocument(changelogPath, func(e *schema.CheckpointEntry) *schema.CheckpointEntry {
 		e.CommitHash = commitHash
@@ -142,6 +161,11 @@ func CommitWithOptions(projectPath string, opts CommitOptions, version string) {
 	}); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to backfill commit_hash in changelog: %v\n", err)
 		fmt.Fprintf(os.Stderr, "hint: the commit succeeded, but you may need to manually add the commit hash\n")
+	}
+
+	// Update/backfill commit hash in context
+	if err := context.UpdateContextEntryHash(contextPath, commitHash); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to backfill commit_hash in context: %v\n", err)
 	}
 
 	// Write status file (for macOS app discovery) and carry-forward next_steps
@@ -221,6 +245,78 @@ func generateCommitMessage(entry *schema.CheckpointEntry) string {
 		msg += fmt.Sprintf(" [%s]", strings.Join(scopeList, ", "))
 	}
 	return msg
+}
+
+// generateProjectRecommendations extracts project-scoped items from checkpoint context
+func generateProjectRecommendations(ctx context.CheckpointContext) *struct {
+	Additions project.ProjectAdditions
+	Updates   project.ProjectUpdates
+	Deletions []project.ProjectDeletion
+} {
+	var additions project.ProjectAdditions
+	var updates project.ProjectUpdates
+	var deletions []project.ProjectDeletion
+	hasRecommendations := false
+
+	// Extract project-scoped insights
+	for _, insight := range ctx.KeyInsights {
+		if insight.Scope == "project" {
+			additions.KeyInsights = append(additions.KeyInsights, project.Insight{
+				Insight:   insight.Insight,
+				Rationale: insight.Impact,
+			})
+			hasRecommendations = true
+		}
+	}
+
+	// Extract project-scoped patterns
+	for _, pattern := range ctx.EstablishedPatterns {
+		if pattern.Scope == "project" {
+			additions.EstablishedPatterns = append(additions.EstablishedPatterns, project.Pattern{
+				Pattern:   pattern.Pattern,
+				Rationale: pattern.Rationale,
+				Examples:  pattern.Examples,
+			})
+			hasRecommendations = true
+		}
+	}
+
+	// Extract project-scoped failed approaches
+	for _, failed := range ctx.FailedApproaches {
+		if failed.Scope == "project" {
+			additions.FailedApproaches = append(additions.FailedApproaches, project.FailedApproach{
+				Approach:       failed.Approach,
+				WhyFailed:      failed.WhyFailed,
+				LessonsLearned: failed.LessonsLearned,
+			})
+			hasRecommendations = true
+		}
+	}
+
+	// Extract project-scoped decisions as design principles
+	for _, decision := range ctx.DecisionsMade {
+		if decision.Scope == "project" {
+			additions.DesignPrinciples = append(additions.DesignPrinciples, project.Principle{
+				Principle: decision.Decision,
+				Rationale: decision.Rationale,
+			})
+			hasRecommendations = true
+		}
+	}
+
+	if !hasRecommendations {
+		return nil
+	}
+
+	return &struct {
+		Additions project.ProjectAdditions
+		Updates   project.ProjectUpdates
+		Deletions []project.ProjectDeletion
+	}{
+		Additions: additions,
+		Updates:   updates,
+		Deletions: deletions,
+	}
 }
 
 // generateStatusFile creates status file content for macOS app discovery

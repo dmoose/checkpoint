@@ -8,6 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"go-llm/internal/context"
 	"go-llm/internal/language"
 )
 
@@ -25,14 +26,15 @@ type Change struct {
 }
 
 type CheckpointEntry struct {
-	SchemaVersion string       `yaml:"schema_version"`
-	Timestamp     string       `yaml:"timestamp"`
-	CommitHash    string       `yaml:"commit_hash,omitempty"`
-	GitStatus     string       `yaml:"git_status,omitempty"`
-	DiffFile      string       `yaml:"diff_file,omitempty"`
-	FilesChanged  []FileChange `yaml:"files_changed,omitempty"`
-	Changes       []Change     `yaml:"changes"`
-	NextSteps     []NextStep   `yaml:"next_steps,omitempty"`
+	SchemaVersion string                    `yaml:"schema_version"`
+	Timestamp     string                    `yaml:"timestamp"`
+	CommitHash    string                    `yaml:"commit_hash,omitempty"`
+	GitStatus     string                    `yaml:"git_status,omitempty"`
+	DiffFile      string                    `yaml:"diff_file,omitempty"`
+	FilesChanged  []FileChange              `yaml:"files_changed,omitempty"`
+	Context       context.CheckpointContext `yaml:"context,omitempty"`
+	Changes       []Change                  `yaml:"changes"`
+	NextSteps     []NextStep                `yaml:"next_steps,omitempty"`
 }
 
 const (
@@ -89,10 +91,10 @@ type NextStep struct {
 }
 
 func GenerateInputTemplate(gitStatus, diffFileName string, prevNextSteps []NextStep) string {
-	return GenerateInputTemplateWithMetadata(gitStatus, diffFileName, prevNextSteps, nil, nil)
+	return GenerateInputTemplateWithMetadata(gitStatus, diffFileName, prevNextSteps, nil, nil, "", "")
 }
 
-func GenerateInputTemplateWithMetadata(gitStatus, diffFileName string, prevNextSteps []NextStep, filesChanged []FileChange, languages []language.Language) string {
+func GenerateInputTemplateWithMetadata(gitStatus, diffFileName string, prevNextSteps []NextStep, filesChanged []FileChange, languages []language.Language, projectContext, recentContext string) string {
 	ts := time.Now().Format(time.RFC3339)
 	prev := renderNextStepsYAML(prevNextSteps)
 
@@ -121,6 +123,21 @@ func GenerateInputTemplateWithMetadata(gitStatus, diffFileName string, prevNextS
 		}
 	}
 
+	// Build project context section
+	projectContextSection := ""
+	if projectContext != "" {
+		projectContextSection = "\n# Project context (current project document for LLM consumption):\n# Use this to understand project-wide patterns, principles, and established conventions.\nproject_context: |\n" + indent(projectContext) + "\n"
+	}
+
+	// Build recent context section
+	recentContextSection := ""
+	if recentContext != "" {
+		recentContextSection = "\n# Recent checkpoint context (last 3-4 entries):\n# Review recent decisions and patterns to maintain consistency.\nrecent_context: |\n" + indent(recentContext) + "\n"
+	}
+
+	// Get context template
+	contextTemplate := context.GenerateContextTemplate()
+
 	return fmt.Sprintf(`%s
 schema_version: "%s"
 timestamp: "%s"
@@ -131,7 +148,7 @@ git_status: |
 %s
 
 # Reference to diff context (path to git diff output):
-diff_file: "%s"%s%s
+diff_file: "%s"%s%s%s%s
 
 # List all changes made in this checkpoint
 changes:
@@ -142,12 +159,12 @@ changes:
 #  - summary: "[FILL IN: another change]"
 #    change_type: "[FILL IN]"
 #    scope: "[FILL IN]"
-
+%s
 # Planned next steps (optional)
 # If previous next steps are present below, update by removing completed items and keeping unfinished ones.
 next_steps:
 %s
-`, LLMPrompt, SchemaVersion, ts, indent(gitStatus), diffFileName, filesSection, languagesSection, prev)
+`, LLMPrompt, SchemaVersion, ts, indent(gitStatus), diffFileName, filesSection, languagesSection, projectContextSection, recentContextSection, contextTemplate, prev)
 }
 
 // ExtractNextStepsFromStatus parses a status YAML and returns next_steps if present

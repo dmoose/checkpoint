@@ -6,8 +6,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"go-llm/internal/context"
 	"go-llm/internal/file"
 	"go-llm/internal/git"
+	"go-llm/internal/project"
 	"go-llm/internal/schema"
 	"go-llm/pkg/config"
 )
@@ -85,8 +87,16 @@ func Check(projectPath string) {
 		}
 	}
 
+	// Load project context for LLM
+	projectFilePath := filepath.Join(projectPath, config.ProjectFileName)
+	projectContext, _ := project.RenderProjectDocumentForLLM(projectFilePath) // tolerate missing project file
+
+	// Load recent checkpoint context
+	contextFilePath := filepath.Join(projectPath, config.ContextFileName)
+	recentContext, _ := context.RenderRecentContextForLLM(contextFilePath, 4) // last 4 entries, tolerate errors
+
 	// Generate input file content (multi-change schema)
-	inputContent := schema.GenerateInputTemplateWithMetadata(status, config.DiffFileName, prevNextSteps, filesChanged, nil)
+	inputContent := schema.GenerateInputTemplateWithMetadata(status, config.DiffFileName, prevNextSteps, filesChanged, nil, projectContext, recentContext)
 	if err := file.WriteFile(inputPath, inputContent); err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to write input file: %v\n", err)
 		_ = os.Remove(diffPath)

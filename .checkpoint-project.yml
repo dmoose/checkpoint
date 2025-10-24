@@ -1,0 +1,52 @@
+---
+schema_version: "1"
+project_name: checkpoint
+last_updated: "2025-10-24T10:26:14-07:00"
+key_insights:
+  - insight: Add project-wide insights here that affect all development
+    rationale: "Example: Minimal dependencies philosophy drives architectural decisions"
+established_patterns:
+  - pattern: Add project-wide patterns and conventions here
+    rationale: "Example: Use table-driven tests for multiple scenario validation"
+    examples: "Example: See language detection tests, numstat parsing tests"
+failed_approaches:
+  - approach: Document anti-patterns and failed approaches here
+    why_failed: "Example: Added complexity without providing clear value"
+    lessons_learned: "Example: Simpler solutions often outperform complex ones"
+design_principles:
+  - principle: Add core design principles here
+    rationale: "Example: Append-only file structures prevent corruption and maintain history"
+    applies_to: "Example: changelog, context files, any historical data"
+integration_points:
+  - system: Add external system integrations here
+    interaction: "Example: Reads changelog files for daily summaries"
+    requirements: "Example: YAML multi-document format, consistent schema versions"
+    constraints: "Example: Files must be parseable independently"
+code_patterns:
+  - preference: Add code style preferences here
+    rationale: "Example: Explicit error handling over silent failures"
+    examples: "Example: git command failures, file I/O operations"
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-10-24T10:24:53-07:00"
+recommended_additions:
+    key_insights:
+        - insight: Context discontinuity is the primary challenge in LLM-assisted development
+          rationale: Capturing 'why' decisions were made enables effective session resumption and consistent decision-making
+        - insight: Two-tier context (point-in-time + project-wide) manages LLM context window size
+          rationale: Project file stays small and focused while checkpoint context preserves full history
+        - insight: Human curation is essential for project-level context quality
+          rationale: Automated aggregation would create noise; human judgment maintains signal
+    established_patterns:
+        - pattern: Multi-document YAML for consumption doc + recommendation queue
+          rationale: First document stays clean for LLM consumption, subsequent docs provide curation suggestions
+          examples: .checkpoint-project.yml structure with main doc followed by recommendations per checkpoint
+        - pattern: Context items marked with scope field to indicate checkpoint vs project applicability
+          rationale: Enables automatic extraction of project-level recommendations while keeping checkpoint-specific details separate
+          examples: key_insights, decisions_made, failed_approaches, established_patterns all support scope field
+    design_principles:
+        - principle: Split context into checkpoint-specific and project-wide files
+          rationale: Keeps LLM context manageable (project + recent entries) while preserving full historical detail
+        - principle: Use append-only recommendations queue in project file
+          rationale: Avoids automation complexity while providing helpful suggestions that human can review and incorporate

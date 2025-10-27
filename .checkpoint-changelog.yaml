@@ -538,7 +538,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2025-10-28T13:04:19-07:00"
-commit_hash: ""
+commit_hash: 4837d290e1a36005de0e6e7517792201ce32f8d9
 files_changed:
     - path: cmd/help.go
       additions: 5
@@ -564,6 +564,57 @@ next_steps:
       details: Establish directory for examples, prompts, guides, and templates
       priority: high
       scope: all
+    - summary: Document context curation workflow for humans
+      details: Add guidance on reviewing project recommendations and maintaining the main project document with new sections
+      priority: med
+      scope: docs
+    - summary: Add validation for new project schema fields
+      details: Ensure dependencies, deployment_targets, and other new sections have appropriate validation rules
+      priority: med
+      scope: internal/project
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:31:04-07:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: cmd/check.go
+      additions: 3
+      deletions: 11
+    - path: cmd/init.go
+      additions: 83
+      deletions: 1
+    - path: internal/schema/schema.go
+      additions: 12
+      deletions: 28
+changes:
+    - summary: Remove embedded project and context from input file
+      details: Removed project_context, recent_context, and language detection from .checkpoint-input template to reduce file size from 460+ lines to ~170 lines. Added reference comments pointing to .checkpoint-project.yml and .checkpoint-context.yml files that LLM can read directly if needed.
+      change_type: refactor
+      scope: cmd/check, internal/schema
+    - summary: Create .checkpoint/ directory structure in init command
+      details: Added creation of .checkpoint/ directory with subdirectories (examples/, guides/, prompts/, templates/) and README.md explaining the structure. This provides organized location for supporting materials like examples and documentation.
+      change_type: feature
+      scope: cmd/init
+    - summary: Add README to .checkpoint/ directory
+      details: Created README.md explaining directory structure, usage, and maintenance of supporting files. Documents purpose of each subdirectory and how they integrate with checkpoint commands.
+      change_type: docs
+      scope: .checkpoint
+next_steps:
+    - summary: Populate .checkpoint/examples/ with example checkpoint entries
+      details: Create good feature, bugfix, refactor examples plus anti-patterns showing common mistakes
+      priority: high
+      scope: .checkpoint/examples
+    - summary: Add checkpoint examples command to display examples
+      details: Implement command to view examples from .checkpoint/examples/ directory
+      priority: high
+      scope: cmd
+    - summary: Create initial guides in .checkpoint/guides/
+      details: Start with first-time user guide and LLM workflow guide
+      priority: high
+      scope: .checkpoint/guides
     - summary: Document context curation workflow for humans
       details: Add guidance on reviewing project recommendations and maintaining the main project document with new sections
       priority: med

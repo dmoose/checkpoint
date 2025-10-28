@@ -318,3 +318,49 @@ context:
     conversation_context:
         - exchange: Discussed whether to combine guide and examples commands
           outcome: Kept separate - conceptually different (narrative guides vs concrete examples); easier to discover with distinct commands
+---
+schema_version: "1"
+timestamp: "2025-10-28T14:08:00-07:00"
+context:
+    problem_statement: Developers and LLMs need rapid project orientation at session start. Existing 'checkpoint start' shows status checks but not historical context or recent patterns. Summary command provides comprehensive overview in one place.
+    key_insights:
+        - insight: Summary aggregates data from multiple sources for holistic view
+          impact: Single command provides project state, history, and direction without reading multiple files
+          scope: project
+        - insight: Relative time formatting makes activity timeline intuitive
+          impact: Users immediately understand recency ('4 minutes ago' vs '2025-10-28T14:02:26')
+          scope: project
+        - insight: Recent patterns from context show project evolution
+          impact: Developers see what conventions have been established recently, maintaining consistency
+          scope: checkpoint
+    decisions_made:
+        - decision: Show last 5 checkpoints in recent activity
+          rationale: Enough to show recent trajectory without overwhelming; matches typical short-term memory
+          alternatives_considered:
+            - Last 3 (rejected - too few for context)
+            - Last 10 (rejected - too many, loses focus)
+          constraints_that_influenced: Terminal screen space; typical session length
+          scope: checkpoint
+        - decision: Support --json flag for machine-readable output
+          rationale: Enables integration with other tools, scripts, and potentially macOS app
+          alternatives_considered:
+            - Human-only output (rejected - limits automation)
+            - Always JSON (rejected - poor human UX)
+          scope: project
+        - decision: Extract project-level patterns from recent context entries
+          rationale: Shows what conventions have been established; helps maintain consistency
+          scope: checkpoint
+    established_patterns:
+        - pattern: Commands support --json for machine-readable output
+          rationale: Enables scripting and integration while maintaining human-friendly default
+          examples: 'checkpoint summary --json, future: checkpoint context --json'
+          scope: project
+        - pattern: Relative time formatting for human readability
+          rationale: Humans understand 'yesterday' better than ISO timestamps
+          examples: formatTimeAgo() function converts RFC3339 to relative format
+          scope: project
+    conversation_context:
+        - exchange: Discussed how much historical data to show
+          outcome: Last 5 checkpoints balances context with brevity; patterns from last 3 context entries focuses on recent
+        - exchange: Questioned whether to include project file recommendations count
+          outcome: Yes - reminds users to curate; low-friction way to surface pending work

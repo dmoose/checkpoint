@@ -307,3 +307,23 @@ recommended_additions:
     design_principles:
         - principle: Implement guide command with same pattern as examples command
           rationale: Consistent UX - users already familiar with examples pattern can immediately use guide command
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-10-28T14:08:00-07:00"
+recommended_additions:
+    key_insights:
+        - insight: Summary aggregates data from multiple sources for holistic view
+          rationale: Single command provides project state, history, and direction without reading multiple files
+        - insight: Relative time formatting makes activity timeline intuitive
+          rationale: Users immediately understand recency ('4 minutes ago' vs '2025-10-28T14:02:26')
+    established_patterns:
+        - pattern: Commands support --json for machine-readable output
+          rationale: Enables scripting and integration while maintaining human-friendly default
+          examples: 'checkpoint summary --json, future: checkpoint context --json'
+        - pattern: Relative time formatting for human readability
+          rationale: Humans understand 'yesterday' better than ISO timestamps
+          examples: formatTimeAgo() function converts RFC3339 to relative format
+    design_principles:
+        - principle: Support --json flag for machine-readable output
+          rationale: Enables integration with other tools, scripts, and potentially macOS app

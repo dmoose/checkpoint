@@ -23,6 +23,7 @@ func main() {
 	// crude flag parsing: collect known flags, last non-flag is path
 	dryRun := false
 	changelogOnly := false
+	jsonOutput := false
 	var positional []string
 	for _, a := range args {
 		if a == "-n" || a == "--dry-run" {
@@ -31,6 +32,10 @@ func main() {
 		}
 		if a == "--changelog-only" {
 			changelogOnly = true
+			continue
+		}
+		if a == "--json" {
+			jsonOutput = true
 			continue
 		}
 		if strings.HasPrefix(a, "-") {
@@ -51,6 +56,8 @@ func main() {
 	switch subcommand {
 	case "start":
 		cmd.Start(absPath)
+	case "summary":
+		cmd.Summary(absPath, jsonOutput)
 	case "check":
 		cmd.Check(absPath)
 	case "commit":

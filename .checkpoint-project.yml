@@ -245,3 +245,23 @@ recommended_additions:
     design_principles:
         - principle: Remove project_context, recent_context, and languages from input template
           rationale: These are reference materials that bloat the file but aren't used by commit. LLM can read .checkpoint-project.yml and .checkpoint-context.yml directly when filling input.
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-10-28T13:41:41-07:00"
+recommended_additions:
+    key_insights:
+        - insight: Examples teach better than instructions
+          rationale: Concrete examples with annotations show exactly what to aim for; more effective than abstract guidelines
+        - insight: Anti-patterns are as valuable as good patterns
+          rationale: Showing common mistakes helps users avoid them; complements positive examples
+    established_patterns:
+        - pattern: Examples include 'what makes this good' annotations
+          rationale: Makes examples self-teaching; users learn principles not just see format
+          examples: Each example file ends with checklist of good practices demonstrated
+        - pattern: Command with optional category argument for progressive disclosure
+          rationale: List categories first, then drill into specifics; reduces cognitive load
+          examples: checkpoint examples (list) vs checkpoint examples feature (show)
+    design_principles:
+        - principle: Include extensive annotations in examples explaining what makes them good
+          rationale: Self-teaching - examples explain themselves; helps users understand the 'why' behind patterns

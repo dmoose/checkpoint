@@ -191,3 +191,46 @@ context:
           outcome: Realized project context was only reference material for filling, not used by commit. Led to removing all embedded reference material.
         - exchange: User noticed edit tool had difficulty with the large input file
           outcome: Confirmed that 460+ line input file was problematic; reduced to ~170 lines by removing embedded contexts
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:41:41-07:00"
+context:
+    problem_statement: Users and LLMs need concrete examples of well-structured checkpoints to calibrate their work. Without examples, checkpoint quality varies widely and users don't know what 'good' looks like.
+    key_insights:
+        - insight: Examples teach better than instructions
+          impact: Concrete examples with annotations show exactly what to aim for; more effective than abstract guidelines
+          scope: project
+        - insight: Anti-patterns are as valuable as good patterns
+          impact: Showing common mistakes helps users avoid them; complements positive examples
+          scope: project
+        - insight: 'Examples should cover full spectrum: features, bugs, refactors, context'
+          impact: Different types of work need different checkpoint approaches; comprehensive examples cover all cases
+          scope: checkpoint
+    decisions_made:
+        - decision: Create 5 distinct example files rather than one comprehensive file
+          rationale: Easier to reference specific types; users can view just what they need; keeps each file focused
+          alternatives_considered:
+            - Single examples.yaml with all examples (rejected - too long, hard to navigate)
+            - Embed examples in CHECKPOINT.md (rejected - keeps examples separate from workflow docs)
+          constraints_that_influenced: Examples need to be easily viewable via command; file size should be manageable
+          scope: checkpoint
+        - decision: Include extensive annotations in examples explaining what makes them good
+          rationale: Self-teaching - examples explain themselves; helps users understand the 'why' behind patterns
+          scope: project
+        - decision: Use realistic scenarios (JWT auth, memory leaks, validation) not toy examples
+          rationale: Real-world examples are more relatable and show how to handle actual complexity
+          scope: checkpoint
+    established_patterns:
+        - pattern: Examples include 'what makes this good' annotations
+          rationale: Makes examples self-teaching; users learn principles not just see format
+          examples: Each example file ends with checklist of good practices demonstrated
+          scope: project
+        - pattern: Command with optional category argument for progressive disclosure
+          rationale: List categories first, then drill into specifics; reduces cognitive load
+          examples: checkpoint examples (list) vs checkpoint examples feature (show)
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether to generate examples programmatically or write manually
+          outcome: Manual writing chosen - examples need nuance and annotations that generation can't provide
+        - exchange: Questioned how much detail to include in examples
+          outcome: Decided on comprehensive detail - better to have rich examples users can simplify than sparse examples they must augment

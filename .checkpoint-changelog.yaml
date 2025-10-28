@@ -575,7 +575,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2025-10-28T13:31:04-07:00"
-commit_hash: ""
+commit_hash: ca2138bbad125b45da1db75903ce556ad8a2ebbd
 files_changed:
     - path: .checkpoint-changelog.yaml
       additions: 1
@@ -615,6 +615,54 @@ next_steps:
       details: Start with first-time user guide and LLM workflow guide
       priority: high
       scope: .checkpoint/guides
+    - summary: Document context curation workflow for humans
+      details: Add guidance on reviewing project recommendations and maintaining the main project document with new sections
+      priority: med
+      scope: docs
+    - summary: Add validation for new project schema fields
+      details: Ensure dependencies, deployment_targets, and other new sections have appropriate validation rules
+      priority: med
+      scope: internal/project
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:41:41-07:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: cmd/help.go
+      additions: 7
+      deletions: 0
+    - path: main.go
+      additions: 34
+      deletions: 0
+changes:
+    - summary: Create comprehensive example checkpoints in .checkpoint/examples/
+      details: 'Created 5 example files: feature (JWT auth), bugfix (memory leak), refactor (validation extraction), anti-patterns (12 common mistakes), and context-examples (8 effective context patterns). Examples total 400+ lines showing best practices.'
+      change_type: feature
+      scope: .checkpoint/examples
+    - summary: Add checkpoint examples command to display examples
+      details: Implemented cmd/examples.go with list view and category-specific display. Shows formatted examples with usage instructions.
+      change_type: feature
+      scope: cmd/examples
+    - summary: Wire examples command into main dispatch and help
+      details: Added examples command handling in main.go with argument parsing for optional category. Updated help.go with usage examples.
+      change_type: feature
+      scope: main, cmd/help
+next_steps:
+    - summary: Create initial guides in .checkpoint/guides/
+      details: Start with first-time user guide and LLM workflow guide
+      priority: high
+      scope: .checkpoint/guides
+    - summary: Add checkpoint guide command to display guides
+      details: Implement command to view guides similar to examples command
+      priority: high
+      scope: cmd
+    - summary: Update CHECKPOINT.md to reference examples and guides
+      details: Add pointers to new resources; keep CHECKPOINT.md as quick reference
+      priority: med
+      scope: docs
     - summary: Document context curation workflow for humans
       details: Add guidance on reviewing project recommendations and maintaining the main project document with new sections
       priority: med

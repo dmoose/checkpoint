@@ -61,6 +61,40 @@ func main() {
 		cmd.Clean(absPath)
 	case "lint":
 		cmd.Lint(absPath)
+	case "examples":
+		// Examples takes optional category as first positional arg
+		// The path handling should use "." as default, not interpret category as path
+		category := ""
+		examplesPath := "."
+
+		if len(positional) > 0 {
+			// First arg could be category or path
+			// Check if it looks like a path (has / or . or is a directory)
+			firstArg := positional[0]
+			if strings.Contains(firstArg, "/") || strings.Contains(firstArg, ".") ||
+				(len(positional) > 1) {
+				// Looks like we have both category and path
+				if len(positional) == 1 {
+					// Just a path
+					examplesPath = firstArg
+				} else {
+					// category and path
+					category = firstArg
+					examplesPath = positional[1]
+				}
+			} else {
+				// Single word with no path separators - treat as category
+				category = firstArg
+			}
+		}
+
+		// Resolve the path
+		examplesAbsPath, err := filepath.Abs(examplesPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.Examples(examplesAbsPath, category)
 	case "help", "-h", "--help":
 		cmd.Help()
 	case "version", "-v", "--version":

@@ -1,0 +1,175 @@
+# EXAMPLE: Common Anti-Patterns to Avoid
+# This shows what NOT to do when creating checkpoints
+
+# ❌ ANTI-PATTERN 1: Vague, Generic Summaries
+changes:
+  - summary: "Update files"
+    change_type: "other"
+    scope: "code"
+  # PROBLEM: Tells us nothing about what actually changed
+  # BETTER: "Add input validation to user registration endpoint"
+
+  - summary: "Fix bug"
+    change_type: "fix"
+    scope: "app"
+  # PROBLEM: Which bug? What was broken? How was it fixed?
+  # BETTER: "Fix null pointer error in user profile rendering"
+
+  - summary: "Improve performance"
+    change_type: "perf"
+    scope: "database"
+  # PROBLEM: Vague verb "improve", no specifics
+  # BETTER: "Add index on users.email to speed up login queries (250ms → 15ms)"
+
+
+# ❌ ANTI-PATTERN 2: Too Many Unrelated Changes in One Checkpoint
+changes:
+  - summary: "Add user authentication"
+    change_type: "feature"
+    scope: "auth"
+  - summary: "Refactor database connection pool"
+    change_type: "refactor"
+    scope: "database"
+  - summary: "Update README with installation instructions"
+    change_type: "docs"
+    scope: "docs"
+  - summary: "Fix typo in error message"
+    change_type: "fix"
+    scope: "errors"
+  # PROBLEM: These are 4 completely unrelated changes
+  # BETTER: Create separate checkpoints, or at least group related changes
+  # (auth + auth docs together, database work separate, etc.)
+
+
+# ❌ ANTI-PATTERN 3: Missing or Placeholder Context
+context:
+  problem_statement: "Need to fix issues"
+  # PROBLEM: What issues? This tells us nothing
+  # BETTER: "Login API timing out under load (>30s response) due to N+1 query problem"
+
+  key_insights:
+    - insight: "This is important"
+      impact: "It will help"
+      # PROBLEM: Completely uninformative
+      # BETTER: Specific technical insight with measurable impact
+
+  decisions_made:
+    - decision: "Used the best approach"
+      rationale: "Because it works"
+      # PROBLEM: Tells future you/LLM nothing about why this choice was made
+      # BETTER: "Used connection pooling (max 50 conns) because profiling showed
+      #          we were creating 1000+ connections per second under load"
+
+
+# ❌ ANTI-PATTERN 4: Leaving Placeholder Text
+changes:
+  - summary: "[FILL IN: what changed]"
+    change_type: "[FILL IN: feature|fix|refactor]"
+    scope: "[FILL IN: affected component]"
+  # PROBLEM: Literally forgot to fill in the template
+  # BETTER: Run 'checkpoint lint' to catch this before committing
+
+
+# ❌ ANTI-PATTERN 5: Change Type Mismatch
+changes:
+  - summary: "Add new user dashboard feature"
+    change_type: "fix"  # ❌ This is clearly a feature, not a fix
+    scope: "ui"
+
+  - summary: "Fix incorrect calculation in billing"
+    change_type: "refactor"  # ❌ This is a bug fix, not a refactor
+    scope: "billing"
+
+
+# ❌ ANTI-PATTERN 6: Missing Scope (when it would be helpful)
+changes:
+  - summary: "Add validation"  # Which component? Which module?
+    change_type: "feature"
+    # scope: missing!
+  # BETTER: scope: "api/handlers" or scope: "user-registration"
+
+
+# ❌ ANTI-PATTERN 7: Past Tense (inconsistent with conventions)
+changes:
+  - summary: "Added authentication middleware"  # ❌ past tense
+    change_type: "feature"
+  # BETTER: "Add authentication middleware" (present tense, imperative mood)
+
+  - summary: "Fixed the bug in login"  # ❌ past tense
+    change_type: "fix"
+  # BETTER: "Fix null pointer in login validation"
+
+
+# ❌ ANTI-PATTERN 8: Summaries That Are Too Long
+changes:
+  - summary: "Add comprehensive user authentication system with JWT tokens, refresh token rotation, HTTP-only cookie storage, bcrypt password hashing, rate limiting on login attempts, account lockout after 5 failed attempts, email verification, and password reset functionality"
+    change_type: "feature"
+    scope: "auth"
+  # PROBLEM: 185 characters! Way over 80 char limit
+  # BETTER: Break into multiple distinct changes:
+  #  - "Add JWT authentication with token rotation"
+  #  - "Add rate limiting and account lockout to login"
+  #  - "Add email verification and password reset flows"
+
+
+# ❌ ANTI-PATTERN 9: Details That Just Repeat the Summary
+changes:
+  - summary: "Fix database connection bug"
+    details: "Fixed a bug with database connections"
+    change_type: "fix"
+    scope: "database"
+  # PROBLEM: Details add no new information
+  # BETTER: Either omit details, or explain WHY/HOW:
+  #   details: "Connections weren't being released in error paths, causing pool exhaustion after 2 hours"
+
+
+# ❌ ANTI-PATTERN 10: No Next Steps (when there clearly should be some)
+changes:
+  - summary: "Add user authentication (part 1)"
+    change_type: "feature"
+    scope: "auth"
+
+next_steps: []
+# PROBLEM: If this is "part 1", where's the rest? What's next?
+# BETTER: List concrete next steps:
+#   - summary: "Add password reset flow"
+#     priority: "high"
+#     scope: "auth"
+
+
+# ❌ ANTI-PATTERN 11: Forgetting to Mark Project-Level Patterns
+context:
+  established_patterns:
+    - pattern: "All API endpoints must validate input"
+      rationale: "Prevents injection attacks and ensures data consistency"
+      examples: "user registration, login, profile updates"
+      scope: "checkpoint"  # ❌ This is clearly project-wide!
+  # BETTER: scope: "project" so it becomes a recommendation for the project file
+
+
+# ❌ ANTI-PATTERN 12: Mixing Completed and Planned Work
+changes:
+  - summary: "Add login endpoint"
+    change_type: "feature"
+    scope: "auth"
+  - summary: "Will add logout endpoint later"
+    change_type: "feature"
+    scope: "auth"
+# PROBLEM: Second item is planned work, not completed work
+# BETTER: Move planned work to next_steps:
+#   next_steps:
+#     - summary: "Add logout endpoint"
+#       priority: "high"
+
+
+# REMEMBER:
+# ✓ Be specific and concrete
+# ✓ Keep summaries under 80 characters
+# ✓ Use present tense, imperative mood
+# ✓ Fill ALL fields (no placeholders)
+# ✓ Match change_type to actual change
+# ✓ Include scope when it adds clarity
+# ✓ Group related changes logically
+# ✓ Explain WHY in context, not just WHAT
+# ✓ Mark project-wide patterns with scope:project
+# ✓ Run 'checkpoint lint' before committing

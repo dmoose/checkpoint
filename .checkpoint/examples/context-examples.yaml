@@ -1,0 +1,227 @@
+# EXAMPLE: Effective Context Capture
+# This shows how to write valuable context entries that maintain development continuity
+
+# ==============================================================================
+# EXAMPLE 1: Problem Statement - Be Specific
+# ==============================================================================
+
+# ❌ WEAK:
+context:
+  problem_statement: "Need to make the app faster"
+
+# ✅ STRONG:
+context:
+  problem_statement: "User dashboard loading in 8 seconds under typical load (50 concurrent users), exceeding our 2-second SLA. Profiling identified N+1 query pattern in user activity feed fetching 500+ individual records."
+
+
+# ==============================================================================
+# EXAMPLE 2: Key Insights - Technical + Impact
+# ==============================================================================
+
+# ❌ WEAK:
+  key_insights:
+    - insight: "Caching is good"
+      impact: "Makes things faster"
+      scope: "checkpoint"
+
+# ✅ STRONG:
+  key_insights:
+    - insight: "Redis caching reduced dashboard load time from 8s to 400ms"
+      impact: "Meets SLA with 5x margin; reduces database load by 90% under peak traffic"
+      scope: "checkpoint"
+
+    - insight: "N+1 queries are common pattern when using ORM eager loading incorrectly"
+      impact: "Established code review checklist item; affects all ORM usage project-wide"
+      scope: "project"
+
+
+# ==============================================================================
+# EXAMPLE 3: Decisions - Include Alternatives and Constraints
+# ==============================================================================
+
+# ❌ WEAK:
+  decisions_made:
+    - decision: "Use Redis for caching"
+      rationale: "It's fast"
+      scope: "checkpoint"
+
+# ✅ STRONG:
+  decisions_made:
+    - decision: "Use Redis for dashboard caching with 5-minute TTL"
+      rationale: "Sub-millisecond reads handle our QPS (2000/sec); 5min TTL balances freshness with load reduction"
+      alternatives_considered:
+        - "In-memory cache (rejected - doesn't share across app instances)"
+        - "Database materialized views (rejected - still too slow for our latency target)"
+        - "CDN caching (rejected - dashboard data is user-specific)"
+      constraints_that_influenced: "Must work in multi-instance deployment; need user-specific data; sub-500ms p99 latency requirement"
+      scope: "project"
+
+
+# ==============================================================================
+# EXAMPLE 4: Failed Approaches - Learn from Failures
+# ==============================================================================
+
+# ❌ WEAK:
+  failed_approaches:
+    - approach: "Tried something else first"
+      why_failed: "Didn't work"
+      lessons_learned: "Don't do that"
+      scope: "checkpoint"
+
+# ✅ STRONG:
+  failed_approaches:
+    - approach: "Initially tried query optimization with indexes only"
+      why_failed: "Reduced time to 5s but still exceeded SLA; fundamental issue was N+1 pattern, not query speed"
+      lessons_learned: "Profile before optimizing - we assumed slow queries, actual problem was query count (500+ per page load). Always measure first."
+      scope: "project"
+
+    - approach: "Attempted to use HTTP caching with ETags"
+      why_failed: "Dashboard shows real-time data; ETags resulted in cache misses 95% of the time"
+      lessons_learned: "Understand data freshness requirements before choosing caching strategy"
+      scope: "project"
+
+
+# ==============================================================================
+# EXAMPLE 5: Established Patterns - Make Them Actionable
+# ==============================================================================
+
+# ❌ WEAK:
+  established_patterns:
+    - pattern: "Use best practices"
+      rationale: "Because they're good"
+      examples: "Everywhere"
+      scope: "project"
+
+# ✅ STRONG:
+  established_patterns:
+    - pattern: "Eager load relations in ORM queries to avoid N+1"
+      rationale: "Single query with joins is orders of magnitude faster than hundreds of individual queries"
+      examples: "User.query().with('activities', 'preferences') instead of accessing relations in loop"
+      scope: "project"
+
+    - pattern: "Cache expensive queries with TTL based on data volatility"
+      rationale: "Balance freshness needs with performance; high-volatility data gets short TTL, stable data gets longer"
+      examples: "User dashboard: 5min TTL (updates frequently), user profile: 1hr TTL (rarely changes)"
+      scope: "project"
+
+
+# ==============================================================================
+# EXAMPLE 6: Conversation Context - Capture Decision Rationale
+# ==============================================================================
+
+# ❌ WEAK:
+  conversation_context:
+    - exchange: "We talked about it"
+      outcome: "Made a choice"
+
+# ✅ STRONG:
+  conversation_context:
+    - exchange: "Discussed whether to cache at API layer vs database layer"
+      outcome: "API layer chosen - gives us control over cache invalidation and keeps database layer simple. Database caching would have required stored procedures which team lacks expertise in."
+
+    - exchange: "Debated 5-minute vs 1-minute TTL for dashboard cache"
+      outcome: "5-minute chosen after reviewing analytics - dashboard data updates every 2-3 minutes on average, so 1min provides minimal freshness benefit while doubling cache miss rate."
+
+    - exchange: "Questioned whether Redis dependency is worth the operational complexity"
+      outcome: "Yes - dashboard is critical user path, 8s load time causing 30% abandonment. Redis is mature, team has experience, and we already use it for session storage."
+
+
+# ==============================================================================
+# EXAMPLE 7: Scope Field - When to Use Project vs Checkpoint
+# ==============================================================================
+
+# Use scope: "checkpoint" when:
+# - Specific to this particular implementation
+# - Unlikely to apply elsewhere in codebase
+# - Technical detail that doesn't generalize
+
+  key_insights:
+    - insight: "Dashboard query reduced from 8s to 400ms with Redis caching"
+      scope: "checkpoint"  # Specific metric for this feature
+
+# Use scope: "project" when:
+# - Establishes pattern/principle for entire codebase
+# - Future features should follow this approach
+# - Represents architectural decision
+# - Would go into .checkpoint-project.yml
+
+  key_insights:
+    - insight: "Profile before optimizing - measure actual bottleneck not assumed one"
+      scope: "project"  # Applies to all performance work
+
+    - insight: "N+1 queries are common ORM pitfall requiring code review checks"
+      scope: "project"  # Affects all ORM usage
+
+
+# ==============================================================================
+# EXAMPLE 8: Complete Good Context Entry
+# ==============================================================================
+
+context:
+  problem_statement: "Payment processing failing silently in production for amounts over $10,000. Users seeing success message but charges not processed. Affecting 2-3 high-value transactions daily, ~$75K/week in lost revenue."
+
+  key_insights:
+    - insight: "Integer overflow in cents calculation for amounts >$92,233 (INT32_MAX / 100)"
+      impact: "Affects all payment processing; silent failure meant no alerts triggered"
+      scope: "checkpoint"
+
+    - insight: "Lack of integration tests for edge cases led to production-only bug"
+      impact: "Established need for property-based testing for financial calculations"
+      scope: "project"
+
+    - insight: "Silent failures mask critical bugs and prevent debugging"
+      impact: "All payment operations should now log + alert on any failure path"
+      scope: "project"
+
+  decisions_made:
+    - decision: "Use 64-bit integers (INT64) for all monetary amounts in cents"
+      rationale: "Handles up to $92 quadrillion, well beyond any realistic transaction size; matches Stripe API design"
+      alternatives_considered:
+        - "Decimal type (rejected - adds dependency, overkill for cent precision)"
+        - "Float (rejected - never use floating point for money)"
+      constraints_that_influenced: "Must handle unlimited transaction sizes; precision to cent required; database performance matters"
+      scope: "project"
+
+    - decision: "Add explicit overflow checks and panic on monetary calculation errors"
+      rationale: "Better to fail loudly than process incorrect amounts; financial accuracy is critical"
+      scope: "project"
+
+  failed_approaches:
+    - approach: "Initially tried to catch overflow with try/catch around calculation"
+      why_failed: "Integer overflow in Go doesn't panic or error, it silently wraps; try/catch useless"
+      lessons_learned: "Go integer overflow behavior is silent wraparound; must use explicit checks or larger types"
+      scope: "project"
+
+  established_patterns:
+    - pattern: "All monetary amounts stored as INT64 cents, never floating point"
+      rationale: "Prevents rounding errors and overflow issues; industry standard"
+      examples: "prices, discounts, refunds, balances"
+      scope: "project"
+
+    - pattern: "Property-based testing for financial calculations"
+      rationale: "Catches edge cases like overflow, underflow, precision issues that example-based tests miss"
+      examples: "Test payment calculations with random values up to INT64_MAX"
+      scope: "project"
+
+    - pattern: "All payment operations log structured events and alert on any failure"
+      rationale: "Financial operations require audit trail and immediate failure notification"
+      examples: "Charge attempts, refunds, balance updates all emit events to logging system"
+      scope: "project"
+
+  conversation_context:
+    - exchange: "Discussed whether to fix existing data retroactively"
+      outcome: "Manual review of 8 affected transactions from past month; contacted customers, reprocessed charges. Established runbook for similar data correction scenarios."
+
+    - exchange: "Debated INT64 vs DECIMAL type for future-proofing"
+      outcome: "INT64 sufficient - handles $92 quadrillion; DECIMAL adds complexity and dependency without practical benefit for our use case."
+
+
+# KEY TAKEAWAYS:
+# ✓ Problem statements are specific with metrics and business impact
+# ✓ Insights explain both technical cause and broader implications
+# ✓ Decisions document alternatives considered and constraints
+# ✓ Failed approaches teach future developers what doesn't work
+# ✓ Patterns are concrete and actionable, not abstract principles
+# ✓ Conversation context captures the "why" behind decisions
+# ✓ Scope: project marks items that apply project-wide
+# ✓ Everything is written for future developers/LLMs who lack context

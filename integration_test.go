@@ -315,7 +315,10 @@ func TestInitWorkflow(t *testing.T) {
 		"Key files:",
 		"Basic workflow:",
 		"Schema (YAML):",
-		"LLM guidance:",
+		"## Learning Resources",
+		"## Quick Tips",
+		"## Commands",
+		"## LLM Prompts",
 	}
 
 	for _, section := range expectedSections {

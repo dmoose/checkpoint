@@ -1,0 +1,44 @@
+schema_version: "1"
+
+variables:
+  project_name: "checkpoint"
+  primary_language: "Go"
+
+prompts:
+  - id: session-start
+    name: "Start Development Session"
+    category: checkpoint
+    description: "Orient LLM at beginning of work session"
+    file: session-start.md
+    variables:
+      - task_description
+
+  - id: fill-checkpoint
+    name: "Fill Checkpoint Input"
+    category: checkpoint
+    description: "Analyze changes and create checkpoint entry"
+    file: fill-checkpoint.md
+
+  - id: implement-feature
+    name: "Implement Feature"
+    category: development
+    description: "Implement new feature following project patterns"
+    file: implement-feature.md
+    variables:
+      - feature_name
+      - feature_description
+      - priority
+
+  - id: fix-bug
+    name: "Fix Bug"
+    category: development
+    description: "Investigate and fix bug with testing"
+    file: fix-bug.md
+    variables:
+      - bug_description
+
+  - id: code-review
+    name: "Code Review"
+    category: development
+    description: "Review code changes against project standards"
+    file: code-review.md

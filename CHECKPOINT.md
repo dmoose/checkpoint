@@ -77,10 +77,12 @@ next_steps:
 **All resources are in `.checkpoint/` directory:**
 - `.checkpoint/examples/` - Example checkpoints
 - `.checkpoint/guides/` - Detailed documentation
+- `.checkpoint/prompts/` - LLM prompt templates
 
 ## Quick Tips
 
 **For LLMs:**
+- Use `checkpoint prompt fill-checkpoint` to get instructions for filling checkpoint entries
 - Derive distinct changes from git_status and .checkpoint-diff
 - Keep summaries <80 chars; present tense; consistent scope names
 - Fill context section with reasoning and decision-making process
@@ -104,6 +106,27 @@ next_steps:
 - `checkpoint commit` - Commit with checkpoint metadata
 - `checkpoint examples [category]` - View examples
 - `checkpoint guide [topic]` - View guides
+- `checkpoint prompt [id]` - View LLM prompts
+- `checkpoint summary` - Show project overview
 - `checkpoint clean` - Abort and restart
 - `checkpoint init` - Initialize checkpoint in project
 - `checkpoint help` - Show all commands
+
+## LLM Prompts
+
+Use the prompts system for consistent, high-quality interactions:
+
+```bash
+checkpoint prompt                          # List available prompts
+checkpoint prompt fill-checkpoint          # Get checkpoint fill instructions
+checkpoint prompt implement-feature \
+  --var feature_name="Auth" \
+  --var priority="high"                    # Feature implementation with variables
+```
+
+Prompts support variable substitution:
+- Automatic: `{{project_name}}`, `{{project_path}}`
+- Global: defined in `.checkpoint/prompts/prompts.yaml`
+- User: provided via `--var` flags
+
+Customize prompts by editing files in `.checkpoint/prompts/`.

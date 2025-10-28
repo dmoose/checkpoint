@@ -11,6 +11,369 @@ import (
 	"go-llm/pkg/config"
 )
 
+// createDefaultPrompts creates the default prompts.yaml and prompt template files
+// Only creates files that don't already exist
+func createDefaultPrompts(promptsDir string, projectName string) error {
+	created := 0
+	skipped := 0
+
+	// Create prompts.yaml
+	promptsYaml := filepath.Join(promptsDir, "prompts.yaml")
+	if file.Exists(promptsYaml) {
+		skipped++
+	} else {
+		promptsContent := `schema_version: "1"
+
+variables:
+  project_name: "` + projectName + `"
+  primary_language: "Go"
+
+prompts:
+  - id: session-start
+    name: "Start Development Session"
+    category: checkpoint
+    description: "Orient LLM at beginning of work session"
+    file: session-start.md
+    variables:
+      - task_description
+
+  - id: fill-checkpoint
+    name: "Fill Checkpoint Input"
+    category: checkpoint
+    description: "Analyze changes and create checkpoint entry"
+    file: fill-checkpoint.md
+
+  - id: implement-feature
+    name: "Implement Feature"
+    category: development
+    description: "Implement new feature following project patterns"
+    file: implement-feature.md
+    variables:
+      - feature_name
+      - feature_description
+      - priority
+
+  - id: fix-bug
+    name: "Fix Bug"
+    category: development
+    description: "Investigate and fix bug with testing"
+    file: fix-bug.md
+    variables:
+      - bug_description
+
+  - id: code-review
+    name: "Code Review"
+    category: development
+    description: "Review code changes against project standards"
+    file: code-review.md
+`
+		if err := file.WriteFile(promptsYaml, promptsContent); err != nil {
+			return fmt.Errorf("failed to create prompts.yaml: %w", err)
+		}
+		created++
+	}
+
+	// Create session-start.md
+	sessionStartPath := filepath.Join(promptsDir, "session-start.md")
+	if file.Exists(sessionStartPath) {
+		skipped++
+	} else {
+		sessionStartContent := `# Development Session Start
+
+I'm working on {{project_name}} ({{primary_language}}).
+
+## Current Status
+
+Run ` + "`checkpoint start`" + ` to see project status and next steps.
+
+## Task
+
+Let's work on: {{task_description}}
+
+## Process
+
+1. Implement the changes
+2. Test thoroughly
+3. When done, I'll run ` + "`checkpoint check`" + `
+4. You'll analyze changes and fill ` + "`.checkpoint-input`" + `
+5. I'll review and run ` + "`checkpoint commit`" + `
+
+## Project Patterns
+
+Check ` + "`.checkpoint-project.yml`" + ` for established patterns and conventions.
+`
+		if err := file.WriteFile(sessionStartPath, sessionStartContent); err != nil {
+			return fmt.Errorf("failed to create session-start.md: %w", err)
+		}
+		created++
+	}
+
+	// Create fill-checkpoint.md
+	fillCheckpointPath := filepath.Join(promptsDir, "fill-checkpoint.md")
+	if file.Exists(fillCheckpointPath) {
+		skipped++
+	} else {
+		fillCheckpointContent := `# Fill Checkpoint Input
+
+I've run ` + "`checkpoint check`" + ` which created:
+- ` + "`.checkpoint-input`" + ` - Template for you to fill
+- ` + "`.checkpoint-diff`" + ` - Full diff of changes
+
+## Your Task
+
+Fill ` + "`.checkpoint-input`" + ` with structured information about these changes.
+
+### Changes Section
+
+List each distinct change:
+- Summary: <80 chars, present tense, specific
+- Details: Explain what and why (optional)
+- Type: feature|fix|refactor|docs|perf|other
+- Scope: Component affected
+
+**Examples:**
+- Good: "Add JWT authentication middleware to API"
+- Bad: "Update auth code"
+
+### Context Section (CRITICAL)
+
+This is the most valuable part. Explain:
+
+**problem_statement:** What problem did we solve?
+
+**key_insights:** What did we learn?
+- Mark ` + "`scope: project`" + ` for project-wide lessons
+- Mark ` + "`scope: checkpoint`" + ` for specific details
+
+**decisions_made:** Why this approach?
+- List alternatives we considered
+- Explain why we chose this
+- Note constraints that influenced us
+- Mark ` + "`scope: project`" + ` for architectural decisions
+
+**established_patterns:** New conventions?
+- Pattern description
+- Why it works for this project
+- Examples of where to apply
+- Mark ` + "`scope: project`" + `
+
+**failed_approaches:** What didn't work?
+- What we tried
+- Why it failed
+- Lessons learned
+
+### Next Steps
+
+What should happen next? Include:
+- Summary of task
+- Priority: high|med|low
+- Scope/component
+
+## Project Context
+
+Project: {{project_name}}
+Language: {{primary_language}}
+
+Review ` + "`.checkpoint-project.yml`" + ` for established patterns.
+
+## Validation
+
+Run ` + "`checkpoint lint`" + ` to validate your work.
+
+## Focus
+
+Capture **reasoning and decisions**, not just descriptions.
+The "why" is more valuable than the "what".
+`
+		if err := file.WriteFile(fillCheckpointPath, fillCheckpointContent); err != nil {
+			return fmt.Errorf("failed to create fill-checkpoint.md: %w", err)
+		}
+		created++
+	}
+
+	// Create implement-feature.md
+	implementFeaturePath := filepath.Join(promptsDir, "implement-feature.md")
+	if file.Exists(implementFeaturePath) {
+		skipped++
+	} else {
+		implementFeatureContent := `# Implement Feature: {{feature_name}}
+
+{{feature_description}}
+
+Priority: {{priority}}
+
+## Project: {{project_name}}
+
+Language: {{primary_language}}
+
+## Process
+
+1. **Understand requirements**
+   - Clarify any ambiguities
+   - Identify edge cases
+
+2. **Review existing code**
+   - Find similar features
+   - Check ` + "`.checkpoint-project.yml`" + ` for patterns
+
+3. **Design approach**
+   - Consider alternatives
+   - Think about testing
+   - Plan error handling
+
+4. **Implement**
+   - Follow project patterns
+   - Write clear code
+   - Add comments for complex logic
+
+5. **Test**
+   - Unit tests for logic
+   - Integration tests if needed
+   - Edge cases and errors
+
+6. **Document**
+   - Update relevant docs
+   - Add code comments
+   - Update API docs if needed
+
+## When Done
+
+I'll run ` + "`checkpoint check`" + ` and you'll create the checkpoint entry explaining:
+- What changed
+- Why this approach
+- What patterns were followed
+- What's next
+`
+		if err := file.WriteFile(implementFeaturePath, implementFeatureContent); err != nil {
+			return fmt.Errorf("failed to create implement-feature.md: %w", err)
+		}
+		created++
+	}
+
+	// Create fix-bug.md
+	fixBugPath := filepath.Join(promptsDir, "fix-bug.md")
+	if file.Exists(fixBugPath) {
+		skipped++
+	} else {
+		fixBugContent := `# Fix Bug
+
+{{bug_description}}
+
+## Project: {{project_name}}
+
+## Investigation Process
+
+1. **Reproduce the bug**
+   - Minimal reproduction case
+   - Identify conditions
+
+2. **Understand root cause**
+   - Use debugger/logging
+   - Trace execution
+   - Identify where it breaks
+
+3. **Design fix**
+   - Address root cause, not symptoms
+   - Consider edge cases
+   - Think about similar bugs
+
+4. **Implement fix**
+   - Minimal change to fix issue
+   - Follow project patterns
+   - Add defensive checks
+
+5. **Test**
+   - Verify fix works
+   - Add regression test
+   - Test edge cases
+
+6. **Document**
+   - Explain root cause in checkpoint
+   - Document prevention strategy
+
+## When Done
+
+I'll run ` + "`checkpoint check`" + ` and you'll create checkpoint entry explaining:
+- What was broken
+- Root cause
+- How fixed
+- How to prevent similar bugs
+`
+		if err := file.WriteFile(fixBugPath, fixBugContent); err != nil {
+			return fmt.Errorf("failed to create fix-bug.md: %w", err)
+		}
+		created++
+	}
+
+	// Create code-review.md
+	codeReviewPath := filepath.Join(promptsDir, "code-review.md")
+	if file.Exists(codeReviewPath) {
+		skipped++
+	} else {
+		codeReviewContent := `# Code Review
+
+## Project: {{project_name}}
+
+Language: {{primary_language}}
+
+## Review Checklist
+
+### Code Quality
+- [ ] Clear, readable code
+- [ ] Follows project conventions (check ` + "`.checkpoint-project.yml`" + `)
+- [ ] Appropriate comments
+- [ ] No obvious bugs
+- [ ] Good error handling
+
+### Design
+- [ ] Appropriate abstractions
+- [ ] Not over-engineered
+- [ ] Fits with existing architecture
+- [ ] Considers edge cases
+
+### Testing
+- [ ] Tests included
+- [ ] Tests follow project patterns
+- [ ] Edge cases covered
+- [ ] Error cases tested
+
+### Documentation
+- [ ] Code comments where needed
+- [ ] API docs updated
+- [ ] README updated if needed
+
+### Security/Performance
+- [ ] No security issues
+- [ ] Performance considerations
+- [ ] Resource management
+
+## Feedback Format
+
+Provide feedback as:
+- **MUST FIX**: Critical issues
+- **SHOULD FIX**: Important improvements
+- **CONSIDER**: Suggestions
+- **GOOD**: Call out well-done parts
+
+Be specific and constructive.
+`
+		if err := file.WriteFile(codeReviewPath, codeReviewContent); err != nil {
+			return fmt.Errorf("failed to create code-review.md: %w", err)
+		}
+		created++
+	}
+
+	// Report what was done
+	if created > 0 {
+		fmt.Printf("✓ Created %d prompt file(s)\n", created)
+	}
+	if skipped > 0 {
+		fmt.Printf("  Skipped %d existing prompt file(s)\n", skipped)
+	}
+
+	return nil
+}
+
 // Init creates a CHECKPOINT.md file with practical instructions and theory
 func Init(projectPath string, version string) {
 	// Create .checkpoint/ directory structure
@@ -88,29 +451,49 @@ These files are referenced by checkpoint commands and can be read directly:
 		os.Exit(1)
 	}
 
-	// Initialize changelog with meta document
+	// Initialize changelog with meta document (only if it doesn't exist)
 	changelogPath := filepath.Join(projectPath, config.ChangelogFileName)
-	if err := changelog.InitializeChangelog(changelogPath, version); err != nil {
-		fmt.Fprintf(os.Stderr, "error initializing changelog: %v\n", err)
-		os.Exit(1)
+	if !file.Exists(changelogPath) {
+		if err := changelog.InitializeChangelog(changelogPath, version); err != nil {
+			fmt.Fprintf(os.Stderr, "error initializing changelog: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✓ Created %s\n", config.ChangelogFileName)
+	} else {
+		fmt.Printf("  %s already exists (skipped)\n", config.ChangelogFileName)
 	}
 
-	// Initialize project file
+	// Initialize project file (only if it doesn't exist)
 	projectFilePath := filepath.Join(projectPath, config.ProjectFileName)
 	projectName := filepath.Base(projectPath)
-	if err := project.InitializeProjectFile(projectFilePath, projectName, nil); err != nil {
-		fmt.Fprintf(os.Stderr, "error initializing project file: %v\n", err)
+	if !file.Exists(projectFilePath) {
+		if err := project.InitializeProjectFile(projectFilePath, projectName, nil); err != nil {
+			fmt.Fprintf(os.Stderr, "error initializing project file: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✓ Created %s\n", config.ProjectFileName)
+	} else {
+		fmt.Printf("  %s already exists (skipped)\n", config.ProjectFileName)
+	}
+
+	// Create default prompts
+	promptsDir := filepath.Join(checkpointDir, "prompts")
+	if err := createDefaultPrompts(promptsDir, projectName); err != nil {
+		fmt.Fprintf(os.Stderr, "error creating default prompts: %v\n", err)
 		os.Exit(1)
 	}
 
 	path := filepath.Join(projectPath, "CHECKPOINT.md")
-	if _, err := os.Stat(path); err == nil {
-		fmt.Printf("CHECKPOINT.md already exists at %s\n", path)
-		return
-	}
-	content := `# Checkpoint Workflow
+	checkpointMdExists := file.Exists(path)
+	content := `# Checkpoint Workflow - Quick Reference
 
 This repository uses an append-only changelog to capture LLM-assisted development work.
+
+**First time here?** Run ` + "`checkpoint guide first-time-user`" + ` for a complete walkthrough.
+
+**Using with LLM?** Run ` + "`checkpoint guide llm-workflow`" + ` for integration patterns.
+
+**Need examples?** Run ` + "`checkpoint examples`" + ` to see well-structured checkpoints.
 
 Key files:
 - .checkpoint-input: Edit this during a checkpoint to describe changes and context
@@ -128,15 +511,20 @@ Concepts:
 - Project file aggregates project-wide patterns; human curates from checkpoint recommendations.
 
 Basic workflow:
-1. Run: checkpoint check [path]
-2. Open .checkpoint-input and fill:
-   - changes[] - what changed
-   - context - why and how (problem, decisions, insights, conversation)
+1. Start: checkpoint start
+   - Check project status and see next steps
+2. Make changes: (code as usual)
+3. Prepare: checkpoint check [path]
+   - Generates .checkpoint-input and .checkpoint-diff
+4. Fill input: Open .checkpoint-input and describe:
+   - changes[] - what changed (be specific!)
+   - context - why and how (problem, decisions, insights)
    - next_steps[] - planned work
-3. Run: checkpoint commit [path]
+5. Validate: checkpoint lint (optional but recommended)
+6. Commit: checkpoint commit [path]
    - Stages all changes, creates a commit, backfills commit_hash
    - Appends to changelog, context, and project files
-4. Periodically: review .checkpoint-project.yml recommendations and curate main document
+7. Periodically: review .checkpoint-project.yml recommendations and curate
 
 Schema (YAML):
 ---
@@ -160,23 +548,86 @@ next_steps:
     priority: "low|med|high"
     scope: "<component>"
 
-LLM guidance:
+## Learning Resources
+
+**Comprehensive Guides:**
+- ` + "`checkpoint guide first-time-user`" + ` - Complete walkthrough for newcomers
+- ` + "`checkpoint guide llm-workflow`" + ` - LLM integration patterns and workflow
+- ` + "`checkpoint guide best-practices`" + ` - Best practices for effective checkpoints
+
+**Examples:**
+- ` + "`checkpoint examples`" + ` - List all available examples
+- ` + "`checkpoint examples feature`" + ` - See good feature checkpoint
+- ` + "`checkpoint examples bugfix`" + ` - See good bug fix checkpoint
+- ` + "`checkpoint examples anti-patterns`" + ` - Learn what to avoid
+
+**All resources are in ` + "`.checkpoint/`" + ` directory:**
+- ` + "`.checkpoint/examples/`" + ` - Example checkpoints
+- ` + "`.checkpoint/guides/`" + ` - Detailed documentation
+- ` + "`.checkpoint/prompts/`" + ` - LLM prompt templates
+
+## Quick Tips
+
+**For LLMs:**
+- Use ` + "`checkpoint prompt fill-checkpoint`" + ` to get instructions for filling checkpoint entries
 - Derive distinct changes from git_status and .checkpoint-diff
 - Keep summaries <80 chars; present tense; consistent scope names
 - Fill context section with reasoning and decision-making process
 - Mark context items with scope: project if they represent project-wide patterns
-- Review project_context and recent_context in input for consistency
-- Do not modify schema_version or timestamp; leave commit_hash empty
+- Run ` + "`checkpoint lint`" + ` before finishing
+- See ` + "`checkpoint guide llm-workflow`" + ` for detailed instructions
+
+**For Humans:**
+- Run ` + "`checkpoint start`" + ` at the beginning of each session
+- Be specific in change summaries (not "fix bug" but "fix null pointer in user profile")
+- Explain WHY in context, not just WHAT changed
+- Document alternatives you considered
+- Mark project-wide patterns with scope: project
+- See ` + "`checkpoint guide best-practices`" + ` for more tips
+
+## Commands
+
+- ` + "`checkpoint start`" + ` - Check readiness and show next steps
+- ` + "`checkpoint check`" + ` - Generate input files
+- ` + "`checkpoint lint`" + ` - Validate before committing
+- ` + "`checkpoint commit`" + ` - Commit with checkpoint metadata
+- ` + "`checkpoint examples [category]`" + ` - View examples
+- ` + "`checkpoint guide [topic]`" + ` - View guides
+- ` + "`checkpoint prompt [id]`" + ` - View LLM prompts
+- ` + "`checkpoint summary`" + ` - Show project overview
+- ` + "`checkpoint clean`" + ` - Abort and restart
+- ` + "`checkpoint init`" + ` - Initialize checkpoint in project
+- ` + "`checkpoint help`" + ` - Show all commands
+
+## LLM Prompts
+
+Use the prompts system for consistent, high-quality interactions:
+
+` + "```bash" + `
+checkpoint prompt                          # List available prompts
+checkpoint prompt fill-checkpoint          # Get checkpoint fill instructions
+checkpoint prompt implement-feature \
+  --var feature_name="Auth" \
+  --var priority="high"                    # Feature implementation with variables
+` + "```" + `
+
+Prompts support variable substitution:
+- Automatic: ` + "`{{project_name}}`" + `, ` + "`{{project_path}}`" + `
+- Global: defined in ` + "`.checkpoint/prompts/prompts.yaml`" + `
+- User: provided via ` + "`--var`" + ` flags
+
+Customize prompts by editing files in ` + "`.checkpoint/prompts/`" + `.
 `
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "error writing CHECKPOINT.md: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("✓ Created CHECKPOINT.md\n")
-	fmt.Printf("✓ Created .checkpoint/ directory structure\n")
-	fmt.Printf("  - .checkpoint/examples/   (for example checkpoints)\n")
-	fmt.Printf("  - .checkpoint/guides/     (for detailed documentation)\n")
-	fmt.Printf("  - .checkpoint/prompts/    (for LLM prompt templates)\n")
-	fmt.Printf("  - .checkpoint/templates/  (for customizable templates)\n")
-	fmt.Printf("\nNext: Add files to .checkpoint/, then run 'checkpoint start'\n")
+	if checkpointMdExists {
+		fmt.Printf("✓ Updated CHECKPOINT.md\n")
+	} else {
+		fmt.Printf("✓ Created CHECKPOINT.md\n")
+	}
+	fmt.Printf("\n✓ Checkpoint initialization complete\n")
+	fmt.Printf("  .checkpoint/ directory structure is ready\n")
+	fmt.Printf("\nNext: Run 'checkpoint start' to begin\n")
 }

@@ -47,6 +47,11 @@ COMMANDS:
               Display comprehensive guides for checkpoint usage
               Available topics: first-time-user, llm-workflow, best-practices
 
+  prompt      Show LLM prompts from project library
+              Display prompts with variable substitution
+              Usage: checkpoint prompt [id] [--var key=value]
+              Available prompts defined in .checkpoint/prompts/prompts.yaml
+
   help        Display this help message
   version     Display version information
 
@@ -72,6 +77,9 @@ EXAMPLES:
   checkpoint guide                    # List available guides
   checkpoint guide first-time-user    # Show first-time user guide
   checkpoint guide llm-workflow       # Show LLM workflow guide
+  checkpoint prompt                   # List available prompts
+  checkpoint prompt fill-checkpoint   # Show checkpoint fill prompt
+  checkpoint prompt implement-feature --var feature_name="Auth" # With variables
   checkpoint commit --dry-run         # Preview what would be committed
   checkpoint commit --changelog-only  # Only stage the changelog file
   checkpoint init ~/my-project        # Initialize checkpoint in specific directory

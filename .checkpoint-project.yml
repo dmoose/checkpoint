@@ -327,3 +327,27 @@ recommended_additions:
     design_principles:
         - principle: Support --json flag for machine-readable output
           rationale: Enables integration with other tools, scripts, and potentially macOS app
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-10-28T15:39:48-07:00"
+recommended_additions:
+    key_insights:
+        - insight: Simple regex-based variable substitution is sufficient for prompt templates rather than full templating engines
+          rationale: Keeps the system simple and predictable with no hidden behaviors. Unknown variables become empty strings without errors, matching user expectations.
+        - insight: Init command must be safe to run multiple times in existing projects
+          rationale: Allows newer versions of checkpoint to add new resources (prompts, guides) without destroying user data or requiring manual file creation
+        - insight: CHECKPOINT.md should always be updated since it's documentation, not user data
+          rationale: Users get latest workflow guidance when running init, but their actual checkpoint data remains untouched
+    established_patterns:
+        - pattern: Follow examples/guide command patterns for new list/show commands
+          rationale: Consistent UX across similar commands - list when no arg, show specific item when arg provided
+          examples: Applied to prompt command, mirrors guide and examples commands
+        - pattern: Comprehensive test coverage for new packages
+          rationale: Test-driven approach ensures correctness and makes refactoring safer
+          examples: prompts_test.go has 10+ test cases covering all major functionality
+    design_principles:
+        - principle: 'Three-tier variable priority: CLI args > global vars > automatic vars'
+          rationale: Allows project defaults in prompts.yaml to be overridden per-use with --var flags, while automatic variables like project_name are always available
+        - principle: Init command checks file existence before creating
+          rationale: Makes init safe to run in existing projects to add new features (prompts, guides) without destroying user data like changelog or project files

@@ -364,3 +364,46 @@ context:
           outcome: Last 5 checkpoints balances context with brevity; patterns from last 3 context entries focuses on recent
         - exchange: Questioned whether to include project file recommendations count
           outcome: Yes - reminds users to curate; low-friction way to surface pending work
+---
+schema_version: "1"
+timestamp: "2025-10-28T15:39:48-07:00"
+context:
+    problem_statement: LLM-assisted development requires consistent, high-quality prompts for common tasks. Without a prompt library, developers repeatedly craft similar prompts with varying quality, leading to inconsistency and lost knowledge. Need a system to store, version, and reuse LLM prompts with variable substitution.
+    key_insights:
+        - insight: Simple regex-based variable substitution is sufficient for prompt templates rather than full templating engines
+          impact: Keeps the system simple and predictable with no hidden behaviors. Unknown variables become empty strings without errors, matching user expectations.
+          scope: project
+        - insight: Init command must be safe to run multiple times in existing projects
+          impact: Allows newer versions of checkpoint to add new resources (prompts, guides) without destroying user data or requiring manual file creation
+          scope: project
+        - insight: CHECKPOINT.md should always be updated since it's documentation, not user data
+          impact: Users get latest workflow guidance when running init, but their actual checkpoint data remains untouched
+          scope: project
+    decisions_made:
+        - decision: Use regex for variable substitution instead of text/template
+          rationale: Spec requires exact {{variable_name}} syntax and silent handling of unknown variables. text/template requires {{.variable_name}} syntax and errors on unknown variables by default. Regex gives us exact control with simpler implementation.
+          alternatives_considered:
+            - 'text/template: More powerful but overkill, requires different syntax, harder to handle missing variables gracefully'
+            - 'Simple string replacement: Would require multiple passes, less efficient'
+          scope: checkpoint
+        - decision: 'Three-tier variable priority: CLI args > global vars > automatic vars'
+          rationale: Allows project defaults in prompts.yaml to be overridden per-use with --var flags, while automatic variables like project_name are always available
+          scope: project
+        - decision: Init command checks file existence before creating
+          rationale: Makes init safe to run in existing projects to add new features (prompts, guides) without destroying user data like changelog or project files
+          constraints_that_influenced: Need to support upgrading existing checkpoint installations
+          scope: project
+    established_patterns:
+        - pattern: Follow examples/guide command patterns for new list/show commands
+          rationale: Consistent UX across similar commands - list when no arg, show specific item when arg provided
+          examples: Applied to prompt command, mirrors guide and examples commands
+          scope: project
+        - pattern: Comprehensive test coverage for new packages
+          rationale: Test-driven approach ensures correctness and makes refactoring safer
+          examples: prompts_test.go has 10+ test cases covering all major functionality
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether to use regex vs text/template for variable substitution
+          outcome: Chose regex because spec explicitly shows {{variable_name}} format and requires silent handling of unknown variables, which text/template doesn't provide naturally
+        - exchange: Questioned if init should overwrite CHECKPOINT.md in existing projects
+          outcome: Decided yes - CHECKPOINT.md is documentation that should be updated, unlike user data files (changelog, project, prompts)

@@ -812,3 +812,71 @@ next_steps:
       details: Ensure dependencies, deployment_targets, and other new sections have appropriate validation rules
       priority: low
       scope: internal/project
+---
+schema_version: "1"
+timestamp: "2025-10-28T15:39:48-07:00"
+commit_hash: ""
+files_changed:
+    - path: CHECKPOINT.md
+      additions: 23
+      deletions: 0
+    - path: PROMPTS-SPEC.md
+      additions: 0
+      deletions: 887
+    - path: README.md
+      additions: 77
+      deletions: 11
+    - path: cmd/help.go
+      additions: 8
+      deletions: 0
+    - path: cmd/init.go
+      additions: 479
+      deletions: 28
+    - path: integration_test.go
+      additions: 4
+      deletions: 1
+    - path: main.go
+      additions: 39
+      deletions: 1
+changes:
+    - summary: Implement prompts system for LLM workflow integration
+      details: Created internal/prompts package with YAML config loading, prompt retrieval, and variable substitution. Supports automatic (project_name, project_path), global (prompts.yaml), and user-provided (--var) variables.
+      change_type: feature
+      scope: internal/prompts
+    - summary: Add checkpoint prompt command with list and show functions
+      details: New command displays prompts from .checkpoint/prompts/ library with categorized listing and variable substitution support
+      change_type: feature
+      scope: cmd
+    - summary: Integrate prompt command into main CLI with --var flag parsing
+      details: Added prompt/prompts case to main.go with support for --var key=value flags for variable substitution
+      change_type: feature
+      scope: main
+    - summary: Create default prompt library with 5 workflow prompts
+      details: Added session-start, fill-checkpoint, implement-feature, fix-bug, and code-review prompts with prompts.yaml configuration
+      change_type: feature
+      scope: .checkpoint/prompts
+    - summary: Enhance init command to be safe for existing projects
+      details: Modified init to only create missing files, never overwrite user data (changelog, project, prompts), but always update CHECKPOINT.md documentation
+      change_type: refactor
+      scope: cmd/init
+    - summary: Update documentation for prompts system
+      details: Added prompts sections to README.md, CHECKPOINT.md, and help command with usage examples and variable substitution explanation
+      change_type: docs
+      scope: documentation
+    - summary: Add comprehensive tests for prompts package
+      details: Created prompts_test.go with 10+ test cases covering variable substitution, config loading, prompt retrieval, and error handling
+      change_type: feature
+      scope: internal/prompts
+    - summary: Remove PROMPTS-SPEC.md after implementation
+      details: Deleted specification file as feature is now fully implemented
+      change_type: other
+      scope: documentation
+next_steps:
+    - summary: Add more default prompts for common scenarios
+      details: Expand prompt library with refactoring, debugging, documentation, and performance optimization prompts
+      priority: med
+      scope: .checkpoint/prompts
+    - summary: Consider optional auto-prompt from check command
+      details: Add --prompt flag to checkpoint check to automatically display fill-checkpoint prompt after generating input files
+      priority: low
+      scope: cmd

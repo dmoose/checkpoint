@@ -287,3 +287,23 @@ recommended_additions:
           rationale: Different users need different information; focused guides reduce cognitive load and make specific topics easier to find
         - principle: Include extensive examples and templates in guides
           rationale: Learn by example - show specific YAML, commands, workflows rather than just describing them
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-10-28T14:02:26-07:00"
+recommended_additions:
+    key_insights:
+        - insight: Commands make documentation discoverable and accessible
+          rationale: Users can easily find and view guides without knowing file paths; mirrors examples command for consistency
+        - insight: CHECKPOINT.md should be quick reference, not comprehensive manual
+          rationale: Restructured to point to detailed resources; users get oriented quickly then dive deeper as needed
+    established_patterns:
+        - pattern: 'Discovery commands follow consistent pattern: list all, show specific'
+          rationale: Progressive disclosure - overview first, details on demand; consistent UX across commands
+          examples: checkpoint examples [category], checkpoint guide [topic]
+        - pattern: 'Documentation has layers: quick reference → guides → examples'
+          rationale: Different depth for different needs; users can choose their level of detail
+          examples: CHECKPOINT.md → .checkpoint/guides/ → .checkpoint/examples/
+    design_principles:
+        - principle: Implement guide command with same pattern as examples command
+          rationale: Consistent UX - users already familiar with examples pattern can immediately use guide command

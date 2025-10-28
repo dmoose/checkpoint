@@ -674,7 +674,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2025-10-28T13:54:34-07:00"
-commit_hash: ""
+commit_hash: 7ea3e610e388bba7cd15f3ba08f7427d24651071
 files_changed:
     - path: .checkpoint-changelog.yaml
       additions: 1
@@ -713,3 +713,54 @@ next_steps:
       details: Populate .checkpoint/prompts/ with reusable prompt templates for common scenarios
       priority: med
       scope: .checkpoint/prompts
+---
+schema_version: "1"
+timestamp: "2025-10-28T14:02:26-07:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: CHECKPOINT.md
+      additions: 60
+      deletions: 10
+    - path: cmd/help.go
+      additions: 7
+      deletions: 0
+    - path: main.go
+      additions: 27
+      deletions: 0
+changes:
+    - summary: Add checkpoint guide command to display guides
+      details: Created cmd/guide.go with listing and display functionality for guides in .checkpoint/guides/. Shows first-time-user, llm-workflow, and best-practices guides.
+      change_type: feature
+      scope: cmd/guide
+    - summary: Wire guide command into main dispatch and help
+      details: Added guide command handling in main.go with argument parsing for optional topic. Updated help.go with usage examples.
+      change_type: feature
+      scope: main, cmd/help
+    - summary: Update CHECKPOINT.md as enhanced quick reference
+      details: Restructured as quick reference with prominent links to guides and examples. Added Learning Resources section, Quick Tips for LLMs/humans, and complete commands reference.
+      change_type: docs
+      scope: CHECKPOINT.md
+next_steps:
+    - summary: Implement checkpoint summary command
+      details: Show project overview, recent activity, current status, next steps, and recent patterns for rapid session orientation
+      priority: high
+      scope: cmd
+    - summary: Implement checkpoint context search command
+      details: Query historical context with filters (--recent, --search, --patterns, --decisions, --failed) to find relevant past decisions
+      priority: high
+      scope: cmd
+    - summary: Create context curation guide
+      details: Add guide specifically for reviewing and curating .checkpoint-project.yml recommendations
+      priority: med
+      scope: .checkpoint/guides
+    - summary: Create prompts.yaml file with structured LLM prompts
+      details: Populate .checkpoint/prompts/ with reusable prompt templates for common scenarios
+      priority: med
+      scope: .checkpoint/prompts
+    - summary: Add validation for new project schema fields
+      details: Ensure dependencies, deployment_targets, and other new sections have appropriate validation rules
+      priority: low
+      scope: internal/project

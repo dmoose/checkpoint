@@ -1,6 +1,12 @@
-# Checkpoint Workflow
+# Checkpoint Workflow - Quick Reference
 
 This repository uses an append-only changelog to capture LLM-assisted development work.
+
+**First time here?** Run `checkpoint guide first-time-user` for a complete walkthrough.
+
+**Using with LLM?** Run `checkpoint guide llm-workflow` for integration patterns.
+
+**Need examples?** Run `checkpoint examples` to see well-structured checkpoints.
 
 Key files:
 - .checkpoint-input: Edit this during a checkpoint to describe changes and context
@@ -18,15 +24,20 @@ Concepts:
 - Project file aggregates project-wide patterns; human curates from checkpoint recommendations.
 
 Basic workflow:
-1. Run: checkpoint check [path]
-2. Open .checkpoint-input and fill:
-   - changes[] - what changed
-   - context - why and how (problem, decisions, insights, conversation)
+1. Start: checkpoint start
+   - Check project status and see next steps
+2. Make changes: (code as usual)
+3. Prepare: checkpoint check [path]
+   - Generates .checkpoint-input and .checkpoint-diff
+4. Fill input: Open .checkpoint-input and describe:
+   - changes[] - what changed (be specific!)
+   - context - why and how (problem, decisions, insights)
    - next_steps[] - planned work
-3. Run: checkpoint commit [path]
+5. Validate: checkpoint lint (optional but recommended)
+6. Commit: checkpoint commit [path]
    - Stages all changes, creates a commit, backfills commit_hash
    - Appends to changelog, context, and project files
-4. Periodically: review .checkpoint-project.yml recommendations and curate main document
+7. Periodically: review .checkpoint-project.yml recommendations and curate
 
 Schema (YAML):
 ---
@@ -50,10 +61,49 @@ next_steps:
     priority: "low|med|high"
     scope: "<component>"
 
-LLM guidance:
+## Learning Resources
+
+**Comprehensive Guides:**
+- `checkpoint guide first-time-user` - Complete walkthrough for newcomers
+- `checkpoint guide llm-workflow` - LLM integration patterns and workflow
+- `checkpoint guide best-practices` - Best practices for effective checkpoints
+
+**Examples:**
+- `checkpoint examples` - List all available examples
+- `checkpoint examples feature` - See good feature checkpoint
+- `checkpoint examples bugfix` - See good bug fix checkpoint
+- `checkpoint examples anti-patterns` - Learn what to avoid
+
+**All resources are in `.checkpoint/` directory:**
+- `.checkpoint/examples/` - Example checkpoints
+- `.checkpoint/guides/` - Detailed documentation
+
+## Quick Tips
+
+**For LLMs:**
 - Derive distinct changes from git_status and .checkpoint-diff
 - Keep summaries <80 chars; present tense; consistent scope names
 - Fill context section with reasoning and decision-making process
 - Mark context items with scope: project if they represent project-wide patterns
-- Review project_context and recent_context in input for consistency
-- Do not modify schema_version or timestamp; leave commit_hash empty
+- Run `checkpoint lint` before finishing
+- See `checkpoint guide llm-workflow` for detailed instructions
+
+**For Humans:**
+- Run `checkpoint start` at the beginning of each session
+- Be specific in change summaries (not "fix bug" but "fix null pointer in user profile")
+- Explain WHY in context, not just WHAT changed
+- Document alternatives you considered
+- Mark project-wide patterns with scope: project
+- See `checkpoint guide best-practices` for more tips
+
+## Commands
+
+- `checkpoint start` - Check readiness and show next steps
+- `checkpoint check` - Generate input files
+- `checkpoint lint` - Validate before committing
+- `checkpoint commit` - Commit with checkpoint metadata
+- `checkpoint examples [category]` - View examples
+- `checkpoint guide [topic]` - View guides
+- `checkpoint clean` - Abort and restart
+- `checkpoint init` - Initialize checkpoint in project
+- `checkpoint help` - Show all commands

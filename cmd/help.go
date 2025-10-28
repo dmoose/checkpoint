@@ -39,6 +39,10 @@ COMMANDS:
               Display examples of well-structured checkpoints
               Available categories: feature, bugfix, refactor, context, anti-patterns
 
+  guide       Show detailed guides and documentation
+              Display comprehensive guides for checkpoint usage
+              Available topics: first-time-user, llm-workflow, best-practices
+
   help        Display this help message
   version     Display version information
 
@@ -59,6 +63,9 @@ EXAMPLES:
   checkpoint examples                 # List available examples
   checkpoint examples feature         # Show feature example
   checkpoint examples anti-patterns   # Show common mistakes to avoid
+  checkpoint guide                    # List available guides
+  checkpoint guide first-time-user    # Show first-time user guide
+  checkpoint guide llm-workflow       # Show LLM workflow guide
   checkpoint commit --dry-run         # Preview what would be committed
   checkpoint commit --changelog-only  # Only stage the changelog file
   checkpoint init ~/my-project        # Initialize checkpoint in specific directory

@@ -280,3 +280,41 @@ context:
           outcome: Decided to create guides first, command in next checkpoint - establishes content before building command to display it
         - exchange: Questioned how much detail to include in guides
           outcome: Comprehensive detail chosen - guides are reference material, users can skim but depth available when needed
+---
+schema_version: "1"
+timestamp: "2025-10-28T14:02:26-07:00"
+context:
+    problem_statement: Guides were created but not easily accessible. Users need commands to view them, and CHECKPOINT.md should direct users to detailed resources rather than trying to be comprehensive itself.
+    key_insights:
+        - insight: Commands make documentation discoverable and accessible
+          impact: Users can easily find and view guides without knowing file paths; mirrors examples command for consistency
+          scope: project
+        - insight: CHECKPOINT.md should be quick reference, not comprehensive manual
+          impact: Restructured to point to detailed resources; users get oriented quickly then dive deeper as needed
+          scope: project
+    decisions_made:
+        - decision: Implement guide command with same pattern as examples command
+          rationale: Consistent UX - users already familiar with examples pattern can immediately use guide command
+          alternatives_considered:
+            - Different command structure (rejected - consistency more valuable)
+            - Combine with examples command (rejected - conceptually different enough to warrant separate command)
+          constraints_that_influenced: Want consistency across discovery commands
+          scope: project
+        - decision: Restructure CHECKPOINT.md as quick reference with links
+          rationale: Users need rapid orientation, not comprehensive docs; point to detailed resources for depth
+          alternatives_considered:
+            - Expand CHECKPOINT.md to be comprehensive (rejected - becomes overwhelming)
+            - Minimal CHECKPOINT.md (rejected - need enough context for basic understanding)
+          scope: checkpoint
+    established_patterns:
+        - pattern: 'Discovery commands follow consistent pattern: list all, show specific'
+          rationale: Progressive disclosure - overview first, details on demand; consistent UX across commands
+          examples: checkpoint examples [category], checkpoint guide [topic]
+          scope: project
+        - pattern: 'Documentation has layers: quick reference → guides → examples'
+          rationale: Different depth for different needs; users can choose their level of detail
+          examples: CHECKPOINT.md → .checkpoint/guides/ → .checkpoint/examples/
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether to combine guide and examples commands
+          outcome: Kept separate - conceptually different (narrative guides vs concrete examples); easier to discover with distinct commands

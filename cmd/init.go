@@ -6,12 +6,88 @@ import (
 	"path/filepath"
 
 	"go-llm/internal/changelog"
+	"go-llm/internal/file"
 	"go-llm/internal/project"
 	"go-llm/pkg/config"
 )
 
 // Init creates a CHECKPOINT.md file with practical instructions and theory
 func Init(projectPath string, version string) {
+	// Create .checkpoint/ directory structure
+	checkpointDir := filepath.Join(projectPath, ".checkpoint")
+	if err := os.MkdirAll(checkpointDir, 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "error creating .checkpoint directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create subdirectories
+	subdirs := []string{"examples", "guides", "prompts", "templates"}
+	for _, subdir := range subdirs {
+		path := filepath.Join(checkpointDir, subdir)
+		if err := os.MkdirAll(path, 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "error creating .checkpoint/%s directory: %v\n", subdir, err)
+			os.Exit(1)
+		}
+	}
+
+	// Create .gitignore for .checkpoint directory
+	gitignorePath := filepath.Join(checkpointDir, ".gitignore")
+	gitignoreContent := `# Checkpoint directory is tracked
+# This file ensures the directory structure is preserved in git
+`
+	if err := file.WriteFile(gitignorePath, gitignoreContent); err != nil {
+		fmt.Fprintf(os.Stderr, "error creating .checkpoint/.gitignore: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create README.md in .checkpoint directory
+	readmePath := filepath.Join(checkpointDir, "README.md")
+	readmeContent := `# Checkpoint Support Files
+
+This directory contains supporting materials for the checkpoint workflow.
+
+## Directory Structure
+
+- **examples/** - Example checkpoint entries showing best practices
+  - Good examples of features, bug fixes, refactorings
+  - Context examples showing effective decision capture
+  - Anti-patterns to avoid
+
+- **guides/** - Detailed documentation for checkpoint users
+  - First-time user walkthrough
+  - LLM integration patterns
+  - Context writing guidelines
+  - Best practices
+
+- **prompts/** - LLM prompt templates (planned)
+  - Session start prompts
+  - Checkpoint filling prompts
+  - Review and curation prompts
+
+- **templates/** - Customizable templates (planned)
+  - Custom input templates
+  - Project-specific patterns
+
+## Usage
+
+These files are referenced by checkpoint commands and can be read directly:
+
+- Run ` + "`checkpoint examples`" + ` to view examples
+- Run ` + "`checkpoint guide [topic]`" + ` to view guides
+- LLMs can read these files directly when filling checkpoint entries
+
+## Maintenance
+
+- This directory is tracked in git
+- Add new examples as you develop useful patterns
+- Update guides as the workflow evolves
+- Customize for your project's specific needs
+`
+	if err := file.WriteFile(readmePath, readmeContent); err != nil {
+		fmt.Fprintf(os.Stderr, "error creating .checkpoint/README.md: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Initialize changelog with meta document
 	changelogPath := filepath.Join(projectPath, config.ChangelogFileName)
 	if err := changelog.InitializeChangelog(changelogPath, version); err != nil {
@@ -96,5 +172,11 @@ LLM guidance:
 		fmt.Fprintf(os.Stderr, "error writing CHECKPOINT.md: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Created %s\n", path)
+	fmt.Printf("✓ Created CHECKPOINT.md\n")
+	fmt.Printf("✓ Created .checkpoint/ directory structure\n")
+	fmt.Printf("  - .checkpoint/examples/   (for example checkpoints)\n")
+	fmt.Printf("  - .checkpoint/guides/     (for detailed documentation)\n")
+	fmt.Printf("  - .checkpoint/prompts/    (for LLM prompt templates)\n")
+	fmt.Printf("  - .checkpoint/templates/  (for customizable templates)\n")
+	fmt.Printf("\nNext: Add files to .checkpoint/, then run 'checkpoint start'\n")
 }

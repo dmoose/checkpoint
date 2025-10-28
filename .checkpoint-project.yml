@@ -228,3 +228,20 @@ recommended_additions:
     design_principles:
         - principle: Create 'start' command as first command of each work session
           rationale: Validates readiness (git repo, checkpoint init, no conflicts), shows context (next steps), guides user to next action
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-10-28T13:31:04-07:00"
+recommended_additions:
+    key_insights:
+        - insight: Input file should be minimal and focused on what needs to be filled
+          rationale: Keeps input file manageable (~170 lines vs 460+), easier to edit, prevents tool failures. LLM can read source files directly when needed.
+        - insight: Supporting materials need organized structure separate from root
+          rationale: Clean separation between data files (root) and documentation/examples (.checkpoint/ directory)
+    established_patterns:
+        - pattern: Reference files by path in comments rather than embedding content
+          rationale: Keeps files focused and manageable; users/LLMs can read full files when needed
+          examples: Input template now has comments pointing to .checkpoint-project.yml and .checkpoint-context.yml
+    design_principles:
+        - principle: Remove project_context, recent_context, and languages from input template
+          rationale: These are reference materials that bloat the file but aren't used by commit. LLM can read .checkpoint-project.yml and .checkpoint-context.yml directly when filling input.

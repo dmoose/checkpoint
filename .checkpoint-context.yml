@@ -154,3 +154,40 @@ context:
           outcome: Decided warnings shouldn't block start - they're informational. Only errors (no git, no init) should prevent starting work.
         - exchange: Question about how to count checkpoints in changelog
           outcome: Realized document separators (---) are the correct approach; first separator marks meta doc, subsequent ones mark checkpoints
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:31:04-07:00"
+context:
+    problem_statement: Input file was too large (460+ lines) due to embedded project context and recent context, making it difficult to edit and causing tool failures. Also needed to establish organized directory structure for supporting materials per Checkpoint 1 plan.
+    key_insights:
+        - insight: Input file should be minimal and focused on what needs to be filled
+          impact: Keeps input file manageable (~170 lines vs 460+), easier to edit, prevents tool failures. LLM can read source files directly when needed.
+          scope: project
+        - insight: Supporting materials need organized structure separate from root
+          impact: Clean separation between data files (root) and documentation/examples (.checkpoint/ directory)
+          scope: project
+    decisions_made:
+        - decision: Remove project_context, recent_context, and languages from input template
+          rationale: These are reference materials that bloat the file but aren't used by commit. LLM can read .checkpoint-project.yml and .checkpoint-context.yml directly when filling input.
+          alternatives_considered:
+            - Keep embedded but compress/summarize
+            - Move to separate reference file that check creates
+          constraints_that_influenced: Edit tool struggled with 460+ line files; human user found it unwieldy
+          scope: project
+        - decision: Create .checkpoint/ directory with subdirectories in init command
+          rationale: Provides organized location for examples, guides, prompts, and templates. Tracked in git so structure is preserved.
+          alternatives_considered:
+            - Flat .checkpoint/ directory
+            - Multiple top-level dot directories
+          constraints_that_influenced: Need clean root directory; examples and guides need logical organization
+          scope: checkpoint
+    established_patterns:
+        - pattern: Reference files by path in comments rather than embedding content
+          rationale: Keeps files focused and manageable; users/LLMs can read full files when needed
+          examples: Input template now has comments pointing to .checkpoint-project.yml and .checkpoint-context.yml
+          scope: project
+    conversation_context:
+        - exchange: User questioned why project context was in input file and whether it was needed at commit time
+          outcome: Realized project context was only reference material for filling, not used by commit. Led to removing all embedded reference material.
+        - exchange: User noticed edit tool had difficulty with the large input file
+          outcome: Confirmed that 460+ line input file was problematic; reduced to ~170 lines by removing embedded contexts

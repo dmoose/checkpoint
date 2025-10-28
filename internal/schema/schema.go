@@ -108,32 +108,11 @@ func GenerateInputTemplateWithMetadata(gitStatus, diffFileName string, prevNextS
 		}
 	}
 
-	// Build languages section
-	languagesSection := ""
-	if len(languages) > 0 {
-		languagesSection = "\n# Detected languages (informational):\nlanguages:\n"
-		for _, lang := range languages {
-			languagesSection += fmt.Sprintf("  - name: \"%s\"\n", lang.Name)
-			if len(lang.Indicators) > 0 {
-				languagesSection += "    indicators:\n"
-				for _, indicator := range lang.Indicators {
-					languagesSection += fmt.Sprintf("      - \"%s\"\n", indicator)
-				}
-			}
-		}
-	}
-
-	// Build project context section
-	projectContextSection := ""
-	if projectContext != "" {
-		projectContextSection = "\n# Project context (current project document for LLM consumption):\n# Use this to understand project-wide patterns, principles, and established conventions.\nproject_context: |\n" + indent(projectContext) + "\n"
-	}
-
-	// Build recent context section
-	recentContextSection := ""
-	if recentContext != "" {
-		recentContextSection = "\n# Recent checkpoint context (last 3-4 entries):\n# Review recent decisions and patterns to maintain consistency.\nrecent_context: |\n" + indent(recentContext) + "\n"
-	}
+	// Note: Language detection, project context, and recent context are no longer embedded
+	// to keep the input file manageable. Reference files directly if needed:
+	// - Project patterns: .checkpoint-project.yml
+	// - Recent decisions: .checkpoint-context.yml
+	// - Run 'checkpoint start' to see next steps and project summary
 
 	// Get context template
 	contextTemplate := context.GenerateContextTemplate()
@@ -148,7 +127,12 @@ git_status: |
 %s
 
 # Reference to diff context (path to git diff output):
-diff_file: "%s"%s%s%s%s
+diff_file: "%s"%s
+
+# REFERENCE FILES (if needed):
+# - Project patterns and conventions: .checkpoint-project.yml
+# - Recent checkpoint decisions: .checkpoint-context.yml
+# - Run 'checkpoint start' to see project summary and next steps
 
 # List all changes made in this checkpoint
 changes:
@@ -164,7 +148,7 @@ changes:
 # If previous next steps are present below, update by removing completed items and keeping unfinished ones.
 next_steps:
 %s
-`, LLMPrompt, SchemaVersion, ts, indent(gitStatus), diffFileName, filesSection, languagesSection, projectContextSection, recentContextSection, contextTemplate, prev)
+`, LLMPrompt, SchemaVersion, ts, indent(gitStatus), diffFileName, filesSection, contextTemplate, prev)
 }
 
 // ExtractNextStepsFromStatus parses a status YAML and returns next_steps if present

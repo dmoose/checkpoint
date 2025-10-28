@@ -1,0 +1,81 @@
+# EXAMPLE: Feature Addition
+# This shows a well-structured checkpoint for adding a new feature
+
+schema_version: "1"
+timestamp: "2025-01-15T14:30:00-08:00"
+commit_hash: "a1b2c3d4e5f6789"
+
+changes:
+  - summary: "Add JWT authentication middleware"
+    details: "Implemented token validation, refresh logic, and error handling for protected routes"
+    change_type: "feature"
+    scope: "auth"
+
+  - summary: "Add authentication tests with mock tokens"
+    details: "Test suite covers valid/invalid tokens, expiry, refresh, and edge cases"
+    change_type: "feature"
+    scope: "tests"
+
+  - summary: "Update API documentation for auth endpoints"
+    details: "Documented /login, /logout, /refresh endpoints with examples"
+    change_type: "docs"
+    scope: "api"
+
+context:
+  problem_statement: "Application needs secure authentication for protected API endpoints"
+
+  key_insights:
+    - insight: "JWT refresh tokens prevent frequent re-login UX issues"
+      impact: "Users stay logged in across sessions without compromising security"
+      scope: "checkpoint"
+
+    - insight: "HTTP-only cookies prevent XSS token theft"
+      impact: "Security best practice - tokens not accessible to JavaScript"
+      scope: "project"
+
+  decisions_made:
+    - decision: "Use short-lived access tokens (15min) with refresh tokens (7 days)"
+      rationale: "Balances security (limited exposure window) with UX (stay logged in)"
+      alternatives_considered:
+        - "Long-lived tokens only (rejected - security risk if compromised)"
+        - "Session storage (rejected - doesn't scale horizontally)"
+      constraints_that_influenced: "Need to support stateless authentication for horizontal scaling"
+      scope: "project"
+
+    - decision: "Store refresh tokens in HTTP-only cookies"
+      rationale: "Prevents XSS attacks while allowing automatic inclusion in requests"
+      alternatives_considered:
+        - "LocalStorage (rejected - vulnerable to XSS)"
+        - "SessionStorage (rejected - lost on tab close)"
+      scope: "project"
+
+  established_patterns:
+    - pattern: "All protected routes use authMiddleware decorator"
+      rationale: "Consistent authentication check across all protected endpoints"
+      examples: "@authMiddleware on controller methods requiring authentication"
+      scope: "project"
+
+  conversation_context:
+    - exchange: "Discussed whether to use JWT vs session-based auth"
+      outcome: "JWT chosen for stateless scaling; sessions would require shared storage"
+
+next_steps:
+  - summary: "Add rate limiting to auth endpoints"
+    details: "Prevent brute force attacks on login endpoint"
+    priority: "high"
+    scope: "auth"
+
+  - summary: "Add password reset flow"
+    details: "Email-based password reset with secure tokens"
+    priority: "med"
+    scope: "auth"
+
+# WHAT MAKES THIS A GOOD EXAMPLE:
+# ✓ Multiple related changes grouped logically (feature + tests + docs)
+# ✓ Summaries are concise (<80 chars) and specific
+# ✓ Problem statement clearly explains the goal
+# ✓ Key insights explain both technical and product impact
+# ✓ Decisions include alternatives considered and rationale
+# ✓ Project-scoped items identify patterns for reuse
+# ✓ Conversation context captures important discussions
+# ✓ Next steps are concrete and prioritized

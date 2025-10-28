@@ -35,6 +35,10 @@ COMMANDS:
               Validates input file and suggests improvements before commit
               Catches placeholder text, vague summaries, and common errors
 
+  examples    Show example checkpoint entries and best practices
+              Display examples of well-structured checkpoints
+              Available categories: feature, bugfix, refactor, context, anti-patterns
+
   help        Display this help message
   version     Display version information
 
@@ -52,6 +56,9 @@ EXAMPLES:
   checkpoint start                    # Check readiness and see what's next
   checkpoint check                    # Generate input files in current directory
   checkpoint lint                     # Check input for issues before committing
+  checkpoint examples                 # List available examples
+  checkpoint examples feature         # Show feature example
+  checkpoint examples anti-patterns   # Show common mistakes to avoid
   checkpoint commit --dry-run         # Preview what would be committed
   checkpoint commit --changelog-only  # Only stage the changelog file
   checkpoint init ~/my-project        # Initialize checkpoint in specific directory

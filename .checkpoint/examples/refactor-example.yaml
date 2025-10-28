@@ -1,0 +1,87 @@
+# EXAMPLE: Refactoring
+# This shows a well-structured checkpoint for refactoring code
+
+schema_version: "1"
+timestamp: "2025-01-20T16:45:00-08:00"
+commit_hash: "c3d4e5f6789abcde"
+
+changes:
+  - summary: "Extract validation logic into dedicated validator package"
+    details: "Moved input validation from HTTP handlers into internal/validator package with reusable validation functions"
+    change_type: "refactor"
+    scope: "internal/validator"
+
+  - summary: "Update handlers to use new validator package"
+    details: "Replaced inline validation code in all handlers with validator calls"
+    change_type: "refactor"
+    scope: "handlers"
+
+  - summary: "Add comprehensive validation tests"
+    details: "Test suite covers all validation rules including edge cases and error messages"
+    change_type: "feature"
+    scope: "tests"
+
+context:
+  problem_statement: "Validation logic was duplicated across 15+ handlers, making it hard to maintain consistent validation rules and error messages. Changes required updating multiple locations."
+
+  key_insights:
+    - insight: "Validation rules were inconsistent across different endpoints"
+      impact: "Same field had different validation in different handlers; centralization reveals inconsistencies"
+      scope: "checkpoint"
+
+    - insight: "Extracting cross-cutting concerns reduces duplication and improves testability"
+      impact: "Single source of truth for validation rules; test once, use everywhere"
+      scope: "project"
+
+  decisions_made:
+    - decision: "Create validator package with functional API (Validate() returns error)"
+      rationale: "Simple, idiomatic Go; easy to test; composable for complex validations"
+      alternatives_considered:
+        - "Struct-based validator with builder pattern (rejected - overkill for current needs)"
+        - "Third-party validation library (rejected - adds dependency for simple needs)"
+      constraints_that_influenced: "Minimal dependencies philosophy; validation needs are straightforward"
+      scope: "checkpoint"
+
+    - decision: "Standardize validation error format: field, rule, message"
+      rationale: "Consistent API response format helps frontend handle validation errors uniformly"
+      alternatives_considered:
+        - "Keep existing varied formats (rejected - poor UX)"
+      scope: "project"
+
+  established_patterns:
+    - pattern: "Extract cross-cutting concerns into internal packages when duplicated 3+ times"
+      rationale: "Threshold balances avoiding premature abstraction with reducing duplication"
+      examples: "Validation, logging, error handling, metrics"
+      scope: "project"
+
+    - pattern: "Refactorings include comprehensive tests"
+      rationale: "Ensures behavior unchanged; tests serve as documentation"
+      examples: "This refactoring added 25 validation tests"
+      scope: "project"
+
+  conversation_context:
+    - exchange: "Discussed whether to use struct tags (like validator library) vs functions"
+      outcome: "Functions chosen - more flexible, easier to test, no magic"
+
+    - exchange: "Questioned whether to refactor all handlers at once or incrementally"
+      outcome: "All at once - small enough change, easier to review consistency"
+
+next_steps:
+  - summary: "Extract authentication logic into middleware package"
+    details: "Similar duplication pattern in auth checks across handlers"
+    priority: "med"
+    scope: "internal/middleware"
+
+  - summary: "Create linter rule to prevent inline validation"
+    details: "Enforce use of validator package in new code"
+    priority: "low"
+    scope: "ci"
+
+# WHAT MAKES THIS A GOOD EXAMPLE:
+# ✓ Clearly explains WHY refactoring was needed (duplication, inconsistency)
+# ✓ Documents decision to extract rather than use third-party library
+# ✓ Establishes pattern for when to extract (3+ duplications)
+# ✓ Pattern marked scope:project applies to future refactorings
+# ✓ Next steps identify similar patterns elsewhere
+# ✓ Captures conversation about implementation approach
+# ✓ Tests included as part of refactoring (not separate change)

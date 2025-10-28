@@ -1,0 +1,74 @@
+# EXAMPLE: Bug Fix
+# This shows a well-structured checkpoint for fixing a bug
+
+schema_version: "1"
+timestamp: "2025-01-18T09:15:00-08:00"
+commit_hash: "b2c3d4e5f6789abc"
+
+changes:
+  - summary: "Fix memory leak in database connection pool"
+    details: "Connections were not being properly closed after timeout, causing pool exhaustion after ~2 hours of operation"
+    change_type: "fix"
+    scope: "database"
+
+  - summary: "Add connection pool monitoring tests"
+    details: "Tests verify connections are released under timeout and error conditions"
+    change_type: "feature"
+    scope: "tests"
+
+context:
+  problem_statement: "Production servers experiencing memory leaks causing OOM crashes after 2-3 hours under load. Investigation traced to database connection pool not releasing timed-out connections."
+
+  key_insights:
+    - insight: "Defer statements in error paths weren't executing due to early returns"
+      impact: "Identified pattern affecting multiple connection-handling functions"
+      scope: "project"
+
+    - insight: "Connection pool metrics revealed the leak pattern"
+      impact: "Added monitoring showed gradual accumulation; established need for production metrics"
+      scope: "project"
+
+  decisions_made:
+    - decision: "Use named return values with defer for cleanup in error paths"
+      rationale: "Ensures cleanup code executes even with multiple return statements"
+      alternatives_considered:
+        - "Explicit Close() calls before each return (rejected - error-prone, duplicates code)"
+        - "Wrapper function (rejected - adds complexity for this simple case)"
+      constraints_that_influenced: "Need reliable cleanup without code duplication"
+      scope: "project"
+
+    - decision: "Add connection pool monitoring to production"
+      rationale: "Catch similar leaks early before they cause crashes"
+      scope: "checkpoint"
+
+  failed_approaches:
+    - approach: "Initially tried fixing with explicit Close() calls"
+      why_failed: "Missed several error paths; still leaked under certain conditions"
+      lessons_learned: "Defer is more reliable for cleanup; easier to verify all paths covered"
+      scope: "project"
+
+  established_patterns:
+    - pattern: "Use defer for resource cleanup with named returns in error paths"
+      rationale: "Guarantees cleanup executes regardless of which return path is taken"
+      examples: "Database connections, file handles, locks"
+      scope: "project"
+
+next_steps:
+  - summary: "Audit other connection handling code for similar pattern"
+    details: "Check file operations, HTTP clients, lock management"
+    priority: "high"
+    scope: "codebase"
+
+  - summary: "Add automated leak detection to CI"
+    details: "Run tests with race detector and memory profiling"
+    priority: "med"
+    scope: "ci"
+
+# WHAT MAKES THIS A GOOD EXAMPLE:
+# ✓ Clear problem statement describing the bug and investigation
+# ✓ Root cause identified (defer not executing in error paths)
+# ✓ Failed approach documented to prevent repeating mistake
+# ✓ Pattern established to prevent similar bugs
+# ✓ Scope: project used to mark broadly applicable learnings
+# ✓ Next steps include preventive measures (audit, CI checks)
+# ✓ Details explain WHY the bug occurred, not just WHAT was changed

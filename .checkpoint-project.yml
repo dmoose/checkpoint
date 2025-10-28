@@ -204,3 +204,27 @@ recommended_additions:
   design_principles:
     - principle: Use timestamp-only correlation instead of backfilling hashes to multiple files
       rationale: Only changelog participates in git commit, so only it needs the hash; timestamp is sufficient for linking across files
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-10-28T13:04:19-07:00"
+recommended_additions:
+    key_insights:
+        - insight: Workflow needs explicit session entry point that validates state and guides next steps
+          rationale: Prevents confusion about when to run which command; makes workflow self-teaching
+        - insight: Commands that call os.Exit are hard to test
+          rationale: Extract testable internal implementation that returns success/failure bool
+    established_patterns:
+        - pattern: Commands should have both public wrapper and testable internal implementation
+          rationale: Allows comprehensive testing without mocking os.Exit or other system calls
+          examples: Start() calls startInternal() which returns bool; same pattern should apply to other commands that call os.Exit
+        - pattern: Start command as session entry point
+          rationale: Validates state, shows context, guides next action - makes workflow explicit
+          examples: Run 'checkpoint start' at beginning of each work session
+    failed_approaches:
+        - approach: Initially tried to mock os.Exit in tests
+          why_failed: Mock approach is fragile and doesn't test actual behavior
+          lessons_learned: Better pattern is public wrapper that calls testable internal implementation
+    design_principles:
+        - principle: Create 'start' command as first command of each work session
+          rationale: Validates readiness (git repo, checkpoint init, no conflicts), shows context (next steps), guides user to next action

@@ -535,3 +535,40 @@ next_steps:
       details: Enable finding relevant past decisions and patterns across checkpoint history
       priority: low
       scope: internal/context
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:04:19-07:00"
+commit_hash: ""
+files_changed:
+    - path: cmd/help.go
+      additions: 5
+      deletions: 0
+    - path: main.go
+      additions: 2
+      deletions: 0
+changes:
+    - summary: Add checkpoint start command to validate readiness
+      details: Created cmd/start.go with validation of git repo, checkpoint initialization, no in-progress checkpoint, git status, and pending recommendations. Shows next steps from last checkpoint and guides user to run checkpoint check when ready.
+      change_type: feature
+      scope: cmd/start
+    - summary: Add comprehensive tests for start command
+      details: Created cmd/start_test.go with tests covering successful start, missing git repo, missing checkpoint init, checkpoint in progress, next steps display, and helper function tests
+      change_type: feature
+      scope: cmd/start
+    - summary: Wire start command into main dispatch and help
+      details: Added start case to main.go command switch and added start command documentation to help.go
+      change_type: feature
+      scope: cmd, main
+next_steps:
+    - summary: 'Begin Checkpoint 1: Create .checkpoint/ directory structure'
+      details: Establish directory for examples, prompts, guides, and templates
+      priority: high
+      scope: all
+    - summary: Document context curation workflow for humans
+      details: Add guidance on reviewing project recommendations and maintaining the main project document with new sections
+      priority: med
+      scope: docs
+    - summary: Add validation for new project schema fields
+      details: Ensure dependencies, deployment_targets, and other new sections have appropriate validation rules
+      priority: med
+      scope: internal/project

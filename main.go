@@ -49,6 +49,8 @@ func main() {
 	}
 
 	switch subcommand {
+	case "start":
+		cmd.Start(absPath)
 	case "check":
 		cmd.Check(absPath)
 	case "commit":

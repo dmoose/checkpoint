@@ -108,3 +108,49 @@ context:
           outcome: Added detailed instructions, complete section list, and inline examples to context template
         - exchange: Considered whether to backport new schema to existing project file
           outcome: Updated existing file with all new fields and checkpoint-specific real values
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:04:19-07:00"
+context:
+    problem_statement: LLM incorrectly attempted to run 'checkpoint check' before implementing any code changes, revealing missing workflow guidance for session start
+    key_insights:
+        - insight: Workflow needs explicit session entry point that validates state and guides next steps
+          impact: Prevents confusion about when to run which command; makes workflow self-teaching
+          scope: project
+        - insight: Commands that call os.Exit are hard to test
+          impact: Extract testable internal implementation that returns success/failure bool
+          scope: project
+    decisions_made:
+        - decision: Create 'start' command as first command of each work session
+          rationale: Validates readiness (git repo, checkpoint init, no conflicts), shows context (next steps), guides user to next action
+          alternatives_considered:
+            - Add --status flag to check command
+            - Just improve documentation
+          constraints_that_influenced: Need to catch workflow errors early; documentation alone isn't enough for LLMs
+          scope: project
+        - decision: Show warnings but don't fail on non-critical issues
+          rationale: Pending recommendations or changes in working directory shouldn't block starting work
+          alternatives_considered:
+            - Fail on any non-clean state
+          scope: checkpoint
+    failed_approaches:
+        - approach: Initially tried to mock os.Exit in tests
+          why_failed: Mock approach is fragile and doesn't test actual behavior
+          lessons_learned: Better pattern is public wrapper that calls testable internal implementation
+          scope: project
+    established_patterns:
+        - pattern: Commands should have both public wrapper and testable internal implementation
+          rationale: Allows comprehensive testing without mocking os.Exit or other system calls
+          examples: Start() calls startInternal() which returns bool; same pattern should apply to other commands that call os.Exit
+          scope: project
+        - pattern: Start command as session entry point
+          rationale: Validates state, shows context, guides next action - makes workflow explicit
+          examples: Run 'checkpoint start' at beginning of each work session
+          scope: project
+    conversation_context:
+        - exchange: User correctly identified that I misunderstood the workflow by running 'checkpoint check' before doing any work
+          outcome: Realized need for explicit 'start' command that validates readiness and explains what to do. This is Checkpoint 0 - improving the workflow itself.
+        - exchange: Discussed whether to fail on warnings (in-progress checkpoint, pending recommendations)
+          outcome: Decided warnings shouldn't block start - they're informational. Only errors (no git, no init) should prevent starting work.
+        - exchange: Question about how to count checkpoints in changelog
+          outcome: Realized document separators (---) are the correct approach; first separator marks meta doc, subsequent ones mark checkpoints

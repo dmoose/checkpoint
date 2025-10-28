@@ -234,3 +234,49 @@ context:
           outcome: Manual writing chosen - examples need nuance and annotations that generation can't provide
         - exchange: Questioned how much detail to include in examples
           outcome: Decided on comprehensive detail - better to have rich examples users can simplify than sparse examples they must augment
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:54:34-07:00"
+context:
+    problem_statement: Users and LLMs need comprehensive documentation to understand checkpoint workflow, best practices, and integration patterns. Examples alone aren't enough - need narrative guides explaining how and why.
+    key_insights:
+        - insight: 'Guides serve different audiences: first-time users need quick start, LLMs need workflow integration, everyone needs best practices'
+          impact: Three distinct guides cover the full spectrum of use cases without overwhelming any single audience
+          scope: project
+        - insight: Documentation should be self-contained in .checkpoint/ directory
+          impact: All resources available locally; no external dependencies or web docs needed
+          scope: project
+        - insight: Real-world examples in guides make concepts concrete
+          impact: Guides include specific scenarios, command outputs, and YAML examples throughout
+          scope: checkpoint
+    decisions_made:
+        - decision: Create three focused guides rather than one comprehensive manual
+          rationale: Different users need different information; focused guides reduce cognitive load and make specific topics easier to find
+          alternatives_considered:
+            - Single comprehensive manual (rejected - too overwhelming for new users)
+            - Many small guides (rejected - harder to find information, duplication)
+          constraints_that_influenced: Need to serve first-time users, experienced users, and LLMs with different needs
+          scope: project
+        - decision: Write guides in Markdown for readability and portability
+          rationale: Markdown is human-readable as plain text, renders nicely in editors/viewers, easy to edit
+          alternatives_considered:
+            - YAML format (rejected - less readable for long-form content)
+            - HTML (rejected - harder to edit, requires browser)
+          scope: checkpoint
+        - decision: Include extensive examples and templates in guides
+          rationale: Learn by example - show specific YAML, commands, workflows rather than just describing them
+          scope: project
+    established_patterns:
+        - pattern: Guides include both concept explanation and concrete examples
+          rationale: Theory + practice = effective learning; readers can understand why and see how
+          examples: Each major concept in guides followed by example YAML, command output, or workflow
+          scope: project
+        - pattern: Documentation organized by audience and use case
+          rationale: Makes it easy to find relevant information; reduces time to value
+          examples: first-time-user.md for newcomers, llm-workflow.md for LLM integration, best-practices.md for ongoing use
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether to include guide command in this checkpoint
+          outcome: Decided to create guides first, command in next checkpoint - establishes content before building command to display it
+        - exchange: Questioned how much detail to include in guides
+          outcome: Comprehensive detail chosen - guides are reference material, users can skim but depth available when needed

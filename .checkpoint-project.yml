@@ -265,3 +265,25 @@ recommended_additions:
     design_principles:
         - principle: Include extensive annotations in examples explaining what makes them good
           rationale: Self-teaching - examples explain themselves; helps users understand the 'why' behind patterns
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-10-28T13:54:34-07:00"
+recommended_additions:
+    key_insights:
+        - insight: 'Guides serve different audiences: first-time users need quick start, LLMs need workflow integration, everyone needs best practices'
+          rationale: Three distinct guides cover the full spectrum of use cases without overwhelming any single audience
+        - insight: Documentation should be self-contained in .checkpoint/ directory
+          rationale: All resources available locally; no external dependencies or web docs needed
+    established_patterns:
+        - pattern: Guides include both concept explanation and concrete examples
+          rationale: Theory + practice = effective learning; readers can understand why and see how
+          examples: Each major concept in guides followed by example YAML, command output, or workflow
+        - pattern: Documentation organized by audience and use case
+          rationale: Makes it easy to find relevant information; reduces time to value
+          examples: first-time-user.md for newcomers, llm-workflow.md for LLM integration, best-practices.md for ongoing use
+    design_principles:
+        - principle: Create three focused guides rather than one comprehensive manual
+          rationale: Different users need different information; focused guides reduce cognitive load and make specific topics easier to find
+        - principle: Include extensive examples and templates in guides
+          rationale: Learn by example - show specific YAML, commands, workflows rather than just describing them

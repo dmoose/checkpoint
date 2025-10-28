@@ -626,7 +626,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2025-10-28T13:41:41-07:00"
-commit_hash: ""
+commit_hash: 02c96f0aae02efa9440fcd4a459b1157e4226dde
 files_changed:
     - path: .checkpoint-changelog.yaml
       additions: 1
@@ -671,3 +671,45 @@ next_steps:
       details: Ensure dependencies, deployment_targets, and other new sections have appropriate validation rules
       priority: med
       scope: internal/project
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:54:34-07:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+changes:
+    - summary: Create first-time user guide in .checkpoint/guides/
+      details: Comprehensive 9KB guide covering quick start, workflow, file explanations, common scenarios (solo/LLM/team), best practices, troubleshooting, and philosophy
+      change_type: docs
+      scope: .checkpoint/guides
+    - summary: Create LLM workflow guide in .checkpoint/guides/
+      details: Detailed 14KB guide for LLM-specific workflow including responsibilities, context capture, scope usage, common mistakes, prompt templates, and example sessions
+      change_type: docs
+      scope: .checkpoint/guides
+    - summary: Create best practices guide in .checkpoint/guides/
+      details: Comprehensive 17KB guide covering core principles, writing effective changes/context, common scenarios, workflow tips, maintenance practices, anti-patterns, and success metrics
+      change_type: docs
+      scope: .checkpoint/guides
+next_steps:
+    - summary: Add checkpoint guide command to display guides
+      details: Implement command to view guides similar to examples command, allowing easy access to first-time-user, llm-workflow, and best-practices guides
+      priority: high
+      scope: cmd
+    - summary: Update CHECKPOINT.md to reference examples and guides
+      details: Add pointers to new resources in .checkpoint/ directory; keep CHECKPOINT.md as quick reference that directs to detailed resources
+      priority: high
+      scope: docs
+    - summary: Create context curation guide
+      details: Add guide specifically for reviewing and curating .checkpoint-project.yml recommendations
+      priority: med
+      scope: .checkpoint/guides
+    - summary: Add validation for new project schema fields
+      details: Ensure dependencies, deployment_targets, and other new sections have appropriate validation rules
+      priority: med
+      scope: internal/project
+    - summary: Create prompts.yaml file with structured LLM prompts
+      details: Populate .checkpoint/prompts/ with reusable prompt templates for common scenarios
+      priority: med
+      scope: .checkpoint/prompts

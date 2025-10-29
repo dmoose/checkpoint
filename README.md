@@ -23,17 +23,37 @@ It pairs a Go CLI with a simple YAML schema. Each "checkpoint" is one Git commit
   - `.checkpoint-changelog.yaml` (tracked): append-only YAML, one document per checkpoint with an array of changes
   - `.checkpoint-context.yml` (tracked): append-only context log capturing reasoning and decisions
   - `.checkpoint-project.yml` (tracked): project-wide patterns and conventions (human-curated)
-  - `.checkpoint-status.yaml` (untracked): last-commit metadata for discovery
+  - `.checkpoint-status.yaml` (untracked): last-commit metadata with project identity for discovery
   - `.checkpoint/` (tracked): directory containing examples, guides, prompts, and templates
 
 - macOS Swift app (separate project)
   - Recursively discovers projects by `.checkpoint-status.yaml`
+  - Uses `project_id` and `path_hash` from status file for project identification and deduplication
   - Reads `.checkpoint-changelog.yaml` (multi-document YAML)
   - Buckets changes by local day and generates per-project and cross-project summaries
 
 ## Data model (YAML)
 
-One YAML document per checkpoint:
+### Changelog Document
+
+The `.checkpoint-changelog.yaml` file contains:
+1. A meta document (first document, created once)
+2. One checkpoint document per commit
+
+**Meta Document (first document in changelog):**
+
+```yaml
+---
+schema_version: "1"
+document_type: "meta"
+project_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"  # ULID, unique project identifier
+path_hash: "abcdef1234567890"              # SHA256 hash of project path (first 16 chars)
+created_at: "2025-01-01T12:00:00Z"
+tool_version: "1.0.0"
+languages: []                               # Detected project languages
+```
+
+**Checkpoint Document (one per commit):**
 
 ```yaml
 ---
@@ -51,6 +71,29 @@ next_steps:
     priority: "low|med|high"
     scope: "affected component"
 ```
+
+### Status File
+
+The `.checkpoint-status.yaml` file contains project identity and last commit metadata for discovery:
+
+```yaml
+project_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"  # Mirrored from changelog meta
+path_hash: "abcdef1234567890"              # Mirrored from changelog meta
+last_commit_hash: "abc123..."
+last_commit_timestamp: "2025-10-22T16:00:00Z"
+last_commit_message: "Checkpoint: feature - Add new feature"
+status: "success"
+changes_count: 3
+next_steps:
+  - summary: "Follow-up task"
+    priority: "high"
+    scope: "module"
+```
+
+The `project_id` and `path_hash` are copied from the changelog meta document during each commit, enabling:
+- Unique project identification without parsing the full changelog
+- Detection of moved/renamed projects via path_hash comparison
+- Project deduplication across different discovery locations
 
 ## Workflow
 

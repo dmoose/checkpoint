@@ -156,6 +156,47 @@ func createMetaDocument(changelogPath, toolVersion string) (*MetaDocument, error
 	}, nil
 }
 
+// ReadMetaDocument reads and returns the meta document from the changelog
+// Returns nil if no meta document exists (non-fatal)
+func ReadMetaDocument(changelogPath string) (*MetaDocument, error) {
+	content, err := os.ReadFile(changelogPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil // File doesn't exist yet, not an error
+		}
+		return nil, fmt.Errorf("read changelog: %w", err)
+	}
+
+	contentStr := string(content)
+	if !strings.Contains(contentStr, "document_type: meta") {
+		return nil, nil // No meta document, not an error
+	}
+
+	// Extract first document
+	firstDocEnd := strings.Index(contentStr, "\n---\n")
+	var firstDoc string
+	if firstDocEnd != -1 {
+		firstDoc = contentStr[:firstDocEnd]
+	} else {
+		firstDoc = contentStr
+	}
+
+	// Remove leading "---\n" if present
+	firstDoc = strings.TrimPrefix(firstDoc, "---\n")
+
+	var meta MetaDocument
+	if err := yaml.Unmarshal([]byte(firstDoc), &meta); err != nil {
+		return nil, fmt.Errorf("parse meta document: %w", err)
+	}
+
+	// Verify it's actually a meta document
+	if meta.DocumentType != "meta" {
+		return nil, nil
+	}
+
+	return &meta, nil
+}
+
 // UpdateLastDocument finds the last commit_hash line and updates it
 func UpdateLastDocument(path string, fn func(*schema.CheckpointEntry) *schema.CheckpointEntry) error {
 	content, err := os.ReadFile(path)

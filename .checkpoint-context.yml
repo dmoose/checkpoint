@@ -407,3 +407,16 @@ context:
           outcome: Chose regex because spec explicitly shows {{variable_name}} format and requires silent handling of unknown variables, which text/template doesn't provide naturally
         - exchange: Questioned if init should overwrite CHECKPOINT.md in existing projects
           outcome: Decided yes - CHECKPOINT.md is documentation that should be updated, unlike user data files (changelog, project, prompts)
+---
+schema_version: "1"
+timestamp: "2025-10-29T08:05:11-07:00"
+context:
+    problem_statement: The macOS app needs to identify and deduplicate projects during discovery. Status file only had commit metadata, requiring full changelog parsing to get project_id and path_hash from meta document.
+    key_insights:
+        - insight: Status file becomes more useful when self-contained for discovery
+          impact: macOS app can identify projects without parsing multi-document YAML
+          scope: checkpoint
+    decisions_made:
+        - decision: Read meta document rather than regenerate identifiers
+          rationale: Ensures consistency with changelog - single source of truth. Treat as non-fatal if missing for backwards compatibility.
+          scope: checkpoint

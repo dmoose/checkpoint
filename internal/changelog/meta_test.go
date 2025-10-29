@@ -315,3 +315,205 @@ func TestProjectIDUniqueness(t *testing.T) {
 		t.Error("different calls should produce different project IDs")
 	}
 }
+
+func TestReadMetaDocument_ValidMeta(t *testing.T) {
+	tmpDir := t.TempDir()
+	changelogPath := filepath.Join(tmpDir, ".checkpoint-changelog.yaml")
+
+	// Create changelog with meta document
+	err := createChangelogWithMeta(changelogPath, "1.0.0")
+	if err != nil {
+		t.Fatalf("createChangelogWithMeta failed: %v", err)
+	}
+
+	// Read meta document
+	meta, err := ReadMetaDocument(changelogPath)
+	if err != nil {
+		t.Fatalf("ReadMetaDocument failed: %v", err)
+	}
+
+	if meta == nil {
+		t.Fatal("expected meta document, got nil")
+	}
+
+	// Verify fields
+	if meta.DocumentType != "meta" {
+		t.Errorf("expected document_type 'meta', got %q", meta.DocumentType)
+	}
+	if meta.SchemaVersion != "1" {
+		t.Errorf("expected schema_version '1', got %q", meta.SchemaVersion)
+	}
+	if meta.ProjectID == "" {
+		t.Error("expected non-empty project_id")
+	}
+	if meta.PathHash == "" {
+		t.Error("expected non-empty path_hash")
+	}
+	if meta.ToolVersion != "1.0.0" {
+		t.Errorf("expected tool_version '1.0.0', got %q", meta.ToolVersion)
+	}
+}
+
+func TestReadMetaDocument_NoFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	changelogPath := filepath.Join(tmpDir, ".checkpoint-changelog.yaml")
+
+	// Read from non-existent file
+	meta, err := ReadMetaDocument(changelogPath)
+	if err != nil {
+		t.Fatalf("ReadMetaDocument should not error on missing file: %v", err)
+	}
+
+	if meta != nil {
+		t.Error("expected nil meta for missing file")
+	}
+}
+
+func TestReadMetaDocument_NoMeta(t *testing.T) {
+	tmpDir := t.TempDir()
+	changelogPath := filepath.Join(tmpDir, ".checkpoint-changelog.yaml")
+
+	// Create changelog without meta document
+	content := `---
+schema_version: "1"
+timestamp: "2023-01-01T12:00:00Z"
+commit_hash: "abc123"
+changes:
+  - summary: "test change"
+    change_type: "feature"
+`
+	err := os.WriteFile(changelogPath, []byte(content), 0644)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	// Read meta document
+	meta, err := ReadMetaDocument(changelogPath)
+	if err != nil {
+		t.Fatalf("ReadMetaDocument failed: %v", err)
+	}
+
+	if meta != nil {
+		t.Error("expected nil meta for changelog without meta document")
+	}
+}
+
+func TestReadMetaDocument_WithMultipleDocuments(t *testing.T) {
+	tmpDir := t.TempDir()
+	changelogPath := filepath.Join(tmpDir, ".checkpoint-changelog.yaml")
+
+	// Create changelog with meta and checkpoint documents
+	content := `---
+schema_version: "1"
+document_type: meta
+project_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+path_hash: "abcdef1234567890"
+created_at: "2023-01-01T12:00:00Z"
+tool_version: "2.5.0"
+---
+schema_version: "1"
+timestamp: "2023-01-01T13:00:00Z"
+commit_hash: "abc123"
+changes:
+  - summary: "first change"
+    change_type: "feature"
+---
+schema_version: "1"
+timestamp: "2023-01-02T14:00:00Z"
+commit_hash: "def456"
+changes:
+  - summary: "second change"
+    change_type: "fix"
+`
+	err := os.WriteFile(changelogPath, []byte(content), 0644)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	// Read meta document
+	meta, err := ReadMetaDocument(changelogPath)
+	if err != nil {
+		t.Fatalf("ReadMetaDocument failed: %v", err)
+	}
+
+	if meta == nil {
+		t.Fatal("expected meta document, got nil")
+	}
+
+	// Verify it read the first document (meta)
+	if meta.DocumentType != "meta" {
+		t.Errorf("expected document_type 'meta', got %q", meta.DocumentType)
+	}
+	if meta.ProjectID != "01ARZ3NDEKTSV4RRFFQ69G5FAV" {
+		t.Errorf("expected project_id '01ARZ3NDEKTSV4RRFFQ69G5FAV', got %q", meta.ProjectID)
+	}
+	if meta.PathHash != "abcdef1234567890" {
+		t.Errorf("expected path_hash 'abcdef1234567890', got %q", meta.PathHash)
+	}
+	if meta.ToolVersion != "2.5.0" {
+		t.Errorf("expected tool_version '2.5.0', got %q", meta.ToolVersion)
+	}
+}
+
+func TestReadMetaDocument_CorruptedYAML(t *testing.T) {
+	tmpDir := t.TempDir()
+	changelogPath := filepath.Join(tmpDir, ".checkpoint-changelog.yaml")
+
+	// Create changelog with corrupted YAML
+	content := `---
+schema_version: "1"
+document_type: meta
+project_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV
+path_hash: "abcdef1234567890"
+this is not valid yaml: [[[
+`
+	err := os.WriteFile(changelogPath, []byte(content), 0644)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	// Read meta document - should return error
+	meta, err := ReadMetaDocument(changelogPath)
+	if err == nil {
+		t.Error("expected error for corrupted YAML")
+	}
+	if meta != nil {
+		t.Error("expected nil meta for corrupted YAML")
+	}
+}
+
+func TestReadMetaDocument_NonMetaFirstDocument(t *testing.T) {
+	tmpDir := t.TempDir()
+	changelogPath := filepath.Join(tmpDir, ".checkpoint-changelog.yaml")
+
+	// Create changelog where first document is not meta
+	content := `---
+schema_version: "1"
+timestamp: "2023-01-01T13:00:00Z"
+commit_hash: "abc123"
+changes:
+  - summary: "first change"
+    change_type: "feature"
+---
+schema_version: "1"
+document_type: meta
+project_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+path_hash: "abcdef1234567890"
+created_at: "2023-01-01T12:00:00Z"
+tool_version: "1.0.0"
+`
+	err := os.WriteFile(changelogPath, []byte(content), 0644)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	// Read meta document - should return nil since first doc is not meta
+	meta, err := ReadMetaDocument(changelogPath)
+	if err != nil {
+		t.Fatalf("ReadMetaDocument failed: %v", err)
+	}
+
+	if meta != nil {
+		t.Error("expected nil meta when first document is not meta type")
+	}
+}

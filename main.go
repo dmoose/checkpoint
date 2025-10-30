@@ -95,6 +95,33 @@ func main() {
 			os.Exit(1)
 		}
 		cmd.Examples(examplesAbsPath, category)
+	case "guide":
+		// Guide takes optional topic as first positional arg
+		// Same logic as examples command
+		topic := ""
+		guidePath := "."
+
+		if len(positional) > 0 {
+			firstArg := positional[0]
+			if strings.Contains(firstArg, "/") || strings.Contains(firstArg, ".") ||
+				(len(positional) > 1) {
+				if len(positional) == 1 {
+					guidePath = firstArg
+				} else {
+					topic = firstArg
+					guidePath = positional[1]
+				}
+			} else {
+				topic = firstArg
+			}
+		}
+
+		guideAbsPath, err := filepath.Abs(guidePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.Guide(guideAbsPath, topic)
 	case "help", "-h", "--help":
 		cmd.Help()
 	case "version", "-v", "--version":

@@ -13,6 +13,10 @@ COMMANDS:
               Checks git status, checkpoint initialization, and displays
               planned work from last checkpoint
 
+  summary     Show project overview and recent activity
+              Display checkpoints, status, next steps, and patterns
+              Flags: --json (machine-readable output)
+
   check       Generate input file for LLM
               Creates .checkpoint-input and .checkpoint-diff files
               Guards against concurrent checkpoints with lock files
@@ -58,6 +62,8 @@ ARGUMENTS:
 
 EXAMPLES:
   checkpoint start                    # Check readiness and see what's next
+  checkpoint summary                  # Show project overview
+  checkpoint summary --json           # Get summary as JSON
   checkpoint check                    # Generate input files in current directory
   checkpoint lint                     # Check input for issues before committing
   checkpoint examples                 # List available examples

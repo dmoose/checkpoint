@@ -420,3 +420,25 @@ context:
         - decision: Read meta document rather than regenerate identifiers
           rationale: Ensures consistency with changelog - single source of truth. Treat as non-fatal if missing for backwards compatibility.
           scope: checkpoint
+---
+schema_version: "1"
+timestamp: "2025-11-03T19:14:42-08:00"
+context:
+    problem_statement: Expose checkpoint data via MCP without breaking existing CLI behavior
+    key_insights:
+        - insight: Directory-dependent output favors stdio transport with per-call project_id
+          impact: Stable, IDE-agnostic integration; avoids connection-scoped state
+          scope: checkpoint
+    decisions_made:
+        - decision: Use mcp-go and stdio-only MVP with a single 'project' tool
+          rationale: Minimize surface area; verify end-to-end before adding transports/tools
+          alternatives_considered:
+            - Connection-scoped context (rejected due to IDE variability)
+          constraints_that_influenced: Multiple repos open in IDE; unknown process lifecycles
+          scope: checkpoint
+        - decision: 'Roots precedence: --root > CHECKPOINT_ROOTS > config; rescan on miss'
+          rationale: Deterministic resolution and robustness to project moves
+          scope: checkpoint
+        - decision: Never write .checkpoint-* from MCP
+          rationale: Preserve append-only guarantees; CLI remains sole writer
+          scope: project

@@ -351,3 +351,11 @@ recommended_additions:
           rationale: Allows project defaults in prompts.yaml to be overridden per-use with --var flags, while automatic variables like project_name are always available
         - principle: Init command checks file existence before creating
           rationale: Makes init safe to run in existing projects to add new features (prompts, guides) without destroying user data like changelog or project files
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2025-11-03T19:14:42-08:00"
+recommended_additions:
+    design_principles:
+        - principle: Never write .checkpoint-* from MCP
+          rationale: Preserve append-only guarantees; CLI remains sole writer

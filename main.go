@@ -24,8 +24,10 @@ func main() {
 	dryRun := false
 	changelogOnly := false
 	jsonOutput := false
+	varFlags := make(map[string]string)
 	var positional []string
-	for _, a := range args {
+	for i := 0; i < len(args); i++ {
+		a := args[i]
 		if a == "-n" || a == "--dry-run" {
 			dryRun = true
 			continue
@@ -36,6 +38,15 @@ func main() {
 		}
 		if a == "--json" {
 			jsonOutput = true
+			continue
+		}
+		if a == "--var" && i+1 < len(args) {
+			// Parse key=value
+			parts := strings.SplitN(args[i+1], "=", 2)
+			if len(parts) == 2 {
+				varFlags[parts[0]] = parts[1]
+			}
+			i++ // Skip next arg
 			continue
 		}
 		if strings.HasPrefix(a, "-") {
@@ -129,6 +140,33 @@ func main() {
 			os.Exit(1)
 		}
 		cmd.Guide(guideAbsPath, topic)
+	case "prompt", "prompts":
+		// Prompt takes optional prompt ID as first positional arg
+		// Same logic as examples/guide commands
+		promptID := ""
+		promptPath := "."
+
+		if len(positional) > 0 {
+			firstArg := positional[0]
+			if strings.Contains(firstArg, "/") || strings.Contains(firstArg, ".") ||
+				(len(positional) > 1) {
+				if len(positional) == 1 {
+					promptPath = firstArg
+				} else {
+					promptID = firstArg
+					promptPath = positional[1]
+				}
+			} else {
+				promptID = firstArg
+			}
+		}
+
+		promptAbsPath, err := filepath.Abs(promptPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.Prompt(promptAbsPath, promptID, varFlags)
 	case "help", "-h", "--help":
 		cmd.Help()
 	case "version", "-v", "--version":

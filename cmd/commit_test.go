@@ -241,6 +241,104 @@ changes:
 	}
 }
 
+// TestGenerateStatusFileWithProjectMetadata tests that status file includes project_id and path_hash
+func TestGenerateStatusFileWithProjectMetadata(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "checkpoint-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Initialize git repo
+	if err := runGitCmd(tmpDir, "init"); err != nil {
+		t.Fatalf("failed to init git repo: %v", err)
+	}
+	if err := runGitCmd(tmpDir, "config", "user.email", "test@example.com"); err != nil {
+		t.Fatalf("failed to set git email: %v", err)
+	}
+	if err := runGitCmd(tmpDir, "config", "user.name", "Test User"); err != nil {
+		t.Fatalf("failed to set git name: %v", err)
+	}
+
+	// Create valid input file
+	inputYAML := `schema_version: "1"
+timestamp: "2023-01-01T12:00:00Z"
+commit_hash: ""
+changes:
+  - summary: "Add test feature"
+    change_type: "feature"
+    scope: "test"
+next_steps:
+  - summary: "Follow up task"
+    priority: "high"
+    scope: "test"`
+
+	inputPath := filepath.Join(tmpDir, config.InputFileName)
+	err = file.WriteFile(inputPath, inputYAML)
+	if err != nil {
+		t.Fatalf("failed to write input file: %v", err)
+	}
+
+	// Run commit (which will create changelog with meta and status file)
+	CommitWithOptions(tmpDir, CommitOptions{}, "test-version")
+
+	// Read status file
+	statusPath := filepath.Join(tmpDir, config.StatusFileName)
+	if !file.Exists(statusPath) {
+		t.Fatal("status file should have been created")
+	}
+
+	statusContent, err := file.ReadFile(statusPath)
+	if err != nil {
+		t.Fatalf("failed to read status file: %v", err)
+	}
+
+	// Verify status file contains project metadata
+	if !strings.Contains(statusContent, "project_id:") {
+		t.Error("status file should contain project_id")
+	}
+	if !strings.Contains(statusContent, "path_hash:") {
+		t.Error("status file should contain path_hash")
+	}
+
+	// Verify status file contains commit metadata
+	if !strings.Contains(statusContent, "last_commit_hash:") {
+		t.Error("status file should contain last_commit_hash")
+	}
+	if !strings.Contains(statusContent, "last_commit_timestamp:") {
+		t.Error("status file should contain last_commit_timestamp")
+	}
+	if !strings.Contains(statusContent, "last_commit_message:") {
+		t.Error("status file should contain last_commit_message")
+	}
+	if !strings.Contains(statusContent, "status: \"success\"") {
+		t.Error("status file should contain status: success")
+	}
+	if !strings.Contains(statusContent, "changes_count:") {
+		t.Error("status file should contain changes_count")
+	}
+
+	// Verify next_steps are preserved
+	if !strings.Contains(statusContent, "next_steps:") {
+		t.Error("status file should contain next_steps")
+	}
+	if !strings.Contains(statusContent, "Follow up task") {
+		t.Error("status file should contain next step summary")
+	}
+
+	// Verify project_id and path_hash come before commit metadata
+	projectIDIndex := strings.Index(statusContent, "project_id:")
+	lastCommitIndex := strings.Index(statusContent, "last_commit_hash:")
+	if projectIDIndex > lastCommitIndex {
+		t.Error("project_id should come before last_commit_hash in status file")
+	}
+
+	pathHashIndex := strings.Index(statusContent, "path_hash:")
+	if pathHashIndex > lastCommitIndex {
+		t.Error("path_hash should come before last_commit_hash in status file")
+	}
+}
+
 // Helper function to run git commands for testing
 func runGitCmd(dir string, args ...string) error {
 	cmd := exec.Command("git", args...)

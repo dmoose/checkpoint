@@ -163,9 +163,18 @@ func CommitWithOptions(projectPath string, opts CommitOptions, version string) {
 		fmt.Fprintf(os.Stderr, "hint: the commit succeeded, but you may need to manually add the commit hash\n")
 	}
 
-	// Write status file (for macOS app discovery) and carry-forward next_steps
+	// Read meta document for project metadata
+	var projectID, pathHash string
+	if meta, err := changelog.ReadMetaDocument(changelogPath); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to read meta document: %v\n", err)
+	} else if meta != nil {
+		projectID = meta.ProjectID
+		pathHash = meta.PathHash
+	}
+
+	// Write status file (for macOS app discovery) with project metadata
 	statusPath := filepath.Join(projectPath, config.StatusFileName)
-	statusContent := generateStatusFile(entry, commitMsg)
+	statusContent := generateStatusFile(entry, commitMsg, projectID, pathHash)
 	if err := file.WriteFile(statusPath, statusContent); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to write status file: %v\n", err)
 		fmt.Fprintf(os.Stderr, "hint: this is non-fatal, but the macOS app may not discover this project\n")
@@ -315,9 +324,19 @@ func generateProjectRecommendations(ctx context.CheckpointContext) *struct {
 }
 
 // generateStatusFile creates status file content for macOS app discovery
-func generateStatusFile(entry *schema.CheckpointEntry, commitMsg string) string {
+func generateStatusFile(entry *schema.CheckpointEntry, commitMsg string, projectID string, pathHash string) string {
 	// include next_steps to be surfaced in the next check
 	var b strings.Builder
+
+	// Project metadata (if available)
+	if projectID != "" {
+		b.WriteString(fmt.Sprintf("project_id: \"%s\"\n", projectID))
+	}
+	if pathHash != "" {
+		b.WriteString(fmt.Sprintf("path_hash: \"%s\"\n", pathHash))
+	}
+
+	// Commit metadata
 	b.WriteString(fmt.Sprintf("last_commit_hash: \"%s\"\n", entry.CommitHash))
 	b.WriteString(fmt.Sprintf("last_commit_timestamp: \"%s\"\n", entry.Timestamp))
 	b.WriteString(fmt.Sprintf("last_commit_message: \"%s\"\n", commitMsg))

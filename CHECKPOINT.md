@@ -14,12 +14,14 @@ Key files:
 - .checkpoint-changelog.yaml: Append-only YAML changelog; one document per checkpoint with changes[]
 - .checkpoint-context.yml: Append-only context log; captures reasoning and decisions
 - .checkpoint-project.yml: Project-wide patterns and conventions (human-curated)
-- .checkpoint-status.yaml: Last commit metadata for discovery
+- .checkpoint-status.yaml: Last commit metadata with project identity for discovery
 
 Concepts:
 - One checkpoint equals one Git commit. The tool stages ALL changes when committing.
+- The changelog starts with a meta document containing project_id and path_hash for identity.
 - The changelog document is appended before commit; after commit, the tool backfills commit_hash into the last document without another commit.
 - Each document contains an array of changes; use concise summaries and optional details.
+- Status file mirrors project_id and path_hash from the changelog meta for efficient discovery.
 - Context captures the "why" behind decisions to maintain continuity across LLM sessions.
 - Project file aggregates project-wide patterns; human curates from checkpoint recommendations.
 

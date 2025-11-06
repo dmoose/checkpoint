@@ -59,7 +59,7 @@ FILES:
   .checkpoint-input              Editable input file for LLM/user (temporary)
   .checkpoint-diff               Git diff context for reference (temporary)
   .checkpoint-changelog.yaml     Append-only YAML changelog (tracked in git)
-  .checkpoint-status.yaml        Last commit metadata for discovery (not committed)
+  .checkpoint-status.yaml        Last commit metadata with project identity for discovery (not committed)
   .checkpoint-lock               Lock file to prevent concurrent operations (temporary)
 
 ARGUMENTS:

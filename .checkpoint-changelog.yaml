@@ -815,7 +815,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2025-10-28T15:39:48-07:00"
-commit_hash: ""
+commit_hash: 2c367f03e7c41141f0c0e7e13a23d349e6366c31
 files_changed:
     - path: CHECKPOINT.md
       additions: 23
@@ -880,3 +880,53 @@ next_steps:
       details: Add --prompt flag to checkpoint check to automatically display fill-checkpoint prompt after generating input files
       priority: low
       scope: cmd
+---
+schema_version: "1"
+timestamp: "2025-10-29T08:05:11-07:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: CHECKPOINT.md
+      additions: 3
+      deletions: 1
+    - path: README.md
+      additions: 45
+      deletions: 2
+    - path: cmd/commit.go
+      additions: 22
+      deletions: 3
+    - path: cmd/commit_test.go
+      additions: 98
+      deletions: 0
+    - path: cmd/help.go
+      additions: 1
+      deletions: 1
+    - path: cmd/init.go
+      additions: 3
+      deletions: 1
+    - path: internal/changelog/changelog.go
+      additions: 41
+      deletions: 0
+    - path: internal/changelog/meta_test.go
+      additions: 202
+      deletions: 0
+changes:
+    - summary: Mirror project_id and path_hash into status file
+      details: Status file now includes project_id and path_hash from changelog meta document, enabling macOS app to identify projects without parsing full changelog. Includes ReadMetaDocument function, updated commit workflow, comprehensive tests, and documentation.
+      change_type: feature
+      scope: status file
+next_steps:
+    - summary: Add more default prompts for common scenarios
+      details: Expand prompt library with refactoring, debugging, documentation, and performance optimization prompts
+      priority: med
+      scope: .checkpoint/prompts
+    - summary: Consider optional auto-prompt from check command
+      details: Add --prompt flag to checkpoint check to automatically display fill-checkpoint prompt after generating input files
+      priority: low
+      scope: cmd
+    - summary: Update macOS app to use project metadata from status file
+      details: Modify discovery logic to read project_id and path_hash from status file for efficient identification and deduplication
+      priority: high
+      scope: macOS app

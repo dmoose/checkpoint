@@ -140,6 +140,20 @@ func main() {
 			os.Exit(1)
 		}
 		cmd.Guide(guideAbsPath, topic)
+	case "mcp":
+		// MCP stdio server; supports --root flags
+		var roots []string
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			if a == "--root" && i+1 < len(args) {
+				roots = append(roots, args[i+1])
+				i++
+			}
+		}
+		if err := cmd.MCP(cmd.MCPOptions{Roots: roots}); err != nil {
+			fmt.Fprintf(os.Stderr, "mcp error: %v\n", err)
+			os.Exit(1)
+		}
 	case "prompt", "prompts":
 		// Prompt takes optional prompt ID as first positional arg
 		// Same logic as examples/guide commands

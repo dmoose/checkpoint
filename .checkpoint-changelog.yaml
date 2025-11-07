@@ -930,3 +930,61 @@ next_steps:
       details: Modify discovery logic to read project_id and path_hash from status file for efficient identification and deduplication
       priority: high
       scope: macOS app
+---
+schema_version: "1"
+timestamp: "2025-11-03T19:14:42-08:00"
+commit_hash: ""
+files_changed:
+    - path: README.md
+      additions: 5
+      deletions: 0
+    - path: go.mod
+      additions: 12
+      deletions: 0
+    - path: go.sum
+      additions: 35
+      deletions: 0
+    - path: internal/file/file.go
+      additions: 1
+      deletions: 1
+    - path: internal/file/file_test.go
+      additions: 1
+      deletions: 1
+    - path: main.go
+      additions: 14
+      deletions: 0
+changes:
+    - summary: Add MCP stdio server and 'mcp' command
+      details: Introduce stdio-only MCP with roots-based project resolution and read-only scope
+      change_type: feature
+      scope: cmd/mcp, main
+    - summary: Implement 'project' tool returning structured project info
+      details: Echo project_id; include project_root, path_hash, checkpoint_count, last timestamp; verify status each call; rescan on miss
+      change_type: feature
+      scope: cmd/mcp
+    - summary: Document MCP command and usage
+      details: README documents roots precedence and project tool params
+      change_type: docs
+      scope: README
+    - summary: Add WARP.md with repo commands and architecture
+      change_type: docs
+      scope: WARP.md
+next_steps:
+    - summary: Add more default prompts for common scenarios
+      details: Expand prompt library with refactoring, debugging, documentation, and performance optimization prompts
+      priority: med
+      scope: .checkpoint/prompts
+    - summary: Consider optional auto-prompt from check command
+      details: Add --prompt flag to checkpoint check to automatically display fill-checkpoint prompt after generating input files
+      priority: low
+      scope: cmd
+    - summary: Update macOS app to use project metadata from status file
+      details: Modify discovery logic to read project_id and path_hash from status file for efficient identification and deduplication
+      priority: high
+      scope: macOS app
+    - summary: Add MCP 'status' tool returning server info
+      priority: med
+      scope: cmd/mcp
+    - summary: Add tests for roots cache, rescan-on-miss, duplicate detection
+      priority: high
+      scope: cmd/mcp

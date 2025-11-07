@@ -173,6 +173,11 @@ The `project_id` and `path_hash` are copied from the changelog meta document dur
   - Usage: `checkpoint prompt [id] [--var key=value]`
   - Examples: session-start, fill-checkpoint, implement-feature, fix-bug, code-review
 
+- `checkpoint mcp [--root DIR]...`
+  - Start MCP stdio server (read-only) for multi-project access by project_id
+  - Roots precedence: `--root` (repeatable) > `CHECKPOINT_ROOTS` env (comma-separated) > `~/.config/checkpoint/config.json`
+  - Tool: `project` with params `{ project_id }` returns structured project info; responses echo `project_id`
+
 ## Validation
 
 Before committing, the tool validates:

@@ -28,8 +28,11 @@ COMMANDS:
                 -n, --dry-run       Show commit message and staged files without committing
                 --changelog-only    Stage only changelog instead of all changes
 
-  init        Create CHECKPOINT.md with usage instructions in project root
-              Provides workflow guidance and schema documentation
+  init        Initialize checkpoint in a project with optional template
+              Creates .checkpoint/ directory with config files
+              Flags:
+                --template <name>   Use a project template (go-cli, node-api, etc.)
+                --list-templates    Show available templates
 
   clean       Remove temporary checkpoint files to abort and restart
               Deletes .checkpoint-input and .checkpoint-diff files
@@ -52,6 +55,43 @@ COMMANDS:
               Usage: checkpoint prompt [id] [--var key=value]
               Available prompts defined in .checkpoint/prompts/prompts.yaml
 
+  explain     Get project context for LLMs and developers
+              Display project info, tools, guidelines, and skills
+              Usage: checkpoint explain [topic] [flags]
+              Topics: project, tools, guidelines, skills, skill <name>, history
+              Flags:
+                --full   Complete context dump
+                --md     Output as markdown
+                --json   Output as JSON
+
+  skill       Manage skills for LLM context
+              Skills describe tools and capabilities available
+              Actions:
+                list              List available skills
+                show <name>       Show skill details
+                add <name>        Add global skill to project
+                create <name>     Create new local skill
+
+  search      Search checkpoint history
+              Query changelog and context for patterns, decisions, failed approaches
+              Usage: checkpoint search <query> [flags]
+              Flags:
+                --failed          Search failed approaches
+                --pattern         Search established patterns
+                --decision        Search decisions made
+                --scope <scope>   Filter by scope/component
+                --recent <n>      Limit to recent N checkpoints
+
+  learn       Capture knowledge during development
+              Low-friction way to add guidelines, tools, or insights
+              Usage: checkpoint learn <content> [flags]
+              Flags:
+                --guideline       Add as a rule to follow
+                --avoid           Add as an anti-pattern to avoid
+                --principle       Add as a design principle
+                --pattern         Add as an established pattern
+                --tool [name]     Add as a tool command
+
   help        Display this help message
   version     Display version information
 
@@ -69,6 +109,14 @@ EXAMPLES:
   checkpoint start                    # Check readiness and see what's next
   checkpoint summary                  # Show project overview
   checkpoint summary --json           # Get summary as JSON
+  checkpoint explain                  # Get executive summary + options
+  checkpoint explain project          # Detailed project architecture
+  checkpoint explain tools            # All build/test/lint commands
+  checkpoint explain guidelines       # Conventions and rules to follow
+  checkpoint explain skills           # Available skills listing
+  checkpoint explain skill ripgrep    # Specific skill details
+  checkpoint explain --full           # Complete context dump
+  checkpoint explain --json           # Machine-readable output
   checkpoint check                    # Generate input files in current directory
   checkpoint lint                     # Check input for issues before committing
   checkpoint examples                 # List available examples
@@ -82,9 +130,13 @@ EXAMPLES:
   checkpoint prompt implement-feature --var feature_name="Auth" # With variables
   checkpoint commit --dry-run         # Preview what would be committed
   checkpoint commit --changelog-only  # Only stage the changelog file
-  checkpoint init ~/my-project        # Initialize checkpoint in specific directory
+  checkpoint init                     # Initialize in current directory
+  checkpoint init --list-templates    # Show available templates
+  checkpoint init --template go-cli   # Initialize with Go CLI template
+  checkpoint init --template node-api ~/my-project  # Use template in specific dir
   checkpoint clean                    # Abort current checkpoint and clean up
 
 For detailed workflow guidance, run: checkpoint init
+For project context, run: checkpoint explain
 `)
 }

@@ -372,6 +372,62 @@ func main() {
 			os.Exit(1)
 		}
 		cmd.Search(searchAbsPath, searchOpts)
+	case "session":
+		// Parse session-specific args
+		sessionOpts := cmd.SessionOptions{}
+		var sessionPositional []string
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			if a == "--status" && i+1 < len(args) {
+				sessionOpts.Status = args[i+1]
+				i++
+				continue
+			}
+			if strings.HasPrefix(a, "--status=") {
+				sessionOpts.Status = strings.TrimPrefix(a, "--status=")
+				continue
+			}
+			if strings.HasPrefix(a, "-") {
+				continue
+			}
+			sessionPositional = append(sessionPositional, a)
+		}
+		// Parse: [action] [summary] [path]
+		// Actions: show, save, clear, handoff
+		sessionPath := "."
+		if len(sessionPositional) > 0 {
+			first := sessionPositional[0]
+			if isSessionAction(first) {
+				sessionOpts.Action = first
+				if len(sessionPositional) > 1 {
+					// Could be summary or path
+					second := sessionPositional[1]
+					if looksLikePath(second) {
+						sessionPath = second
+					} else {
+						sessionOpts.Summary = second
+						if len(sessionPositional) > 2 {
+							sessionPath = sessionPositional[2]
+						}
+					}
+				}
+			} else if looksLikePath(first) {
+				sessionPath = first
+			} else {
+				// Treat as summary for save
+				sessionOpts.Action = "save"
+				sessionOpts.Summary = first
+				if len(sessionPositional) > 1 {
+					sessionPath = sessionPositional[1]
+				}
+			}
+		}
+		sessionAbsPath, err := filepath.Abs(sessionPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.Session(sessionAbsPath, sessionOpts)
 	case "skill", "skills":
 		// Parse skill-specific args
 		skillOpts := cmd.SkillOptions{}
@@ -426,7 +482,7 @@ func main() {
 
 // isExplainTopic returns true if the string is a known explain topic
 func isExplainTopic(s string) bool {
-	topics := []string{"project", "tools", "guidelines", "skills", "skill", "history"}
+	topics := []string{"project", "tools", "guidelines", "skills", "skill", "history", "next"}
 	for _, t := range topics {
 		if s == t {
 			return true
@@ -443,6 +499,17 @@ func looksLikePath(s string) bool {
 // isSkillAction returns true if the string is a known skill action
 func isSkillAction(s string) bool {
 	actions := []string{"list", "show", "add", "create"}
+	for _, a := range actions {
+		if s == a {
+			return true
+		}
+	}
+	return false
+}
+
+// isSessionAction returns true if the string is a known session action
+func isSessionAction(s string) bool {
+	actions := []string{"show", "save", "clear", "handoff"}
 	for _, a := range actions {
 		if s == a {
 			return true

@@ -50,7 +50,9 @@ func Explain(projectPath string, opts ExplainOptions) {
 		}
 		output = ctx.RenderSkill(opts.SkillName)
 	case "history":
-		output = renderHistory(projectPath)
+		output = explain.RenderHistory(projectPath, 10)
+	case "next":
+		output = explain.RenderNext(projectPath)
 	default:
 		// Check if it's a skill name directly
 		skillOutput := ctx.RenderSkill(opts.Topic)
@@ -58,7 +60,7 @@ func Explain(projectPath string, opts ExplainOptions) {
 			output = skillOutput
 		} else {
 			fmt.Fprintf(os.Stderr, "unknown topic: %s\n", opts.Topic)
-			fmt.Fprintf(os.Stderr, "available: project, tools, guidelines, skills, skill <name>, history\n")
+			fmt.Fprintf(os.Stderr, "available: project, tools, guidelines, skills, skill <name>, history, next\n")
 			os.Exit(1)
 		}
 	}
@@ -74,19 +76,6 @@ func Explain(projectPath string, opts ExplainOptions) {
 
 func isSkillNotFound(output string) bool {
 	return len(output) > 0 && output[0:5] == "Skill"
-}
-
-func renderHistory(projectPath string) string {
-	// TODO: Implement history rendering from changelog
-	return `# Recent History
-
-(History view coming soon - will show recent checkpoints, patterns, and decisions)
-
-For now, see:
-- .checkpoint-changelog.yaml for full history
-- .checkpoint-context.yml for decisions
-- checkpoint search <term> to query history
-`
 }
 
 func outputJSON(ctx *explain.ExplainOutput, topic string) {

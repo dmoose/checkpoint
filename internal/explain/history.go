@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"go-llm/pkg/config"
+	"github.com/dmoose/checkpoint/pkg/config"
 
 	"gopkg.in/yaml.v3"
 )

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go-llm/cmd"
+	"github.com/dmoose/checkpoint/cmd"
 )
 
 const version = "0.1.0"
@@ -164,6 +164,19 @@ func main() {
 		cmd.InitWithOptions(initAbsPath, version, initOpts)
 	case "clean":
 		cmd.Clean(absPath)
+	case "doctor":
+		// Parse doctor-specific flags
+		doctorOpts := cmd.DoctorOptions{}
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			if a == "--fix" {
+				doctorOpts.Fix = true
+			}
+			if a == "--verbose" || a == "-v" {
+				doctorOpts.Verbose = true
+			}
+		}
+		cmd.Doctor(absPath, doctorOpts)
 	case "lint":
 		cmd.Lint(absPath)
 	case "examples":
@@ -469,6 +482,13 @@ func main() {
 			os.Exit(1)
 		}
 		cmd.Skill(skillAbsPath, skillOpts)
+	case "completion":
+		// Parse completion shell argument
+		shell := ""
+		if len(positional) > 0 {
+			shell = positional[0]
+		}
+		cmd.Completion(cmd.CompletionOptions{Shell: shell})
 	case "help", "-h", "--help":
 		cmd.Help()
 	case "version", "-v", "--version":
@@ -482,7 +502,7 @@ func main() {
 
 // isExplainTopic returns true if the string is a known explain topic
 func isExplainTopic(s string) bool {
-	topics := []string{"project", "tools", "guidelines", "skills", "skill", "history", "next"}
+	topics := []string{"project", "tools", "guidelines", "skills", "learnings", "skill", "history", "next"}
 	for _, t := range topics {
 		if s == t {
 			return true

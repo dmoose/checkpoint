@@ -30,6 +30,7 @@ COMMANDS:
 
   init        Initialize checkpoint in a project with optional template
               Creates .checkpoint/ directory with config files
+              Auto-detects language and tools from go.mod, package.json, Makefile, etc.
               Flags:
                 --template <name>   Use a project template (go-cli, node-api, etc.)
                 --list-templates    Show available templates
@@ -37,6 +38,12 @@ COMMANDS:
   clean       Remove temporary checkpoint files to abort and restart
               Deletes .checkpoint-input and .checkpoint-diff files
               Use when you need to start over or resolve conflicts
+
+  doctor      Check project setup and suggest fixes
+              Validates configuration, detects missing tools, suggests commands
+              Flags:
+                --verbose, -v   Show detected project info
+                --fix           Auto-fix issues where possible
 
   lint        Check checkpoint input for obvious mistakes and issues
               Validates input file and suggests improvements before commit
@@ -58,7 +65,7 @@ COMMANDS:
   explain     Get project context for LLMs and developers
               Display project info, tools, guidelines, and skills
               Usage: checkpoint explain [topic] [flags]
-              Topics: project, tools, guidelines, skills, skill <name>, history, next
+              Topics: project, tools, guidelines, skills, learnings, skill <name>, history, next
               Flags:
                 --full   Complete context dump
                 --md     Output as markdown
@@ -102,6 +109,11 @@ COMMANDS:
                 handoff           Generate comprehensive handoff document
               Flags:
                 --status <s>      Set status: in_progress, blocked, complete, handoff
+
+  completion  Generate shell completion script
+              Output completion script for bash, zsh, or fish
+              Usage: checkpoint completion <shell>
+              Shells: bash, zsh, fish
 
   help        Display this help message
   version     Display version information
@@ -148,11 +160,20 @@ EXAMPLES:
   checkpoint init --template go-cli   # Initialize with Go CLI template
   checkpoint init --template node-api ~/my-project  # Use template in specific dir
   checkpoint clean                    # Abort current checkpoint and clean up
+  checkpoint doctor                   # Check setup and show issues
+  checkpoint doctor --verbose         # Show detected project info
   checkpoint session                  # Show current session state
   checkpoint session save "Working on auth" # Save session with summary
   checkpoint session save "Blocked on API" --status blocked # Save with status
   checkpoint session handoff          # Generate handoff document for next LLM
   checkpoint session clear            # Clear session state
+  checkpoint learn "Always validate input" --guideline  # Add a rule
+  checkpoint learn "Don't use globals" --avoid          # Add anti-pattern
+  checkpoint explain learnings        # View captured insights
+  checkpoint search "auth"            # Search changelog history
+  checkpoint search "database" --decision  # Search decisions
+  checkpoint completion bash >> ~/.bashrc  # Install bash completion
+  checkpoint completion zsh >> ~/.zshrc    # Install zsh completion
 
 For detailed workflow guidance, run: checkpoint init
 For project context, run: checkpoint explain

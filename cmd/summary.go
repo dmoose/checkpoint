@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"go-llm/internal/file"
-	"go-llm/internal/git"
-	"go-llm/pkg/config"
+	"github.com/dmoose/checkpoint/internal/file"
+	"github.com/dmoose/checkpoint/internal/git"
+	"github.com/dmoose/checkpoint/pkg/config"
 
 	"gopkg.in/yaml.v3"
 )

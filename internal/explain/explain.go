@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go-llm/pkg/config"
+	"github.com/dmoose/checkpoint/pkg/config"
 
 	"gopkg.in/yaml.v3"
 )
@@ -18,6 +18,7 @@ type ExplainOutput struct {
 	Guidelines  *GuidelinesConfig
 	Skills      *SkillsConfig
 	SkillDefs   []Skill
+	Learnings   []Learning
 	ProjectPath string
 }
 
@@ -68,7 +69,29 @@ func LoadExplainContext(projectPath string) (*ExplainOutput, error) {
 	// Load skill definitions
 	output.SkillDefs = loadSkills(projectPath, output.Skills)
 
+	// Load learnings.yml (multi-document YAML)
+	learningsYml := filepath.Join(checkpointDir, "learnings.yml")
+	if data, err := os.ReadFile(learningsYml); err == nil {
+		output.Learnings = loadLearnings(data)
+	}
+
 	return output, nil
+}
+
+// loadLearnings parses multi-document YAML learnings file
+func loadLearnings(data []byte) []Learning {
+	var learnings []Learning
+	decoder := yaml.NewDecoder(strings.NewReader(string(data)))
+	for {
+		var l Learning
+		if err := decoder.Decode(&l); err != nil {
+			break
+		}
+		if l.Learning != "" {
+			learnings = append(learnings, l)
+		}
+	}
+	return learnings
 }
 
 // loadSkills loads skill.md files from local and global skills directories
@@ -189,6 +212,21 @@ func (e *ExplainOutput) RenderSummary() string {
 		sb.WriteString("\n")
 	}
 
+	// Learnings summary if any
+	if len(e.Learnings) > 0 {
+		sb.WriteString(fmt.Sprintf("LEARNINGS: %d captured insights\n", len(e.Learnings)))
+		// Show most recent
+		if len(e.Learnings) > 0 {
+			recent := e.Learnings[len(e.Learnings)-1]
+			learning := recent.Learning
+			if len(learning) > 60 {
+				learning = learning[:57] + "..."
+			}
+			sb.WriteString(fmt.Sprintf("  latest: %s\n", learning))
+		}
+		sb.WriteString("\n")
+	}
+
 	// Option index
 	sb.WriteString("FOR MORE DETAIL:\n")
 	sb.WriteString("  checkpoint explain project      - Architecture, data flow, key files\n")
@@ -196,6 +234,7 @@ func (e *ExplainOutput) RenderSummary() string {
 	sb.WriteString("  checkpoint explain guidelines   - Conventions, rules, anti-patterns\n")
 	sb.WriteString("  checkpoint explain skills       - Available skills and how to use them\n")
 	sb.WriteString("  checkpoint explain skill <name> - Specific skill details\n")
+	sb.WriteString("  checkpoint explain learnings    - Captured insights and lessons\n")
 	sb.WriteString("  checkpoint explain history      - Recent checkpoints and patterns\n")
 	sb.WriteString("  checkpoint explain --full       - Complete context dump\n")
 	sb.WriteString("\n")
@@ -483,6 +522,36 @@ func (e *ExplainOutput) RenderSkill(name string) string {
 	return fmt.Sprintf("Skill '%s' not found.\nAvailable skills: checkpoint explain skills\n", name)
 }
 
+// RenderLearnings returns captured learnings/insights
+func (e *ExplainOutput) RenderLearnings() string {
+	var sb strings.Builder
+	sb.WriteString("# Captured Learnings\n\n")
+
+	if len(e.Learnings) == 0 {
+		sb.WriteString("No learnings captured yet.\n")
+		sb.WriteString("hint: Use 'checkpoint learn \"your insight\"' to capture learnings\n")
+		return sb.String()
+	}
+
+	sb.WriteString(fmt.Sprintf("Total: %d learnings\n\n", len(e.Learnings)))
+
+	// Show most recent first (reverse order)
+	for i := len(e.Learnings) - 1; i >= 0; i-- {
+		l := e.Learnings[i]
+		// Format timestamp nicely
+		ts := l.Timestamp
+		if len(ts) > 10 {
+			ts = ts[:10] // Just the date
+		}
+		sb.WriteString(fmt.Sprintf("- [%s] %s\n", ts, l.Learning))
+	}
+
+	sb.WriteString("\nTo add: checkpoint learn \"your insight\"\n")
+	sb.WriteString("To categorize: checkpoint learn \"insight\" --guideline|--avoid|--principle\n")
+
+	return sb.String()
+}
+
 // RenderFull returns complete context dump
 func (e *ExplainOutput) RenderFull() string {
 	var sb strings.Builder
@@ -499,6 +568,12 @@ func (e *ExplainOutput) RenderFull() string {
 	for _, s := range e.SkillDefs {
 		sb.WriteString(fmt.Sprintf("\n---\n\n## Skill: %s\n\n", s.Name))
 		sb.WriteString(s.Content)
+	}
+
+	// Include learnings if any
+	if len(e.Learnings) > 0 {
+		sb.WriteString("\n---\n\n")
+		sb.WriteString(e.RenderLearnings())
 	}
 
 	return sb.String()

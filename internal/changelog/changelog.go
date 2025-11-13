@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"go-llm/internal/language"
-	"go-llm/internal/schema"
+	"github.com/dmoose/checkpoint/internal/language"
+	"github.com/dmoose/checkpoint/internal/schema"
 
 	"github.com/oklog/ulid/v2"
 	"gopkg.in/yaml.v3"

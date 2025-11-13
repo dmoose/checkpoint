@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
-	"go-llm/internal/changelog"
-	"go-llm/internal/file"
-	"go-llm/internal/project"
-	"go-llm/internal/templates"
-	"go-llm/pkg/config"
+	"github.com/dmoose/checkpoint/internal/changelog"
+	"github.com/dmoose/checkpoint/internal/detect"
+	"github.com/dmoose/checkpoint/internal/file"
+	"github.com/dmoose/checkpoint/internal/project"
+	"github.com/dmoose/checkpoint/internal/templates"
+	"github.com/dmoose/checkpoint/pkg/config"
 )
 
 // InitOptions holds flags for the init command
@@ -381,6 +383,263 @@ Be specific and constructive.
 	return nil
 }
 
+// updateProjectGitignore adds checkpoint artifact entries to the project's .gitignore
+func updateProjectGitignore(projectPath string) {
+	gitignorePath := filepath.Join(projectPath, ".gitignore")
+
+	checkpointEntries := `
+# Checkpoint artifacts (temporary files, not tracked)
+.checkpoint-input
+.checkpoint-diff
+.checkpoint-lock
+.checkpoint-status.yaml
+.checkpoint-session.yaml
+`
+
+	// Check if .gitignore exists
+	existingContent := ""
+	if data, err := os.ReadFile(gitignorePath); err == nil {
+		existingContent = string(data)
+	}
+
+	// Check if checkpoint entries already exist
+	if strings.Contains(existingContent, ".checkpoint-input") {
+		// Already has checkpoint entries
+		return
+	}
+
+	// Append checkpoint entries
+	var newContent string
+	if existingContent == "" {
+		newContent = strings.TrimPrefix(checkpointEntries, "\n")
+	} else {
+		// Ensure there's a newline before our entries
+		if !strings.HasSuffix(existingContent, "\n") {
+			existingContent += "\n"
+		}
+		newContent = existingContent + checkpointEntries
+	}
+
+	if err := os.WriteFile(gitignorePath, []byte(newContent), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not update .gitignore: %v\n", err)
+		return
+	}
+
+	if existingContent == "" {
+		fmt.Println("✓ Created .gitignore with checkpoint artifacts")
+	} else {
+		fmt.Println("✓ Updated .gitignore with checkpoint artifacts")
+	}
+}
+
+// createAutoDetectedConfigs creates config files based on auto-detected project info
+func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
+	info := detect.DetectProject(projectPath)
+
+	created := 0
+	skipped := 0
+
+	// Create project.yml
+	projectYmlPath := filepath.Join(checkpointDir, config.ExplainProjectYml)
+	if file.Exists(projectYmlPath) {
+		skipped++
+	} else {
+		var sb strings.Builder
+		sb.WriteString("schema_version: \"1\"\n\n")
+		sb.WriteString(fmt.Sprintf("name: %s\n", info.Name))
+		if info.Description != "" {
+			sb.WriteString(fmt.Sprintf("description: %s\n", info.Description))
+		} else {
+			sb.WriteString("description: \"\" # TODO: Add project description\n")
+		}
+		sb.WriteString(fmt.Sprintf("language: %s\n", info.Language))
+		if len(info.Languages) > 1 {
+			sb.WriteString("additional_languages:\n")
+			for _, lang := range info.Languages[1:] {
+				sb.WriteString(fmt.Sprintf("  - %s\n", lang))
+			}
+		}
+		if len(info.Frameworks) > 0 {
+			sb.WriteString("frameworks:\n")
+			for _, fw := range info.Frameworks {
+				sb.WriteString(fmt.Sprintf("  - %s\n", fw))
+			}
+		}
+		sb.WriteString("\narchitecture:\n")
+		sb.WriteString("  # TODO: Describe high-level architecture\n")
+		sb.WriteString("  # pattern: MVC|microservices|monolith|cli|library\n")
+		sb.WriteString("  # key_directories:\n")
+		sb.WriteString("  #   - path: src/\n")
+		sb.WriteString("  #     purpose: Source code\n")
+
+		if err := file.WriteFile(projectYmlPath, sb.String()); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not create project.yml: %v\n", err)
+		} else {
+			created++
+		}
+	}
+
+	// Create tools.yml
+	toolsYmlPath := filepath.Join(checkpointDir, config.ExplainToolsYml)
+	if file.Exists(toolsYmlPath) {
+		skipped++
+	} else {
+		var sb strings.Builder
+		sb.WriteString("schema_version: \"1\"\n\n")
+
+		cmdCount := 0
+		if info.BuildCmd != "" {
+			sb.WriteString("# Build commands\n")
+			sb.WriteString("build:\n")
+			sb.WriteString("  default:\n")
+			sb.WriteString(fmt.Sprintf("    command: %s\n", info.BuildCmd))
+			sb.WriteString("    notes: Build the project\n\n")
+			cmdCount++
+		}
+		if info.TestCmd != "" {
+			sb.WriteString("# Test commands\n")
+			sb.WriteString("test:\n")
+			sb.WriteString("  default:\n")
+			sb.WriteString(fmt.Sprintf("    command: %s\n", info.TestCmd))
+			sb.WriteString("    notes: Run tests\n\n")
+			cmdCount++
+		}
+		if info.LintCmd != "" {
+			sb.WriteString("# Lint commands\n")
+			sb.WriteString("lint:\n")
+			sb.WriteString("  default:\n")
+			sb.WriteString(fmt.Sprintf("    command: %s\n", info.LintCmd))
+			sb.WriteString("    notes: Run linter\n\n")
+			cmdCount++
+		}
+		if info.FormatCmd != "" {
+			sb.WriteString("  format:\n")
+			sb.WriteString(fmt.Sprintf("    command: %s\n", info.FormatCmd))
+			sb.WriteString("    notes: Format code\n\n")
+		}
+		if info.DevCmd != "" {
+			sb.WriteString("# Run commands\n")
+			sb.WriteString("run:\n")
+			sb.WriteString("  dev:\n")
+			sb.WriteString(fmt.Sprintf("    command: %s\n", info.DevCmd))
+			sb.WriteString("    notes: Run in development mode\n\n")
+			cmdCount++
+		}
+		if info.CleanCmd != "" {
+			sb.WriteString("# Maintenance commands\n")
+			sb.WriteString("maintenance:\n")
+			sb.WriteString("  clean:\n")
+			sb.WriteString(fmt.Sprintf("    command: %s\n", info.CleanCmd))
+			sb.WriteString("    notes: Clean build artifacts\n")
+			cmdCount++
+		}
+
+		if cmdCount == 0 {
+			sb.WriteString("# No commands detected. Add commands like:\n")
+			sb.WriteString("# build:\n")
+			sb.WriteString("#   default:\n")
+			sb.WriteString("#     command: your-build-command\n")
+			sb.WriteString("#     notes: Build the project\n")
+			sb.WriteString("#\n")
+			sb.WriteString("# test:\n")
+			sb.WriteString("#   default:\n")
+			sb.WriteString("#     command: your-test-command\n")
+			sb.WriteString("#     notes: Run tests\n")
+		}
+
+		if err := file.WriteFile(toolsYmlPath, sb.String()); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not create tools.yml: %v\n", err)
+		} else {
+			created++
+		}
+	}
+
+	// Create guidelines.yml
+	guidelinesYmlPath := filepath.Join(checkpointDir, config.ExplainGuidelinesYml)
+	if file.Exists(guidelinesYmlPath) {
+		skipped++
+	} else {
+		var sb strings.Builder
+		sb.WriteString("schema_version: \"1\"\n\n")
+		sb.WriteString("# Naming conventions\n")
+		sb.WriteString("naming:\n")
+		sb.WriteString("  # Add your naming conventions here\n")
+		sb.WriteString("  # Example:\n")
+		sb.WriteString("  # functions:\n")
+		sb.WriteString("  #   exported: PascalCase\n")
+		sb.WriteString("  #   internal: camelCase\n")
+		sb.WriteString("\n")
+		sb.WriteString("# Project structure guidelines\n")
+		sb.WriteString("structure:\n")
+		sb.WriteString("  # Describe how to add new components\n")
+		sb.WriteString("  # Example:\n")
+		sb.WriteString("  # new_command: |\n")
+		sb.WriteString("  #   1. Create cmd/name.go\n")
+		sb.WriteString("  #   2. Add to main.go switch\n")
+		sb.WriteString("\n")
+		sb.WriteString("# Rules to follow\n")
+		sb.WriteString("rules:\n")
+		sb.WriteString("  # - Run tests before committing\n")
+		sb.WriteString("  # - All errors need user-friendly messages\n")
+		sb.WriteString("\n")
+		sb.WriteString("# Anti-patterns to avoid\n")
+		sb.WriteString("avoid:\n")
+		sb.WriteString("  # - Global state\n")
+		sb.WriteString("  # - Silent failures\n")
+		sb.WriteString("\n")
+		sb.WriteString("# Design principles\n")
+		sb.WriteString("principles:\n")
+		sb.WriteString("  # - Keep it simple\n")
+		sb.WriteString("  # - Prefer composition over inheritance\n")
+
+		if err := file.WriteFile(guidelinesYmlPath, sb.String()); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not create guidelines.yml: %v\n", err)
+		} else {
+			created++
+		}
+	}
+
+	// Create skills.yml
+	skillsYmlPath := filepath.Join(checkpointDir, config.ExplainSkillsYml)
+	if file.Exists(skillsYmlPath) {
+		skipped++
+	} else {
+		var sb strings.Builder
+		sb.WriteString("schema_version: \"1\"\n\n")
+		sb.WriteString("# Skills available for this project\n")
+		sb.WriteString("# Local skills are in .checkpoint/skills/\n")
+		sb.WriteString("# Global skills are in ~/.config/checkpoint/skills/\n")
+		sb.WriteString("\n")
+		sb.WriteString("# Uncomment to include global skills:\n")
+		sb.WriteString("# global:\n")
+		sb.WriteString("#   - git\n")
+		sb.WriteString("#   - ripgrep\n")
+
+		if err := file.WriteFile(skillsYmlPath, sb.String()); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not create skills.yml: %v\n", err)
+		} else {
+			created++
+		}
+	}
+
+	// Report what was detected and created
+	if created > 0 || skipped > 0 {
+		if info.Language != "" {
+			fmt.Printf("✓ Detected: %s project", info.Language)
+			if len(info.Frameworks) > 0 {
+				fmt.Printf(" (%s)", strings.Join(info.Frameworks, ", "))
+			}
+			fmt.Println()
+		}
+		if created > 0 {
+			fmt.Printf("✓ Created %d config file(s) with auto-detected settings\n", created)
+		}
+		if skipped > 0 {
+			fmt.Printf("  Skipped %d existing config file(s)\n", skipped)
+		}
+	}
+}
+
 // ListTemplates prints available templates
 func ListTemplates() {
 	tmplList, err := templates.ListTemplates()
@@ -430,7 +689,7 @@ func InitWithOptions(projectPath string, version string, opts InitOptions) {
 		}
 	}
 
-	// Apply template if specified
+	// Apply template if specified, otherwise auto-detect
 	projectName := filepath.Base(projectPath)
 	if opts.Template != "" {
 		tmpl, err := templates.GetTemplate(opts.Template)
@@ -444,9 +703,15 @@ func InitWithOptions(projectPath string, version string, opts InitOptions) {
 			os.Exit(1)
 		}
 		fmt.Printf("✓ Applied template '%s'\n", opts.Template)
+	} else {
+		// Auto-detect project settings and create config files
+		createAutoDetectedConfigs(checkpointDir, projectPath)
 	}
 
-	// Create .gitignore for .checkpoint directory
+	// Update project .gitignore with checkpoint artifacts
+	updateProjectGitignore(projectPath)
+
+	// Create .gitignore for .checkpoint directory (to preserve empty dirs)
 	gitignorePath := filepath.Join(checkpointDir, ".gitignore")
 	gitignoreContent := `# Checkpoint directory is tracked
 # This file ensures the directory structure is preserved in git
@@ -475,14 +740,14 @@ This directory contains supporting materials for the checkpoint workflow.
   - Context writing guidelines
   - Best practices
 
-- **prompts/** - LLM prompt templates (planned)
+- **prompts/** - LLM prompt templates
   - Session start prompts
   - Checkpoint filling prompts
-  - Review and curation prompts
+  - Feature implementation and bug fix prompts
 
-- **templates/** - Customizable templates (planned)
-  - Custom input templates
-  - Project-specific patterns
+- **skills/** - Skill definitions for LLM context
+  - Local project-specific skills
+  - References to global skills
 
 ## Usage
 

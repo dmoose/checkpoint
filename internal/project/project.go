@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"go-llm/internal/language"
+	"github.com/dmoose/checkpoint/internal/language"
 
 	"gopkg.in/yaml.v3"
 )

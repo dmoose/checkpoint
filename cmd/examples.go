@@ -7,7 +7,34 @@ import (
 	"strings"
 
 	"github.com/dmoose/checkpoint/internal/file"
+
+	"github.com/spf13/cobra"
 )
+
+func init() {
+	rootCmd.AddCommand(examplesCmd)
+}
+
+var examplesCmd = &cobra.Command{
+	Use:   "examples [category]",
+	Short: "Show example checkpoint entries",
+	Long: `Displays example checkpoint entries from .checkpoint/examples/.
+Categories: feature, bugfix, refactor, context, anti-patterns`,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		category := ""
+		if len(args) > 0 {
+			category = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		Examples(absPath, category)
+	},
+}
 
 // Examples displays example checkpoint entries from .checkpoint/examples/
 func Examples(projectPath string, category string) {

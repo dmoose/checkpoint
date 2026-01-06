@@ -12,7 +12,40 @@ import (
 	"github.com/dmoose/checkpoint/internal/project"
 	"github.com/dmoose/checkpoint/internal/templates"
 	"github.com/dmoose/checkpoint/pkg/config"
+
+	"github.com/spf13/cobra"
 )
+
+var initOpts struct {
+	template      string
+	listTemplates bool
+}
+
+func init() {
+	rootCmd.AddCommand(initCmd)
+	initCmd.Flags().StringVar(&initOpts.template, "template", "", "Use a specific template")
+	initCmd.Flags().BoolVar(&initOpts.listTemplates, "list-templates", false, "List available templates")
+}
+
+var initCmd = &cobra.Command{
+	Use:   "init [path]",
+	Short: "Initialize checkpoint in a project",
+	Long: `Creates .checkpoint/ directory structure and CHECKPOINT.md.
+Auto-detects project language and sets up config files.`,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		if len(args) > 0 {
+			projectPath = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		InitWithOptions(absPath, Version, InitOptions{Template: initOpts.template, ListTemplates: initOpts.listTemplates})
+	},
+}
 
 // InitOptions holds flags for the init command
 type InitOptions struct {

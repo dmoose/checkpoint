@@ -10,8 +10,39 @@ import (
 	"github.com/dmoose/checkpoint/internal/explain"
 	"github.com/dmoose/checkpoint/pkg/config"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
+
+var doctorOpts struct {
+	fix     bool
+	verbose bool
+}
+
+func init() {
+	rootCmd.AddCommand(doctorCmd)
+	doctorCmd.Flags().BoolVar(&doctorOpts.fix, "fix", false, "Auto-fix issues where possible")
+	doctorCmd.Flags().BoolVarP(&doctorOpts.verbose, "verbose", "v", false, "Show detected project info")
+}
+
+var doctorCmd = &cobra.Command{
+	Use:   "doctor [path]",
+	Short: "Check project setup and suggest fixes",
+	Long:  `Validates configuration, detects missing tools, suggests commands.`,
+	Args:  cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		if len(args) > 0 {
+			projectPath = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		Doctor(absPath, DoctorOptions{Fix: doctorOpts.fix, Verbose: doctorOpts.verbose})
+	},
+}
 
 // DoctorOptions holds flags for the doctor command
 type DoctorOptions struct {

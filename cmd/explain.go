@@ -4,9 +4,54 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/dmoose/checkpoint/internal/explain"
+
+	"github.com/spf13/cobra"
 )
+
+var explainOpts struct {
+	full     bool
+	markdown bool
+	json     bool
+}
+
+func init() {
+	rootCmd.AddCommand(explainCmd)
+	explainCmd.Flags().BoolVar(&explainOpts.full, "full", false, "Show complete context dump")
+	explainCmd.Flags().BoolVar(&explainOpts.markdown, "md", false, "Output as markdown")
+	explainCmd.Flags().BoolVar(&explainOpts.json, "json", false, "Output as JSON")
+}
+
+var explainCmd = &cobra.Command{
+	Use:   "explain [topic] [skill-name]",
+	Short: "Get project context for LLMs and developers",
+	Long: `Display project context information.
+Topics: project, tools, guidelines, skills, learnings, skill <name>, history, next`,
+	Args: cobra.MaximumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+
+		opts := ExplainOptions{
+			Full:     explainOpts.full,
+			Markdown: explainOpts.markdown,
+			JSON:     explainOpts.json,
+		}
+		if len(args) > 0 {
+			opts.Topic = args[0]
+		}
+		if len(args) > 1 {
+			opts.SkillName = args[1]
+		}
+		Explain(absPath, opts)
+	},
+}
 
 // ExplainOptions holds flags for the explain command
 type ExplainOptions struct {

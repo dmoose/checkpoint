@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,29 +11,70 @@ import (
 
 	"github.com/dmoose/checkpoint/pkg/config"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
+
+var sessionOpts struct {
+	status string
+	json   bool
+}
+
+func init() {
+	rootCmd.AddCommand(sessionCmd)
+	sessionCmd.Flags().StringVar(&sessionOpts.status, "status", "", "Set status (in_progress, blocked, complete, handoff)")
+	sessionCmd.Flags().BoolVar(&sessionOpts.json, "json", false, "Output as JSON (for show)")
+}
+
+var sessionCmd = &cobra.Command{
+	Use:   "session [action] [summary]",
+	Short: "Manage session state for LLM handoff",
+	Long: `Capture and restore session state across LLM conversations.
+Actions: show, save <summary>, clear, handoff`,
+	Args: cobra.MaximumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+
+		opts := SessionOptions{
+			Status: sessionOpts.status,
+			JSON:   sessionOpts.json,
+		}
+		if len(args) > 0 {
+			opts.Action = args[0]
+		}
+		if len(args) > 1 {
+			opts.Summary = args[1]
+		}
+		Session(absPath, opts)
+	},
+}
 
 // SessionOptions holds flags for the session command
 type SessionOptions struct {
 	Action  string // save, show, clear
 	Summary string // session summary when saving
 	Status  string // in_progress, blocked, complete, handoff
+	JSON    bool   // output as JSON
 }
 
 // SessionState represents captured session state
 type SessionState struct {
-	SchemaVersion   string        `yaml:"schema_version"`
-	Timestamp       string        `yaml:"timestamp"`
-	Status          string        `yaml:"status"` // in_progress, blocked, complete, handoff
-	Summary         string        `yaml:"summary"`
-	ModifiedFiles   []string      `yaml:"modified_files,omitempty"`
-	CurrentWork     string        `yaml:"current_work,omitempty"`
-	BlockedOn       string        `yaml:"blocked_on,omitempty"`
-	NextActions     []string      `yaml:"next_actions,omitempty"`
-	KeyDecisions    []string      `yaml:"key_decisions,omitempty"`
-	SessionNotes    string        `yaml:"session_notes,omitempty"`
-	PreviousSession *SessionState `yaml:"previous_session,omitempty"`
+	SchemaVersion   string        `yaml:"schema_version" json:"schema_version"`
+	Timestamp       string        `yaml:"timestamp" json:"timestamp"`
+	Status          string        `yaml:"status" json:"status"` // in_progress, blocked, complete, handoff
+	Summary         string        `yaml:"summary" json:"summary"`
+	ModifiedFiles   []string      `yaml:"modified_files,omitempty" json:"modified_files,omitempty"`
+	CurrentWork     string        `yaml:"current_work,omitempty" json:"current_work,omitempty"`
+	BlockedOn       string        `yaml:"blocked_on,omitempty" json:"blocked_on,omitempty"`
+	NextActions     []string      `yaml:"next_actions,omitempty" json:"next_actions,omitempty"`
+	KeyDecisions    []string      `yaml:"key_decisions,omitempty" json:"key_decisions,omitempty"`
+	SessionNotes    string        `yaml:"session_notes,omitempty" json:"session_notes,omitempty"`
+	PreviousSession *SessionState `yaml:"previous_session,omitempty" json:"previous_session,omitempty"`
 }
 
 const sessionFileName = ".checkpoint-session.yaml"
@@ -41,7 +83,7 @@ const sessionFileName = ".checkpoint-session.yaml"
 func Session(projectPath string, opts SessionOptions) {
 	switch opts.Action {
 	case "", "show":
-		showSession(projectPath)
+		showSession(projectPath, opts.JSON)
 	case "save":
 		saveSession(projectPath, opts)
 	case "clear":
@@ -55,13 +97,17 @@ func Session(projectPath string, opts SessionOptions) {
 	}
 }
 
-func showSession(projectPath string) {
+func showSession(projectPath string, jsonOutput bool) {
 	sessionPath := filepath.Join(projectPath, sessionFileName)
 	data, err := os.ReadFile(sessionPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println("No active session state.")
-			fmt.Println("\nhint: Use 'checkpoint session save \"summary\"' to capture session state")
+			if jsonOutput {
+				fmt.Println(`{"session": null}`)
+			} else {
+				fmt.Println("No active session state.")
+				fmt.Println("\nhint: Use 'checkpoint session save \"summary\"' to capture session state")
+			}
 			return
 		}
 		fmt.Fprintf(os.Stderr, "error reading session: %v\n", err)
@@ -72,6 +118,13 @@ func showSession(projectPath string) {
 	if err := yaml.Unmarshal(data, &session); err != nil {
 		fmt.Fprintf(os.Stderr, "error parsing session: %v\n", err)
 		os.Exit(1)
+	}
+
+	if jsonOutput {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		enc.Encode(session)
+		return
 	}
 
 	renderSession(&session)

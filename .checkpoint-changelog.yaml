@@ -991,7 +991,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-01-12T09:38:19-08:00"
-commit_hash: ""
+commit_hash: 73ce804612b152e474b6eaf8dcf45b007e24bd26
 files_changed:
     - path: .checkpoint/README.md
       additions: 5
@@ -1129,6 +1129,117 @@ changes:
       details: Apache 2.0 license, basic CI workflow, updated guides with doctor/session docs
       change_type: docs
       scope: project
+next_steps:
+    - summary: Add tests for doctor and detect packages
+      details: 'Cover auto-detection scenarios: Go, Node, Python, Rust, Ruby projects'
+      priority: high
+      scope: cmd/doctor, internal/detect
+    - summary: Create release workflow
+      details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
+      priority: high
+      scope: .github/workflows
+---
+schema_version: "1"
+timestamp: "2026-01-12T13:20:13-08:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: cmd/check.go
+      additions: 26
+      deletions: 0
+    - path: cmd/clean.go
+      additions: 26
+      deletions: 0
+    - path: cmd/commit.go
+      additions: 33
+      deletions: 0
+    - path: cmd/completion.go
+      additions: 46
+      deletions: 335
+    - path: cmd/doctor.go
+      additions: 31
+      deletions: 0
+    - path: cmd/examples.go
+      additions: 27
+      deletions: 0
+    - path: cmd/explain.go
+      additions: 45
+      deletions: 0
+    - path: cmd/guide.go
+      additions: 27
+      deletions: 0
+    - path: cmd/help.go
+      additions: 0
+      deletions: 181
+    - path: cmd/init.go
+      additions: 33
+      deletions: 0
+    - path: cmd/learn.go
+      additions: 127
+      deletions: 0
+    - path: cmd/lint.go
+      additions: 26
+      deletions: 0
+    - path: cmd/mcp.go
+      additions: 21
+      deletions: 0
+    - path: cmd/prompt.go
+      additions: 77
+      deletions: 6
+    - path: cmd/search.go
+      additions: 81
+      deletions: 14
+    - path: cmd/session.go
+      additions: 68
+      deletions: 15
+    - path: cmd/skill.go
+      additions: 85
+      deletions: 2
+    - path: cmd/start.go
+      additions: 25
+      deletions: 5
+    - path: cmd/summary.go
+      additions: 29
+      deletions: 0
+    - path: go.mod
+      additions: 3
+      deletions: 0
+    - path: go.sum
+      additions: 9
+      deletions: 0
+    - path: internal/prompts/prompts.go
+      additions: 2
+      deletions: 0
+    - path: main.go
+      additions: 1
+      deletions: 529
+changes:
+    - summary: Migrate CLI from manual parsing to Cobra framework
+      details: Replaced 540-line switch/case main.go with Cobra commands. Each command now self-registers in init(). Eliminates need to update multiple places when adding flags.
+      change_type: refactor
+      scope: cmd
+    - summary: Add config command for programmatic YAML access
+      details: New command with get (read as JSON), set (dot-notation path updates), and list subcommands. Enables Mac management app to read/write checkpoint config files.
+      change_type: feature
+      scope: cmd/config
+    - summary: Add --json output to session, skill, search, learn, prompt commands
+      details: Structured JSON output for programmatic consumption by Mac management app and other tooling.
+      change_type: feature
+      scope: cmd
+    - summary: Add --list flag to learn command
+      details: Lists all captured learnings with optional --json output for tooling integration.
+      change_type: feature
+      scope: cmd/learn
+    - summary: Replace manual completion scripts with Cobra built-in
+      details: Removed 335 lines of manually maintained bash/zsh/fish/powershell scripts. Cobra generates correct completions automatically.
+      change_type: refactor
+      scope: cmd/completion
+    - summary: Delete manual help command
+      details: Cobra provides help automatically with consistent formatting across all commands.
+      change_type: refactor
+      scope: cmd/help
 next_steps:
     - summary: Add tests for doctor and detect packages
       details: 'Cover auto-detection scenarios: Go, Node, Python, Rust, Ruby projects'

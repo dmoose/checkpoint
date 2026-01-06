@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,10 +9,56 @@ import (
 
 	"github.com/dmoose/checkpoint/internal/file"
 	"github.com/dmoose/checkpoint/internal/prompts"
+
+	"github.com/spf13/cobra"
 )
 
+var promptOpts struct {
+	vars []string
+	json bool
+}
+
+func init() {
+	rootCmd.AddCommand(promptCmd)
+	promptCmd.Flags().StringArrayVar(&promptOpts.vars, "var", nil, "Variable substitution (format: name=value)")
+	promptCmd.Flags().BoolVar(&promptOpts.json, "json", false, "Output as JSON (for list)")
+}
+
+var promptCmd = &cobra.Command{
+	Use:   "prompt [id]",
+	Short: "Display LLM prompts from project",
+	Long: `Display and use LLM prompts from .checkpoint/prompts/.
+Without arguments, lists all available prompts.`,
+	Aliases: []string{"prompts"},
+	Args:    cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+
+		promptID := ""
+		if len(args) > 0 {
+			promptID = args[0]
+		}
+
+		// Parse vars
+		vars := make(map[string]string)
+		for _, v := range promptOpts.vars {
+			parts := strings.SplitN(v, "=", 2)
+			if len(parts) == 2 {
+				vars[parts[0]] = parts[1]
+			}
+		}
+
+		Prompt(absPath, promptID, vars, promptOpts.json)
+	},
+}
+
 // Prompt displays LLM prompts from .checkpoint/prompts/
-func Prompt(projectPath string, promptID string, vars map[string]string) {
+func Prompt(projectPath string, promptID string, vars map[string]string, jsonOutput bool) {
 	promptsDir := filepath.Join(projectPath, ".checkpoint", "prompts")
 
 	// Check if prompts directory exists
@@ -31,7 +78,7 @@ func Prompt(projectPath string, promptID string, vars map[string]string) {
 
 	// If no prompt ID specified, list all prompts
 	if promptID == "" {
-		listPrompts(config)
+		listPrompts(config, jsonOutput)
 		return
 	}
 
@@ -40,16 +87,40 @@ func Prompt(projectPath string, promptID string, vars map[string]string) {
 }
 
 // listPrompts displays all available prompts grouped by category
-func listPrompts(config *prompts.PromptsConfig) {
+func listPrompts(config *prompts.PromptsConfig, jsonOutput bool) {
+	// Get all prompts
+	allPrompts := prompts.ListPrompts(config)
+
+	if jsonOutput {
+		type promptJSON struct {
+			ID          string   `json:"id"`
+			Name        string   `json:"name"`
+			Category    string   `json:"category"`
+			Description string   `json:"description"`
+			Variables   []string `json:"variables,omitempty"`
+		}
+		var output []promptJSON
+		for _, p := range allPrompts {
+			output = append(output, promptJSON{
+				ID:          p.ID,
+				Name:        p.Name,
+				Category:    p.Category,
+				Description: p.Description,
+				Variables:   p.Variables,
+			})
+		}
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		enc.Encode(map[string]any{"prompts": output})
+		return
+	}
+
 	fmt.Println()
 	fmt.Println("CHECKPOINT PROMPTS")
 	fmt.Println(strings.Repeat("━", 60))
 	fmt.Println()
 	fmt.Println("Available prompts:")
 	fmt.Println()
-
-	// Get all prompts
-	allPrompts := prompts.ListPrompts(config)
 
 	// Group by category
 	categories := make(map[string][]prompts.PromptInfo)

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,20 +10,57 @@ import (
 	"github.com/dmoose/checkpoint/internal/explain"
 	"github.com/dmoose/checkpoint/pkg/config"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
+
+var skillOpts struct {
+	json bool
+}
+
+func init() {
+	rootCmd.AddCommand(skillCmd)
+	skillCmd.Flags().BoolVar(&skillOpts.json, "json", false, "Output as JSON (for list)")
+}
+
+var skillCmd = &cobra.Command{
+	Use:   "skill [action] [name]",
+	Short: "Manage skills for LLM context",
+	Long: `Manage skills that provide LLM context.
+Actions: list, show <name>, add <name>, create <name>`,
+	Aliases: []string{"skills"},
+	Args:    cobra.MaximumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+
+		opts := SkillOptions{JSON: skillOpts.json}
+		if len(args) > 0 {
+			opts.Action = args[0]
+		}
+		if len(args) > 1 {
+			opts.SkillName = args[1]
+		}
+		Skill(absPath, opts)
+	},
+}
 
 // SkillOptions holds flags for the skill command
 type SkillOptions struct {
 	Action    string // list, show, add, create, or empty for list
 	SkillName string // skill name for show/add/create
+	JSON      bool   // --json for list output
 }
 
 // Skill manages skills for a project
 func Skill(projectPath string, opts SkillOptions) {
 	switch opts.Action {
 	case "", "list":
-		listSkills(projectPath)
+		listSkills(projectPath, opts.JSON)
 	case "show":
 		showSkill(projectPath, opts.SkillName)
 	case "add":
@@ -36,11 +74,56 @@ func Skill(projectPath string, opts SkillOptions) {
 	}
 }
 
-func listSkills(projectPath string) {
+func listSkills(projectPath string, jsonOutput bool) {
 	ctx, err := explain.LoadExplainContext(projectPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error loading context: %v\n", err)
 		os.Exit(1)
+	}
+
+	if jsonOutput {
+		type skillInfo struct {
+			Name   string `json:"name"`
+			Loaded bool   `json:"loaded"`
+		}
+		type skillsOutput struct {
+			Local           []skillInfo `json:"local"`
+			Global          []skillInfo `json:"global"`
+			AvailableGlobal []string    `json:"available_global"`
+		}
+
+		output := skillsOutput{
+			Local:           []skillInfo{},
+			Global:          []skillInfo{},
+			AvailableGlobal: []string{},
+		}
+
+		if ctx.Skills != nil {
+			for _, name := range ctx.Skills.Local {
+				output.Local = append(output.Local, skillInfo{Name: name, Loaded: skillLoaded(ctx.SkillDefs, name)})
+			}
+			for _, name := range ctx.Skills.Global {
+				output.Global = append(output.Global, skillInfo{Name: name, Loaded: skillLoaded(ctx.SkillDefs, name)})
+			}
+		}
+
+		availableGlobal := listAvailableGlobalSkills()
+		currentGlobal := make(map[string]bool)
+		if ctx.Skills != nil {
+			for _, name := range ctx.Skills.Global {
+				currentGlobal[name] = true
+			}
+		}
+		for _, name := range availableGlobal {
+			if !currentGlobal[name] {
+				output.AvailableGlobal = append(output.AvailableGlobal, name)
+			}
+		}
+
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		enc.Encode(output)
+		return
 	}
 
 	fmt.Println("Available Skills")

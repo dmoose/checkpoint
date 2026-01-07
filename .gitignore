@@ -156,3 +156,4 @@ config.local.json
 .checkpoint-diff
 .checkpoint-status.yaml
 .checkpoint-lock
+.checkpoint-session.yaml

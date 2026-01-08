@@ -98,7 +98,7 @@ return fmt.Errorf("operation failed: %w", err)
 - One checkpoint = one git commit
 - Run `make check` before any checkpoint commit
 - All user-facing errors need actionable hints
-- Deps: stdlib + yaml + ulid + mcp-go + cobra
+- Deps: stdlib + yaml + ulid + cobra
 
 ## File Types
 

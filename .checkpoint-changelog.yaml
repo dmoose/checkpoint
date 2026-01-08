@@ -1252,7 +1252,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-01-12T14:04:16-08:00"
-commit_hash: ""
+commit_hash: 8f08a0799930e6e645c8dc422f57b21093febdaa
 files_changed:
     - path: .checkpoint-changelog.yaml
       additions: 1
@@ -1296,6 +1296,41 @@ changes:
       details: Updated llm-workflow.md with Session Planning section, checkpoint-workflow skill with session commands, and session-start.md prompt with planning workflow option.
       change_type: docs
       scope: .checkpoint
+next_steps:
+    - summary: Add tests for doctor and detect packages
+      details: 'Cover auto-detection scenarios: Go, Node, Python, Rust, Ruby projects'
+      priority: high
+      scope: cmd/doctor, internal/detect
+    - summary: Create release workflow
+      details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
+      priority: high
+      scope: .github/workflows
+---
+schema_version: "1"
+timestamp: "2026-01-12T14:27:04-08:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: .checkpoint/guides/llm-workflow.md
+      additions: 34
+      deletions: 19
+    - path: checkpoint
+      additions: 0
+      deletions: 0
+    - path: cmd/plan.go
+      additions: 20
+      deletions: 6
+changes:
+    - summary: Make session template self-documenting with all schema fields
+      details: Template now includes placeholder prompts for all execution-time fields (progress, blockers, decisions, learnings) so LLMs reading the file understand the full schema without external documentation.
+      change_type: feature
+      scope: cmd/plan
+    - summary: Update llm-workflow guide with complete session schema
+      details: Documentation now shows full template including all fields with comments explaining their purpose and valid values.
+      change_type: docs
+      scope: .checkpoint/guides
 next_steps:
     - summary: Add tests for doctor and detect packages
       details: 'Cover auto-detection scenarios: Go, Node, Python, Rust, Ruby projects'

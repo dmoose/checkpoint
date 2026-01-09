@@ -22,12 +22,13 @@ Let's work on: {{task_description}}
 ### With Session Planning (for complex work)
 1. Run `checkpoint plan` to create a planning session
 2. Fill in goals, approach, and next actions
-3. Work through the plan, updating progress
+3. Work through the plan, updating as useful
 4. Run `checkpoint check` when ready
 5. Fill `.checkpoint-input`
 6. Run `checkpoint commit` (clears session)
 
-Or use `checkpoint session handoff` to preserve session for later.
+Sessions are disposable scratchpads—delete or ignore items that become irrelevant.
+Use `checkpoint session handoff` to preserve session for later pickup.
 
 ## Session Commands
 

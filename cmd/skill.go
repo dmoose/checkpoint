@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/dmoose/checkpoint/internal/explain"
+	"github.com/dmoose/checkpoint/internal/file"
 	"github.com/dmoose/checkpoint/pkg/config"
 
 	"github.com/spf13/cobra"
@@ -284,8 +285,11 @@ func addSkill(projectPath string, name string) {
 		os.Exit(1)
 	}
 
-	// Load current skills.yml
-	skillsPath := filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYml)
+	// Load current skills.yaml
+	skillsPath := file.FindWithFallback(
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYaml),
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYmlLegacy),
+	)
 	var skillsConfig explain.SkillsConfig
 
 	if data, err := os.ReadFile(skillsPath); err == nil {
@@ -379,8 +383,11 @@ func createSkill(projectPath string, name string) {
 		os.Exit(1)
 	}
 
-	// Add to skills.yml
-	skillsPath := filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYml)
+	// Add to skills.yaml
+	skillsPath := file.FindWithFallback(
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYaml),
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYmlLegacy),
+	)
 	var skillsConfig explain.SkillsConfig
 
 	if data, err := os.ReadFile(skillsPath); err == nil {

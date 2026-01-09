@@ -2,7 +2,7 @@
 
 # Variables
 BINARY_NAME := checkpoint
-MODULE_NAME := go-llm
+MODULE_NAME := github.com/dmoose/checkpoint
 BIN_DIR := bin
 BUILD_DIR := build
 MAIN_FILE := main.go
@@ -10,6 +10,7 @@ VERSION := $(shell grep 'const version' main.go | cut -d'"' -f2)
 LDFLAGS := -ldflags "-X main.version=$(VERSION) -s -w"
 PLATFORMS := linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 GO_FILES := $(shell find . -name '*.go' -not -path './vendor/*')
+INSTALL_PATH := $(HOME)/.local/bin
 
 # Default target
 .PHONY: all
@@ -48,8 +49,23 @@ build-all: clean-build
 # Install the binary to GOPATH/bin or GOBIN
 .PHONY: install
 install:
-	@echo "Installing $(BINARY_NAME)..."
+	@echo "Installing $(BINARY_NAME) to GOPATH/bin..."
 	go install $(LDFLAGS) .
+
+# Install to user's local bin directory (~/.local/bin)
+.PHONY: install-user
+install-user: build
+	@echo "Installing $(BINARY_NAME) to $(INSTALL_PATH)..."
+	@mkdir -p $(INSTALL_PATH)
+	@cp $(BIN_DIR)/$(BINARY_NAME) $(INSTALL_PATH)/$(BINARY_NAME)
+	@echo "Installed to $(INSTALL_PATH)/$(BINARY_NAME)"
+	@echo "Ensure $(INSTALL_PATH) is in your PATH"
+
+# Uninstall from user's local bin directory
+.PHONY: uninstall-user
+uninstall-user:
+	@echo "Removing $(BINARY_NAME) from $(INSTALL_PATH)..."
+	@rm -f $(INSTALL_PATH)/$(BINARY_NAME)
 
 # Run tests
 .PHONY: test
@@ -155,6 +171,8 @@ help:
 	@echo "  build-dev     - Build with race detector and debug info"
 	@echo "  build-all     - Cross-compile for multiple platforms"
 	@echo "  install       - Install binary to GOPATH/bin"
+	@echo "  install-user  - Install binary to ~/.local/bin"
+	@echo "  uninstall-user- Remove binary from ~/.local/bin"
 	@echo "  test          - Run tests"
 	@echo "  test-coverage - Run tests with coverage report"
 	@echo "  test-race     - Run tests with race detector"

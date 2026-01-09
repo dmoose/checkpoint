@@ -24,3 +24,15 @@ func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
+
+// FindWithFallback checks for a file at the primary path, then falls back to legacy path.
+// Returns the path that exists, or the primary path if neither exists.
+func FindWithFallback(primary, legacy string) string {
+	if Exists(primary) {
+		return primary
+	}
+	if Exists(legacy) {
+		return legacy
+	}
+	return primary // Return primary for creation
+}

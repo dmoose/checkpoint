@@ -139,8 +139,11 @@ func startInternal(projectPath string) bool {
 
 	fmt.Println("\nREADY TO WORK")
 	fmt.Println(strings.Repeat("━", 60))
-	fmt.Println("Make your changes, then run:")
-	fmt.Println("  checkpoint check    # When ready to create a checkpoint")
+	fmt.Println("Before making changes:")
+	fmt.Println("  checkpoint plan     # Create a session to organize your work")
+	fmt.Println()
+	fmt.Println("When done:")
+	fmt.Println("  checkpoint check    # Create a checkpoint")
 	fmt.Println()
 
 	return true

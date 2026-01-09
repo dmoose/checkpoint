@@ -1340,3 +1340,97 @@ next_steps:
       details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
       priority: high
       scope: .github/workflows
+---
+schema_version: "1"
+timestamp: "2026-01-12T20:03:05-08:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint/guides/llm-workflow.md
+      additions: 9
+      deletions: 5
+    - path: .checkpoint/prompts/session-start.md
+      additions: 3
+      deletions: 2
+    - path: .github/workflows/ci.yml
+      additions: 4
+      deletions: 4
+    - path: Makefile
+      additions: 20
+      deletions: 2
+    - path: README.md
+      additions: 103
+      deletions: 63
+    - path: checkpoint
+      additions: 0
+      deletions: 0
+    - path: cmd/completion.go
+      additions: 148
+      deletions: 0
+    - path: cmd/doctor.go
+      additions: 23
+      deletions: 10
+    - path: cmd/init.go
+      additions: 24
+      deletions: 20
+    - path: cmd/learn.go
+      additions: 21
+      deletions: 5
+    - path: cmd/skill.go
+      additions: 11
+      deletions: 4
+    - path: cmd/start.go
+      additions: 5
+      deletions: 2
+    - path: go.md
+      additions: 0
+      deletions: 1071
+    - path: internal/explain/explain.go
+      additions: 28
+      deletions: 15
+    - path: internal/file/file.go
+      additions: 12
+      deletions: 0
+    - path: internal/schema/schema_test.go
+      additions: 183
+      deletions: 0
+    - path: pkg/config/config.go
+      additions: 19
+      deletions: 9
+changes:
+    - summary: Rewrite README with badges and clear value proposition
+      details: Added CI, GoDoc, Go Report Card, License badges. Rewrote docs to explain tool independence and portable context benefits without LLM fluff.
+      change_type: docs
+      scope: README
+    - summary: Add completion install command with shell auto-detection
+      details: Detects Fish, Zsh (oh-my-zsh/.zfunc), Bash (XDG). Conservative detection - errors if no solid location found.
+      change_type: feature
+      scope: cmd/completion
+    - summary: Standardize on .yaml extension with backward compatibility
+      details: Changed all config files from .yml to .yaml. Added FindWithFallback helper to read .yaml first, fall back to .yml for existing projects.
+      change_type: refactor
+      scope: pkg/config, internal/file, cmd
+    - summary: Add install-user and uninstall-user make targets
+      details: Install binary to ~/bin for user-local installation without sudo
+      change_type: feature
+      scope: Makefile
+    - summary: Add tests for schema validation, context, and detect packages
+      details: Tests for LintEntry, RenderChangelogDocument, isPlaceholder, GetRecentContextEntries, detectGitRemote, package manager detection. Coverage 14.7% to 19.3%.
+      change_type: feature
+      scope: internal/schema, internal/context, internal/detect
+    - summary: Clarify session transient nature in documentation
+      details: Updated llm-workflow.md and session-start.md to emphasize sessions are disposable scratchpads, not task trackers
+      change_type: docs
+      scope: .checkpoint/guides, .checkpoint/prompts
+    - summary: Update start command to encourage checkpoint plan
+      details: Final message now suggests running checkpoint plan before making modifications
+      change_type: feature
+      scope: cmd/start
+next_steps:
+    - summary: Create release workflow
+      details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
+      priority: high
+      scope: .github/workflows
+    - summary: Set up git remote and push to GitHub
+      details: Configure github.com/dmoose/checkpoint remote, push main branch
+      priority: high
+      scope: git

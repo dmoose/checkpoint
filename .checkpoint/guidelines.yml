@@ -1,0 +1,80 @@
+schema_version: "1"
+
+naming:
+    commands:
+        examples:
+            - start, check, commit, explain
+        pattern: lowercase single word
+    files:
+        examples:
+            - commit_test.go
+            - changelog.go
+        pattern: snake_case.go
+    functions:
+        command_entry: '{Name}Command or {Name} in cmd/'
+        exported: PascalCase
+        internal: camelCase
+    packages:
+        examples:
+            - internal/changelog
+            - internal/schema
+            - pkg/config
+        pattern: lowercase, single word preferred
+structure:
+    new_command: |
+        1. Create cmd/{name}.go
+        2. Add {Name}() or {Name}Command() function
+        3. Wire into main.go switch statement
+        4. Add to help.go command list
+    new_package: |
+        1. Create internal/{name}/{name}.go
+        2. Keep package focused on single responsibility
+        3. Add {name}_test.go for tests
+    new_schema: |
+        1. Add structs to internal/schema/schema.go or relevant package
+        2. Use yaml struct tags for serialization
+        3. Add validation if user-facing
+errors:
+    examples:
+        - |-
+          error: .checkpoint-input not found
+          hint: Run 'checkpoint check' first
+    style: |
+        Wrap errors with context using fmt.Errorf:
+        return fmt.Errorf("operation failed: %w", err)
+    user_facing: |
+        User-facing errors should include hints for resolution.
+        See cmd/commit.go errorWithHint pattern.
+testing:
+    integration: |
+        Integration tests that need git repo are in integration_test.go.
+        These create temp directories with git init.
+    naming: Test{Function}_{Scenario}
+    pattern: '{file}_test.go in same package'
+    style: |
+        Use table-driven tests for multiple scenarios.
+        See internal/schema/schema_test.go for examples.
+commits:
+    format: 'Checkpoint: {type} ({scope}) - {summary}'
+    pre_commit: Run make check before checkpoint commit
+    tool: Always use checkpoint commit, never raw git commit
+rules:
+    - Run make check before any checkpoint commit
+    - No external deps without explicit discussion
+    - Schema changes require version consideration
+    - All user-facing errors need actionable hints
+    - Append-only semantics for changelog/context files
+    - One checkpoint = one git commit
+    - Always test error paths
+avoid:
+    - Global state in cmd/ files
+    - Modifying changelog documents after append (except commit_hash backfill)
+    - Breaking append-only semantics
+    - Silent failures - always surface errors
+    - Over-engineering - keep it simple
+    - Adding deps when stdlib works
+principles:
+    - 'Append-only: Corruption isolated to tail, history preserved'
+    - 'Minimal deps: stdlib + yaml + ulid + mcp-go only'
+    - 'LLM-friendly: Structured output, clear prompts, searchable history'
+    - 'Git-native: Everything tracked, travels with project'

@@ -1,0 +1,75 @@
+schema_version: "1"
+name: checkpoint
+type: go-cli
+purpose: |
+  Append-only changelog tool for LLM-assisted development.
+  Captures what changed and why, enabling context continuity across
+  LLM sessions and daily summaries via companion macOS app.
+
+repository: github.com/user/checkpoint
+
+architecture:
+  overview: |
+    CLI entry point (main.go) dispatches to command handlers in cmd/.
+    Core logic lives in internal/ packages. Configuration constants
+    in pkg/config/. The tool creates/manages several YAML files in
+    the project root for changelog, context, and project patterns.
+
+  key_paths:
+    entry_point: main.go
+    commands: cmd/
+    core_logic: internal/
+    config: pkg/config/
+    checkpoint_support: .checkpoint/
+
+  data_flow: |
+    1. User runs checkpoint check → creates .checkpoint-input + .checkpoint-diff
+    2. LLM/user fills .checkpoint-input with change descriptions
+    3. User runs checkpoint commit → validates, appends to changelog, git commits
+    4. Tool backfills commit hash into last changelog document
+
+  key_files:
+    - path: .checkpoint-changelog.yaml
+      purpose: Append-only changelog, one YAML document per checkpoint
+      tracked: true
+    - path: .checkpoint-context.yml
+      purpose: Reasoning and decisions log
+      tracked: true
+    - path: .checkpoint-project.yml
+      purpose: Human-curated project patterns (legacy, being replaced)
+      tracked: true
+    - path: .checkpoint-status.yaml
+      purpose: Last commit metadata for macOS app discovery
+      tracked: false
+    - path: .checkpoint-input
+      purpose: Temporary editable file during checkpoint
+      tracked: false
+    - path: .checkpoint-diff
+      purpose: Git diff context for LLM
+      tracked: false
+
+languages:
+  primary: go
+  version: "1.25"
+
+dependencies:
+  external:
+    - name: gopkg.in/yaml.v3
+      purpose: Multi-document YAML parsing
+    - name: github.com/oklog/ulid/v2
+      purpose: Project ID generation (ULID format)
+    - name: github.com/mark3labs/mcp-go
+      purpose: MCP server protocol for multi-project access
+
+integrations:
+  - name: macOS Swift App
+    type: companion
+    interaction: |
+      Swift app discovers projects via .checkpoint-status.yaml presence.
+      Reads changelog for daily summaries. Uses project_id and path_hash
+      for deduplication and move detection.
+  - name: Git
+    type: required
+    interaction: |
+      Tool wraps git commands for status, diff, commit.
+      One checkpoint = one git commit. Backfills commit hash.

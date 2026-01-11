@@ -65,6 +65,62 @@ func main() {
 	}
 
 	switch subcommand {
+	case "explain":
+		// Parse explain-specific flags
+		explainOpts := cmd.ExplainOptions{}
+		var explainPositional []string
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			if a == "--full" {
+				explainOpts.Full = true
+				continue
+			}
+			if a == "--md" {
+				explainOpts.Markdown = true
+				continue
+			}
+			if a == "--json" {
+				explainOpts.JSON = true
+				continue
+			}
+			if strings.HasPrefix(a, "-") {
+				continue
+			}
+			explainPositional = append(explainPositional, a)
+		}
+		// Parse positional: [topic] [skillname] [path]
+		// topic can be: project, tools, guidelines, skills, skill, history
+		// if topic is "skill", next positional is skill name
+		explainPath := "."
+		if len(explainPositional) > 0 {
+			first := explainPositional[0]
+			if first == "skill" && len(explainPositional) > 1 {
+				explainOpts.Topic = "skill"
+				explainOpts.SkillName = explainPositional[1]
+				if len(explainPositional) > 2 {
+					explainPath = explainPositional[2]
+				}
+			} else if isExplainTopic(first) {
+				explainOpts.Topic = first
+				if len(explainPositional) > 1 {
+					explainPath = explainPositional[1]
+				}
+			} else if looksLikePath(first) {
+				explainPath = first
+			} else {
+				// Could be a skill name shorthand
+				explainOpts.Topic = first
+				if len(explainPositional) > 1 {
+					explainPath = explainPositional[1]
+				}
+			}
+		}
+		explainAbsPath, err := filepath.Abs(explainPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.Explain(explainAbsPath, explainOpts)
 	case "start":
 		cmd.Start(absPath)
 	case "summary":
@@ -74,7 +130,38 @@ func main() {
 	case "commit":
 		cmd.CommitWithOptions(absPath, cmd.CommitOptions{DryRun: dryRun, ChangelogOnly: changelogOnly}, version)
 	case "init":
-		cmd.Init(absPath, version)
+		// Parse init-specific flags
+		initOpts := cmd.InitOptions{}
+		var initPath string
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			if a == "--list-templates" {
+				initOpts.ListTemplates = true
+				continue
+			}
+			if a == "--template" && i+1 < len(args) {
+				initOpts.Template = args[i+1]
+				i++
+				continue
+			}
+			if strings.HasPrefix(a, "--template=") {
+				initOpts.Template = strings.TrimPrefix(a, "--template=")
+				continue
+			}
+			if strings.HasPrefix(a, "-") {
+				continue
+			}
+			initPath = a
+		}
+		if initPath == "" {
+			initPath = "."
+		}
+		initAbsPath, err := filepath.Abs(initPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.InitWithOptions(initAbsPath, version, initOpts)
 	case "clean":
 		cmd.Clean(absPath)
 	case "lint":
@@ -181,6 +268,151 @@ func main() {
 			os.Exit(1)
 		}
 		cmd.Prompt(promptAbsPath, promptID, varFlags)
+	case "learn":
+		// Parse learn-specific flags
+		learnOpts := cmd.LearnOptions{}
+		var learnPositional []string
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			if a == "--guideline" {
+				learnOpts.Guideline = true
+				continue
+			}
+			if a == "--avoid" {
+				learnOpts.Avoid = true
+				continue
+			}
+			if a == "--principle" {
+				learnOpts.Principle = true
+				continue
+			}
+			if a == "--pattern" {
+				learnOpts.Pattern = true
+				continue
+			}
+			if a == "--tool" {
+				learnOpts.Tool = true
+				if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+					learnOpts.ToolName = args[i+1]
+					i++
+				}
+				continue
+			}
+			if strings.HasPrefix(a, "-") {
+				continue
+			}
+			learnPositional = append(learnPositional, a)
+		}
+		// First positional is content, last might be path
+		learnPath := "."
+		if len(learnPositional) > 0 {
+			learnOpts.Content = learnPositional[0]
+			if len(learnPositional) > 1 && looksLikePath(learnPositional[len(learnPositional)-1]) {
+				learnPath = learnPositional[len(learnPositional)-1]
+			}
+		}
+		learnAbsPath, err := filepath.Abs(learnPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.Learn(learnAbsPath, learnOpts)
+	case "search":
+		// Parse search-specific flags
+		searchOpts := cmd.SearchOptions{}
+		var searchPositional []string
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			if a == "--failed" {
+				searchOpts.Failed = true
+				continue
+			}
+			if a == "--pattern" {
+				searchOpts.Pattern = true
+				continue
+			}
+			if a == "--decision" {
+				searchOpts.Decision = true
+				continue
+			}
+			if a == "--context" {
+				searchOpts.Context = true
+				continue
+			}
+			if a == "--scope" && i+1 < len(args) {
+				searchOpts.Scope = args[i+1]
+				i++
+				continue
+			}
+			if strings.HasPrefix(a, "--scope=") {
+				searchOpts.Scope = strings.TrimPrefix(a, "--scope=")
+				continue
+			}
+			if a == "--recent" && i+1 < len(args) {
+				fmt.Sscanf(args[i+1], "%d", &searchOpts.Recent)
+				i++
+				continue
+			}
+			if strings.HasPrefix(a, "-") {
+				continue
+			}
+			searchPositional = append(searchPositional, a)
+		}
+		// First positional is query, last might be path
+		searchPath := "."
+		if len(searchPositional) > 0 {
+			searchOpts.Query = searchPositional[0]
+			if len(searchPositional) > 1 {
+				searchPath = searchPositional[len(searchPositional)-1]
+			}
+		}
+		searchAbsPath, err := filepath.Abs(searchPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.Search(searchAbsPath, searchOpts)
+	case "skill", "skills":
+		// Parse skill-specific args
+		skillOpts := cmd.SkillOptions{}
+		var skillPositional []string
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			if strings.HasPrefix(a, "-") {
+				continue
+			}
+			skillPositional = append(skillPositional, a)
+		}
+		// Parse: [action] [name] [path]
+		// Actions: list, show, add, create
+		skillPath := "."
+		if len(skillPositional) > 0 {
+			first := skillPositional[0]
+			if isSkillAction(first) {
+				skillOpts.Action = first
+				if len(skillPositional) > 1 {
+					skillOpts.SkillName = skillPositional[1]
+				}
+				if len(skillPositional) > 2 {
+					skillPath = skillPositional[2]
+				}
+			} else if looksLikePath(first) {
+				skillPath = first
+			} else {
+				// Treat as skill name for show
+				skillOpts.Action = "show"
+				skillOpts.SkillName = first
+				if len(skillPositional) > 1 {
+					skillPath = skillPositional[1]
+				}
+			}
+		}
+		skillAbsPath, err := filepath.Abs(skillPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		cmd.Skill(skillAbsPath, skillOpts)
 	case "help", "-h", "--help":
 		cmd.Help()
 	case "version", "-v", "--version":
@@ -190,4 +422,31 @@ func main() {
 		cmd.Help()
 		os.Exit(1)
 	}
+}
+
+// isExplainTopic returns true if the string is a known explain topic
+func isExplainTopic(s string) bool {
+	topics := []string{"project", "tools", "guidelines", "skills", "skill", "history"}
+	for _, t := range topics {
+		if s == t {
+			return true
+		}
+	}
+	return false
+}
+
+// looksLikePath returns true if the string looks like a file path
+func looksLikePath(s string) bool {
+	return strings.Contains(s, "/") || strings.Contains(s, ".") || s == "."
+}
+
+// isSkillAction returns true if the string is a known skill action
+func isSkillAction(s string) bool {
+	actions := []string{"list", "show", "add", "create"}
+	for _, a := range actions {
+		if s == a {
+			return true
+		}
+	}
+	return false
 }

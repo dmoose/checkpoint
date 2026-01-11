@@ -1,0 +1,101 @@
+schema_version: "1"
+
+# Build commands
+build:
+  default:
+    command: make build
+    output: bin/checkpoint
+    notes: Builds for current platform
+
+  dev:
+    command: make build-dev
+    notes: Development build with race detector
+
+  all:
+    command: make build-all
+    notes: Cross-compile for multiple platforms
+
+  install:
+    command: make install
+    notes: Install to GOPATH/bin
+
+# Test commands
+test:
+  default:
+    command: make test
+    notes: Run all tests
+
+  coverage:
+    command: make test-coverage
+    notes: Run tests with coverage report
+
+  race:
+    command: make test-race
+    notes: Run tests with race detector
+
+  verbose:
+    command: go test -v ./...
+    notes: Verbose test output
+
+# Lint and format
+lint:
+  default:
+    command: make lint
+    notes: Run golangci-lint
+
+  fix:
+    command: make fmt
+    notes: Auto-format code with gofmt
+
+# Pre-commit check
+check:
+  default:
+    command: make check
+    notes: Run fmt, vet, lint, test - use before checkpoint commit
+
+# Run commands
+run:
+  default:
+    command: make run
+    notes: Run checkpoint with no args (shows help)
+
+  with_args:
+    command: make run-with ARGS="<args>"
+    example: make run-with ARGS="start ."
+    notes: Run with specific arguments
+
+# Checkpoint workflow
+checkpoint:
+  start:
+    command: checkpoint start
+    notes: Begin session, see status and next steps
+
+  check:
+    command: checkpoint check
+    notes: Generate input files for editing
+
+  lint:
+    command: checkpoint lint
+    notes: Validate input before commit
+
+  commit:
+    command: checkpoint commit
+    notes: Finalize checkpoint with git commit
+
+  explain:
+    command: checkpoint explain
+    notes: Get project context (this system)
+
+# Maintenance
+maintenance:
+  deps:
+    command: make deps
+    notes: Download dependencies
+
+  tidy:
+    command: make tidy
+    notes: Clean up go.mod
+
+  clean:
+    command: make clean
+    notes: Remove build artifacts

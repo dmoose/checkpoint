@@ -1,0 +1,32 @@
+schema_version: "1"
+
+# Skills available to LLMs working on this project
+# Skills describe tools and capabilities, how to use them, when they're useful
+
+# Global skills (from ~/.config/checkpoint/skills/)
+global:
+  - ripgrep       # Fast code search
+  - git           # Version control
+  - go            # Go toolchain
+  - golangci-lint # Go linter
+
+# Local skills (in .checkpoint/skills/)
+local:
+  - checkpoint-workflow  # How to use checkpoint effectively
+
+# Skill-specific configuration
+config:
+  golangci-lint:
+    config_file: null  # Uses defaults
+
+  go:
+    version: "1.25"
+    module: go-llm
+
+# Auto-detect settings
+auto_detect:
+  # Skills that should be auto-included in explain output
+  include_in_explain:
+    - checkpoint-workflow
+    - ripgrep
+    - git

@@ -8,8 +8,15 @@ import (
 	"go-llm/internal/changelog"
 	"go-llm/internal/file"
 	"go-llm/internal/project"
+	"go-llm/internal/templates"
 	"go-llm/pkg/config"
 )
+
+// InitOptions holds flags for the init command
+type InitOptions struct {
+	Template      string // template name to use
+	ListTemplates bool   // list available templates
+}
 
 // createDefaultPrompts creates the default prompts.yaml and prompt template files
 // Only creates files that don't already exist
@@ -374,8 +381,38 @@ Be specific and constructive.
 	return nil
 }
 
+// ListTemplates prints available templates
+func ListTemplates() {
+	tmplList, err := templates.ListTemplates()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error listing templates: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Available templates:")
+	fmt.Println()
+	for _, t := range tmplList {
+		fmt.Printf("  %-12s  %s\n", t.Name, t.Description)
+		if t.Source != "embedded" {
+			fmt.Printf("               (from %s)\n", t.Source)
+		}
+	}
+	fmt.Println()
+	fmt.Println("Usage: checkpoint init --template <name> [path]")
+}
+
 // Init creates a CHECKPOINT.md file with practical instructions and theory
 func Init(projectPath string, version string) {
+	InitWithOptions(projectPath, version, InitOptions{})
+}
+
+// InitWithOptions creates checkpoint files with optional template
+func InitWithOptions(projectPath string, version string, opts InitOptions) {
+	// Handle --list-templates
+	if opts.ListTemplates {
+		ListTemplates()
+		return
+	}
 	// Create .checkpoint/ directory structure
 	checkpointDir := filepath.Join(projectPath, ".checkpoint")
 	if err := os.MkdirAll(checkpointDir, 0755); err != nil {
@@ -384,13 +421,29 @@ func Init(projectPath string, version string) {
 	}
 
 	// Create subdirectories
-	subdirs := []string{"examples", "guides", "prompts", "templates"}
+	subdirs := []string{"examples", "guides", "prompts", "skills"}
 	for _, subdir := range subdirs {
 		path := filepath.Join(checkpointDir, subdir)
 		if err := os.MkdirAll(path, 0755); err != nil {
 			fmt.Fprintf(os.Stderr, "error creating .checkpoint/%s directory: %v\n", subdir, err)
 			os.Exit(1)
 		}
+	}
+
+	// Apply template if specified
+	projectName := filepath.Base(projectPath)
+	if opts.Template != "" {
+		tmpl, err := templates.GetTemplate(opts.Template)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "hint: Run 'checkpoint init --list-templates' to see available templates\n")
+			os.Exit(1)
+		}
+		if err := templates.ApplyTemplate(tmpl, projectPath, projectName); err != nil {
+			fmt.Fprintf(os.Stderr, "error applying template: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✓ Applied template '%s'\n", opts.Template)
 	}
 
 	// Create .gitignore for .checkpoint directory
@@ -465,7 +518,6 @@ These files are referenced by checkpoint commands and can be read directly:
 
 	// Initialize project file (only if it doesn't exist)
 	projectFilePath := filepath.Join(projectPath, config.ProjectFileName)
-	projectName := filepath.Base(projectPath)
 	if !file.Exists(projectFilePath) {
 		if err := project.InitializeProjectFile(projectFilePath, projectName, nil); err != nil {
 			fmt.Fprintf(os.Stderr, "error initializing project file: %v\n", err)

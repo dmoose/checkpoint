@@ -58,7 +58,7 @@ COMMANDS:
   explain     Get project context for LLMs and developers
               Display project info, tools, guidelines, and skills
               Usage: checkpoint explain [topic] [flags]
-              Topics: project, tools, guidelines, skills, skill <name>, history
+              Topics: project, tools, guidelines, skills, skill <name>, history, next
               Flags:
                 --full   Complete context dump
                 --md     Output as markdown
@@ -92,6 +92,17 @@ COMMANDS:
                 --pattern         Add as an established pattern
                 --tool [name]     Add as a tool command
 
+  session     Manage session state for LLM handoff
+              Capture and restore session context between LLM sessions
+              Usage: checkpoint session [action] [summary] [flags]
+              Actions:
+                show              Show current session state (default)
+                save <summary>    Save session state with summary
+                clear             Clear session state
+                handoff           Generate comprehensive handoff document
+              Flags:
+                --status <s>      Set status: in_progress, blocked, complete, handoff
+
   help        Display this help message
   version     Display version information
 
@@ -115,8 +126,10 @@ EXAMPLES:
   checkpoint explain guidelines       # Conventions and rules to follow
   checkpoint explain skills           # Available skills listing
   checkpoint explain skill ripgrep    # Specific skill details
-  checkpoint explain --full           # Complete context dump
-  checkpoint explain --json           # Machine-readable output
+  checkpoint explain history           # Show recent checkpoints, patterns, decisions
+  checkpoint explain next              # Show all outstanding next steps by priority
+  checkpoint explain --full            # Complete context dump
+  checkpoint explain --json            # Machine-readable output
   checkpoint check                    # Generate input files in current directory
   checkpoint lint                     # Check input for issues before committing
   checkpoint examples                 # List available examples
@@ -135,6 +148,11 @@ EXAMPLES:
   checkpoint init --template go-cli   # Initialize with Go CLI template
   checkpoint init --template node-api ~/my-project  # Use template in specific dir
   checkpoint clean                    # Abort current checkpoint and clean up
+  checkpoint session                  # Show current session state
+  checkpoint session save "Working on auth" # Save session with summary
+  checkpoint session save "Blocked on API" --status blocked # Save with status
+  checkpoint session handoff          # Generate handoff document for next LLM
+  checkpoint session clear            # Clear session state
 
 For detailed workflow guidance, run: checkpoint init
 For project context, run: checkpoint explain

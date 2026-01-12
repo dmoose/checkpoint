@@ -485,3 +485,38 @@ context:
           outcome: README rewritten to lead with problem/solution framing about context loss in LLM sessions
         - exchange: User called FUTURE-FEATURES.md 'LLM generated fantasy of world domination'
           outcome: Cut from 419 to 42 lines, keeping only realistic near-term features
+---
+schema_version: "1"
+timestamp: "2026-01-12T13:20:13-08:00"
+context:
+    problem_statement: Growing CLI complexity made manual flag parsing unsustainable. Adding new commands required changes in 4+ places. A Mac management app needed JSON output and programmatic config access.
+    key_insights:
+        - insight: Cobra's self-registering init() pattern eliminates centralized command routing
+          impact: Adding new commands now requires only creating a single file with init() registration
+          scope: project
+        - insight: Manual completion scripts drift out of sync with actual commands
+          impact: Using framework-generated completions ensures consistency
+          scope: checkpoint
+    decisions_made:
+        - decision: Adopt Cobra as CLI framework
+          rationale: Industry standard for Go CLIs, eliminates boilerplate, provides built-in completions, help, and flag parsing
+          alternatives_considered:
+            - Continue manual parsing - rejected due to maintenance burden
+            - urfave/cli - less widespread, similar feature set
+          constraints_that_influenced: Need to support Mac app integration requiring consistent JSON output
+          scope: project
+        - decision: Use --json flag pattern for machine-readable output
+          rationale: Consistent flag name across commands, optional to preserve human-friendly default
+          scope: project
+    established_patterns:
+        - pattern: Cobra command registration via init()
+          rationale: Each cmd/*.go file registers itself, no central routing needed
+          examples: rootCmd.AddCommand(checkCmd) in cmd/check.go init()
+          scope: project
+        - pattern: Options struct per command for flags
+          rationale: Groups related flags, avoids global variable pollution
+          examples: var skillOpts struct { json bool } with skillCmd.Flags().BoolVar()
+          scope: project
+    conversation_context:
+        - exchange: User asked to assess Cobra value before committing to migration
+          outcome: Analysis showed 540-line main.go and 4+ touch points per flag justified the dependency

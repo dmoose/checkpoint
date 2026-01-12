@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,8 +11,63 @@ import (
 	"github.com/dmoose/checkpoint/internal/explain"
 	"github.com/dmoose/checkpoint/pkg/config"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
+
+var learnOpts struct {
+	guideline bool
+	tool      bool
+	avoid     bool
+	principle bool
+	pattern   bool
+	toolName  string
+	list      bool
+	json      bool
+}
+
+func init() {
+	rootCmd.AddCommand(learnCmd)
+	learnCmd.Flags().BoolVar(&learnOpts.guideline, "guideline", false, "Add as a rule to follow")
+	learnCmd.Flags().BoolVar(&learnOpts.tool, "tool", false, "Add as a tool command")
+	learnCmd.Flags().BoolVar(&learnOpts.avoid, "avoid", false, "Add as an anti-pattern to avoid")
+	learnCmd.Flags().BoolVar(&learnOpts.principle, "principle", false, "Add as a design principle")
+	learnCmd.Flags().BoolVar(&learnOpts.pattern, "pattern", false, "Add as an established pattern")
+	learnCmd.Flags().StringVar(&learnOpts.toolName, "tool-name", "", "Tool name when adding a tool")
+	learnCmd.Flags().BoolVar(&learnOpts.list, "list", false, "List all learnings")
+	learnCmd.Flags().BoolVar(&learnOpts.json, "json", false, "Output as JSON (with --list)")
+}
+
+var learnCmd = &cobra.Command{
+	Use:   "learn [content]",
+	Short: "Capture knowledge during development",
+	Long: `Add learnings, guidelines, patterns, or tools to project knowledge base.
+Use --list to view all captured learnings.`,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+
+		opts := LearnOptions{
+			Guideline: learnOpts.guideline,
+			Tool:      learnOpts.tool,
+			Avoid:     learnOpts.avoid,
+			Principle: learnOpts.principle,
+			Pattern:   learnOpts.pattern,
+			ToolName:  learnOpts.toolName,
+			List:      learnOpts.list,
+			JSON:      learnOpts.json,
+		}
+		if len(args) > 0 {
+			opts.Content = args[0]
+		}
+		Learn(absPath, opts)
+	},
+}
 
 // LearnOptions holds flags for the learn command
 type LearnOptions struct {
@@ -22,10 +78,17 @@ type LearnOptions struct {
 	Principle bool   // Add as a design principle
 	Pattern   bool   // Add as a pattern
 	ToolName  string // Tool name when adding a tool
+	List      bool   // List all learnings
+	JSON      bool   // Output as JSON
 }
 
 // Learn captures knowledge during development
 func Learn(projectPath string, opts LearnOptions) {
+	// Handle --list flag
+	if opts.List {
+		listLearnings(projectPath, opts.JSON)
+		return
+	}
 	if opts.Content == "" {
 		fmt.Fprintf(os.Stderr, "error: content required\n")
 		fmt.Fprintf(os.Stderr, "usage: checkpoint learn <content> [flags]\n")
@@ -285,4 +348,68 @@ func writeToolsFile(path string, t *explain.ToolsConfig) error {
 	}
 
 	return nil
+}
+
+// listLearnings lists all captured learnings
+func listLearnings(projectPath string, jsonOutput bool) {
+	learningsPath := filepath.Join(projectPath, config.CheckpointDir, "learnings.yml")
+
+	data, err := os.ReadFile(learningsPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			if jsonOutput {
+				fmt.Println(`{"learnings": []}`)
+			} else {
+				fmt.Println("No learnings captured yet.")
+				fmt.Println("Use 'checkpoint learn <content>' to capture learnings.")
+			}
+			return
+		}
+		fmt.Fprintf(os.Stderr, "error reading learnings: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Parse multi-document YAML
+	var learnings []struct {
+		Timestamp string `yaml:"timestamp" json:"timestamp"`
+		Learning  string `yaml:"learning" json:"learning"`
+	}
+
+	decoder := yaml.NewDecoder(strings.NewReader(string(data)))
+	for {
+		var entry struct {
+			Timestamp string `yaml:"timestamp"`
+			Learning  string `yaml:"learning"`
+		}
+		if err := decoder.Decode(&entry); err != nil {
+			break
+		}
+		if entry.Learning != "" {
+			learnings = append(learnings, struct {
+				Timestamp string `yaml:"timestamp" json:"timestamp"`
+				Learning  string `yaml:"learning" json:"learning"`
+			}{entry.Timestamp, entry.Learning})
+		}
+	}
+
+	if jsonOutput {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		enc.Encode(map[string]any{"learnings": learnings})
+		return
+	}
+
+	if len(learnings) == 0 {
+		fmt.Println("No learnings captured yet.")
+		return
+	}
+
+	fmt.Printf("Learnings (%d):\n\n", len(learnings))
+	for _, l := range learnings {
+		fmt.Printf("• %s\n", l.Learning)
+		if l.Timestamp != "" {
+			fmt.Printf("  [%s]\n", l.Timestamp)
+		}
+		fmt.Println()
+	}
 }

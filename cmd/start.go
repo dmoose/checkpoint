@@ -11,14 +11,34 @@ import (
 	"github.com/dmoose/checkpoint/internal/schema"
 	"github.com/dmoose/checkpoint/pkg/config"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
-// Start validates project readiness and shows next steps
-func Start(projectPath string) {
-	if !startInternal(projectPath) {
-		os.Exit(1)
-	}
+func init() {
+	rootCmd.AddCommand(startCmd)
+}
+
+var startCmd = &cobra.Command{
+	Use:   "start [path]",
+	Short: "Validate readiness and show next steps",
+	Long: `Checks git status, checkpoint initialization, and displays
+planned work from last checkpoint.`,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		if len(args) > 0 {
+			projectPath = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		if !startInternal(absPath) {
+			os.Exit(1)
+		}
+	},
 }
 
 // startInternal is the testable implementation

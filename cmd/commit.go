@@ -14,7 +14,40 @@ import (
 	"github.com/dmoose/checkpoint/internal/project"
 	"github.com/dmoose/checkpoint/internal/schema"
 	"github.com/dmoose/checkpoint/pkg/config"
+
+	"github.com/spf13/cobra"
 )
+
+var commitOpts struct {
+	dryRun        bool
+	changelogOnly bool
+}
+
+func init() {
+	rootCmd.AddCommand(commitCmd)
+	commitCmd.Flags().BoolVarP(&commitOpts.dryRun, "dry-run", "n", false, "Show commit message and staged files without committing")
+	commitCmd.Flags().BoolVar(&commitOpts.changelogOnly, "changelog-only", false, "Stage only changelog instead of all changes")
+}
+
+var commitCmd = &cobra.Command{
+	Use:   "commit [path]",
+	Short: "Parse input, append to changelog, stage changes, and git commit",
+	Long: `Validates input, creates YAML document, stages files, commits.
+Then backfills commit hash into the last changelog document.`,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		if len(args) > 0 {
+			projectPath = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		CommitWithOptions(absPath, CommitOptions{DryRun: commitOpts.dryRun, ChangelogOnly: commitOpts.changelogOnly}, Version)
+	},
+}
 
 type CommitOptions struct {
 	DryRun        bool

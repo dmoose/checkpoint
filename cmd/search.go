@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,29 +10,81 @@ import (
 
 	"github.com/dmoose/checkpoint/pkg/config"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
+var searchOpts struct {
+	failed   bool
+	pattern  bool
+	decision bool
+	scope    string
+	recent   int
+	context  bool
+	json     bool
+}
+
+func init() {
+	rootCmd.AddCommand(searchCmd)
+	searchCmd.Flags().BoolVar(&searchOpts.failed, "failed", false, "Search failed approaches")
+	searchCmd.Flags().BoolVar(&searchOpts.pattern, "pattern", false, "Search established patterns")
+	searchCmd.Flags().BoolVar(&searchOpts.decision, "decision", false, "Search decisions made")
+	searchCmd.Flags().StringVar(&searchOpts.scope, "scope", "", "Filter by scope")
+	searchCmd.Flags().IntVar(&searchOpts.recent, "recent", 0, "Limit to recent N checkpoints")
+	searchCmd.Flags().BoolVar(&searchOpts.context, "context", false, "Search context file")
+	searchCmd.Flags().BoolVar(&searchOpts.json, "json", false, "Output as JSON")
+}
+
+var searchCmd = &cobra.Command{
+	Use:   "search <query>",
+	Short: "Search checkpoint history",
+	Long:  `Search changelog and context files for patterns, decisions, and failures.`,
+	Args:  cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+
+		opts := SearchOptions{
+			Failed:   searchOpts.failed,
+			Pattern:  searchOpts.pattern,
+			Decision: searchOpts.decision,
+			Scope:    searchOpts.scope,
+			Recent:   searchOpts.recent,
+			Context:  searchOpts.context,
+			JSON:     searchOpts.json,
+		}
+		if len(args) > 0 {
+			opts.Query = args[0]
+		}
+		Search(absPath, opts)
+	},
+}
+
 // SearchOptions holds flags for the search command
 type SearchOptions struct {
-	Query      string
-	Failed     bool   // Search failed approaches
-	Pattern    bool   // Search established patterns
-	Decision   bool   // Search decisions
-	Scope      string // Filter by scope
-	Recent     int    // Limit to recent N entries
-	Context    bool   // Search context file instead of changelog
+	Query    string
+	Failed   bool   // Search failed approaches
+	Pattern  bool   // Search established patterns
+	Decision bool   // Search decisions
+	Scope    string // Filter by scope
+	Recent   int    // Limit to recent N entries
+	Context  bool   // Search context file instead of changelog
+	JSON     bool   // Output as JSON
 }
 
 // SearchResult represents a search match
 type SearchResult struct {
-	Source      string // "changelog" or "context"
-	Timestamp   string
-	CommitHash  string
-	Section     string // "changes", "context", "next_steps", etc.
-	Field       string // Specific field that matched
-	Content     string // Matched content
-	MatchLine   string // Line containing match
+	Source     string `json:"source"`      // "changelog" or "context"
+	Timestamp  string `json:"timestamp"`   // Timestamp of the entry
+	CommitHash string `json:"commit_hash"` // Commit hash if available
+	Section    string `json:"section"`     // "changes", "context", "next_steps", etc.
+	Field      string `json:"field"`       // Specific field that matched
+	Content    string `json:"content"`     // Matched content
+	MatchLine  string `json:"match_line"`  // Line containing match
 }
 
 // Search searches checkpoint history
@@ -64,6 +117,20 @@ func Search(projectPath string, opts SearchOptions) {
 	}
 
 	// Display results
+	if opts.JSON {
+		output := struct {
+			Query   string         `json:"query"`
+			Results []SearchResult `json:"results"`
+		}{
+			Query:   opts.Query,
+			Results: results,
+		}
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		enc.Encode(output)
+		return
+	}
+
 	if len(results) == 0 {
 		fmt.Println("No matches found.")
 		return

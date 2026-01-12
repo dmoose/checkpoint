@@ -33,6 +33,7 @@ type PromptInfo struct {
 	Name        string
 	Category    string
 	Description string
+	Variables   []string
 }
 
 // Prompt represents a loaded prompt with its definition and template content
@@ -68,6 +69,7 @@ func ListPrompts(config *PromptsConfig) []PromptInfo {
 			Name:        p.Name,
 			Category:    p.Category,
 			Description: p.Description,
+			Variables:   p.Variables,
 		})
 	}
 

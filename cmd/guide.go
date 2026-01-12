@@ -7,7 +7,34 @@ import (
 	"strings"
 
 	"github.com/dmoose/checkpoint/internal/file"
+
+	"github.com/spf13/cobra"
 )
+
+func init() {
+	rootCmd.AddCommand(guideCmd)
+}
+
+var guideCmd = &cobra.Command{
+	Use:   "guide [topic]",
+	Short: "Show detailed guides and documentation",
+	Long: `Displays guide documents from .checkpoint/guides/.
+Topics: first-time-user, llm-workflow, best-practices`,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		topic := ""
+		if len(args) > 0 {
+			topic = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		Guide(absPath, topic)
+	},
+}
 
 // Guide displays guide documents from .checkpoint/guides/
 func Guide(projectPath string, topic string) {

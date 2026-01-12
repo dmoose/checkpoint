@@ -13,11 +13,32 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
 	"github.com/dmoose/checkpoint/internal/prompts"
 	"github.com/dmoose/checkpoint/pkg/config"
 )
+
+var mcpRoots []string
+
+func init() {
+	rootCmd.AddCommand(mcpCmd)
+	mcpCmd.Flags().StringArrayVar(&mcpRoots, "root", nil, "Root directory to scan for projects (can be repeated)")
+}
+
+var mcpCmd = &cobra.Command{
+	Use:   "mcp",
+	Short: "Start MCP stdio server for IDE integration",
+	Long: `Starts an MCP (Model Context Protocol) server over stdio.
+Provides read-only access to checkpoint project data for IDEs and tools.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := MCP(MCPOptions{Roots: mcpRoots}); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
 
 // MCP starts a stdio MCP server that serves read-only project data.
 // Roots precedence: --root flags (passed via options) > CHECKPOINT_ROOTS env (comma-separated) > ~/.config/checkpoint/config.json {"roots":[]}

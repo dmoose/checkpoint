@@ -11,8 +11,37 @@ import (
 	"github.com/dmoose/checkpoint/internal/git"
 	"github.com/dmoose/checkpoint/pkg/config"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
+
+var summaryOpts struct {
+	json bool
+}
+
+func init() {
+	rootCmd.AddCommand(summaryCmd)
+	summaryCmd.Flags().BoolVar(&summaryOpts.json, "json", false, "Output as JSON")
+}
+
+var summaryCmd = &cobra.Command{
+	Use:   "summary [path]",
+	Short: "Show project overview and recent activity",
+	Long:  `Displays checkpoint count, recent activity, next steps, and patterns.`,
+	Args:  cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		if len(args) > 0 {
+			projectPath = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		Summary(absPath, summaryOpts.json)
+	},
+}
 
 // Summary displays project overview and status
 func Summary(projectPath string, jsonOutput bool) {

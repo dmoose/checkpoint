@@ -8,7 +8,33 @@ import (
 	"github.com/dmoose/checkpoint/internal/file"
 	"github.com/dmoose/checkpoint/internal/schema"
 	"github.com/dmoose/checkpoint/pkg/config"
+
+	"github.com/spf13/cobra"
 )
+
+func init() {
+	rootCmd.AddCommand(lintCmd)
+}
+
+var lintCmd = &cobra.Command{
+	Use:   "lint [path]",
+	Short: "Check checkpoint input for obvious mistakes and issues",
+	Long: `Validates input file and suggests improvements before commit.
+Catches placeholder text, vague summaries, and common errors.`,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		if len(args) > 0 {
+			projectPath = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		Lint(absPath)
+	},
+}
 
 // Lint checks the checkpoint input for obvious mistakes and issues
 func Lint(projectPath string) {

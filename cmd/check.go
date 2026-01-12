@@ -10,7 +10,33 @@ import (
 	"github.com/dmoose/checkpoint/internal/git"
 	"github.com/dmoose/checkpoint/internal/schema"
 	"github.com/dmoose/checkpoint/pkg/config"
+
+	"github.com/spf13/cobra"
 )
+
+func init() {
+	rootCmd.AddCommand(checkCmd)
+}
+
+var checkCmd = &cobra.Command{
+	Use:   "check [path]",
+	Short: "Generate input file for LLM",
+	Long: `Creates .checkpoint-input and .checkpoint-diff files.
+Guards against concurrent checkpoints with lock files.`,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		if len(args) > 0 {
+			projectPath = args[0]
+		}
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+		Check(absPath)
+	},
+}
 
 // Check implements Phase 2: generate .checkpoint-input and .checkpoint-diff
 func Check(projectPath string) {

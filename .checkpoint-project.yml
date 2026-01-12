@@ -376,3 +376,23 @@ recommended_additions:
     design_principles:
         - principle: Auto-detect project settings in init rather than requiring templates
           rationale: Better UX - works out of the box for common project types
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2026-01-12T13:20:13-08:00"
+recommended_additions:
+    key_insights:
+        - insight: Cobra's self-registering init() pattern eliminates centralized command routing
+          rationale: Adding new commands now requires only creating a single file with init() registration
+    established_patterns:
+        - pattern: Cobra command registration via init()
+          rationale: Each cmd/*.go file registers itself, no central routing needed
+          examples: rootCmd.AddCommand(checkCmd) in cmd/check.go init()
+        - pattern: Options struct per command for flags
+          rationale: Groups related flags, avoids global variable pollution
+          examples: var skillOpts struct { json bool } with skillCmd.Flags().BoolVar()
+    design_principles:
+        - principle: Adopt Cobra as CLI framework
+          rationale: Industry standard for Go CLIs, eliminates boilerplate, provides built-in completions, help, and flag parsing
+        - principle: Use --json flag pattern for machine-readable output
+          rationale: Consistent flag name across commands, optional to preserve human-friendly default

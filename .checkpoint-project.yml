@@ -354,14 +354,6 @@ recommended_additions:
 ---
 schema_version: "1"
 document_type: recommendations
-timestamp: "2025-11-03T19:14:42-08:00"
-recommended_additions:
-    design_principles:
-        - principle: Never write .checkpoint-* from MCP
-          rationale: Preserve append-only guarantees; CLI remains sole writer
----
-schema_version: "1"
-document_type: recommendations
 timestamp: "2026-01-12T09:38:19-08:00"
 recommended_additions:
     key_insights:

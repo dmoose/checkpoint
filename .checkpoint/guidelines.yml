@@ -75,6 +75,6 @@ avoid:
     - Adding deps when stdlib works
 principles:
     - 'Append-only: Corruption isolated to tail, history preserved'
-    - 'Minimal deps: stdlib + yaml + ulid + mcp-go only'
+    - 'Minimal deps: stdlib + yaml + ulid + cobra only'
     - 'LLM-friendly: Structured output, clear prompts, searchable history'
     - 'Git-native: Everything tracked, travels with project'

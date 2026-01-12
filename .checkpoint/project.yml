@@ -58,8 +58,6 @@ dependencies:
       purpose: Multi-document YAML parsing
     - name: github.com/oklog/ulid/v2
       purpose: Project ID generation (ULID format)
-    - name: github.com/mark3labs/mcp-go
-      purpose: MCP server protocol for multi-project access
 
 integrations:
   - name: macOS Swift App

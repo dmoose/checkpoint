@@ -1,6 +1,6 @@
 # checkpoint
 
-[![CI](https://github.com/dmoose/checkpoint/actions/workflows/ci.yml/badge.svg)](https://github.com/dmoose/checkpoint/actions/workflows/ci.yml)
+[![GO](https://github.com/dmoose/checkpoint/actions/workflows/ci.yml/badge.svg)](https://github.com/dmoose/checkpoint/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/dmoose/checkpoint.svg)](https://pkg.go.dev/github.com/dmoose/checkpoint)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dmoose/checkpoint)](https://goreportcard.com/report/github.com/dmoose/checkpoint)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -96,6 +96,8 @@ checkpoint commit    # Commits with structured metadata
 |---------|---------|
 | `init` | Initialize checkpoint in a project |
 | `start` | Begin session, show status and next steps |
+| `plan` | Create planning session (.checkpoint-session.yaml) |
+| `session` | View/manage current planning session |
 | `check` | Generate input file for describing changes |
 | `commit` | Validate input, append to changelog, git commit |
 | `lint` | Validate input file before commit |
@@ -109,8 +111,8 @@ Run `checkpoint help` for the full command list.
 
 **Git-tracked (permanent):**
 - `.checkpoint-changelog.yaml` - Append-only changelog with all checkpoints
-- `.checkpoint-context.yml` - Accumulated decisions, patterns, failed approaches
-- `.checkpoint-project.yml` - Project-wide patterns and conventions
+- `.checkpoint-context.yaml` - Accumulated decisions, patterns, failed approaches
+- `.checkpoint-project.yaml` - Project-wide patterns and conventions
 - `.checkpoint/` - Configuration, prompts, guides
 
 **Not tracked (work-in-progress):**
@@ -155,6 +157,12 @@ checkpoint completion fish > ~/.config/fish/completions/checkpoint.fish
 
 ## Documentation
 
+**In-repo guides:**
+- [Quickstart](docs/QUICKSTART.md) - Get productive in 5 minutes
+- [User Guide](docs/USER-GUIDE.md) - Workflows, scenarios, best practices
+- [LLM Integration](docs/LLM-INTEGRATION.md) - Configuring Claude, Cursor, Aider, etc.
+
+**Built-in commands:**
 ```bash
 checkpoint guide first-time-user  # Getting started
 checkpoint guide llm-workflow     # LLM integration patterns

@@ -1343,7 +1343,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-01-12T20:03:05-08:00"
-commit_hash: ""
+commit_hash: 8e04616590e75488b6ec095c4b151ba09e5e443e
 files_changed:
     - path: .checkpoint/guides/llm-workflow.md
       additions: 9
@@ -1425,6 +1425,35 @@ changes:
       details: Final message now suggests running checkpoint plan before making modifications
       change_type: feature
       scope: cmd/start
+next_steps:
+    - summary: Create release workflow
+      details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
+      priority: high
+      scope: .github/workflows
+    - summary: Set up git remote and push to GitHub
+      details: Configure github.com/dmoose/checkpoint remote, push main branch
+      priority: high
+      scope: git
+---
+schema_version: "1"
+timestamp: "2026-01-13T08:33:53-08:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: README.md
+      additions: 11
+      deletions: 3
+changes:
+    - summary: Add user documentation with workflow guides
+      details: QUICKSTART.md (5-min intro), USER-GUIDE.md (workflows by scenario), LLM-INTEGRATION.md (tool setup for Claude, Cursor, Aider). Covers bug fixes, features, research, refactoring workflows.
+      change_type: docs
+      scope: docs
+    - summary: Add plan and session commands to README
+      details: Command table now includes plan and session. Links to new docs/ guides.
+      change_type: docs
+      scope: README
 next_steps:
     - summary: Create release workflow
       details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64

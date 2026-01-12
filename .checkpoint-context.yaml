@@ -1,0 +1,34 @@
+---
+schema_version: "1"
+timestamp: "2026-01-12T20:03:05-08:00"
+context:
+    problem_statement: Prepare checkpoint for public GitHub release with proper documentation, CI, and consistent file naming
+    key_insights:
+        - insight: Test coverage should focus on logic that can regress, not file I/O
+          impact: Avoid mock-heavy tests for simple operations; test validation, parsing, slice operations
+          scope: project
+        - insight: FindWithFallback pattern enables non-breaking file extension changes
+          impact: Can migrate file formats without breaking existing projects
+    decisions_made:
+        - decision: Standardize on .yaml extension instead of .yml
+          rationale: Visual consistency across project; .yaml is more explicit
+          alternatives_considered:
+            - Keep .yml everywhere
+            - Force migration with no fallback
+          scope: project
+        - decision: Conservative shell completion detection - error if uncertain
+          rationale: Better to fail safely than write to wrong location and confuse users
+          scope: checkpoint
+        - decision: Focus tests on validation logic rather than filesystem mocking
+          rationale: Mocking file I/O adds complexity without catching real bugs; validation logic is where regressions happen
+          scope: project
+    established_patterns:
+        - pattern: Use FindWithFallback for config file paths
+          rationale: Enables backward compatibility when changing file names/extensions
+          examples: project.yaml/project.yml, tools.yaml/tools.yml, etc.
+          scope: project
+    conversation_context:
+        - exchange: Discussed test coverage - user wanted useful tests, not coverage for its own sake
+          outcome: Added tests for validation, parsing, slice operations. Skipped file I/O mocking.
+        - exchange: User noted .yml vs .yaml inconsistency was visually annoying
+          outcome: Standardized on .yaml with backward compatibility for existing .yml files

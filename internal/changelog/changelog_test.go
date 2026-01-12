@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"go-llm/internal/schema"
+	"github.com/dmoose/checkpoint/internal/schema"
 )
 
 func TestUpdateLastDocumentBackfillsHash(t *testing.T) {

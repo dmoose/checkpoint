@@ -8,8 +8,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"go-llm/internal/context"
-	"go-llm/internal/language"
+	"github.com/dmoose/checkpoint/internal/context"
+	"github.com/dmoose/checkpoint/internal/language"
 )
 
 type FileChange struct {

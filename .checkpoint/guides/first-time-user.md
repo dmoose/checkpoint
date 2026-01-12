@@ -27,9 +27,26 @@ This creates:
 - `.checkpoint-changelog.yaml` - Your append-only changelog
 - `.checkpoint-context.yml` - Decision history
 - `.checkpoint-project.yml` - Project patterns (you'll curate this)
-- `.checkpoint/` - Examples and guides
+- `.checkpoint/` - Examples, guides, and config files
 
-### 2. Start a Work Session
+**Auto-detection:** Init automatically detects your project's language and build tools from go.mod, package.json, Makefile, etc., and pre-populates config files.
+
+### 2. Verify Setup
+
+Check that everything is configured correctly:
+
+```bash
+checkpoint doctor
+```
+
+This validates your setup and suggests fixes for any issues:
+- Missing config files
+- Incomplete tool commands
+- Setup problems
+
+Use `checkpoint doctor --verbose` to see what was auto-detected.
+
+### 3. Start a Work Session
 
 Before beginning work:
 
@@ -38,11 +55,11 @@ checkpoint start
 ```
 
 This shows:
-- ✓ Project status checks
+- Project status checks
 - Next steps from your last checkpoint
 - Pending recommendations to review
 
-### 3. Do Your Work
+### 4. Do Your Work
 
 Make changes to your code as usual:
 - Add features
@@ -52,7 +69,7 @@ Make changes to your code as usual:
 
 Work normally - checkpoint doesn't interfere with your development flow.
 
-### 4. Create a Checkpoint
+### 5. Create a Checkpoint
 
 When you're ready to commit:
 
@@ -64,7 +81,7 @@ This creates:
 - `.checkpoint-input` - Template for you to fill
 - `.checkpoint-diff` - Full diff for reference
 
-### 5. Fill the Input File
+### 6. Fill the Input File
 
 Open `.checkpoint-input` and describe your changes:
 
@@ -100,7 +117,7 @@ context:
       scope: "checkpoint"
 ```
 
-### 6. Validate (Optional but Recommended)
+### 7. Validate (Optional but Recommended)
 
 Check your work before committing:
 
@@ -114,7 +131,7 @@ This catches common mistakes:
 - Missing required fields
 - Vague descriptions
 
-### 7. Commit
+### 8. Commit
 
 When satisfied:
 
@@ -302,6 +319,26 @@ Your project's established patterns:
 cat .checkpoint-project.yml
 ```
 
+### View History and Next Steps
+
+See recent checkpoint history:
+
+```bash
+checkpoint explain history    # Recent checkpoints, patterns, decisions
+checkpoint explain next       # All outstanding next steps by priority
+```
+
+### Manage Sessions (LLM Handoff)
+
+When switching between LLM sessions:
+
+```bash
+checkpoint session save "Working on auth feature"  # Save current state
+checkpoint session                                  # Show session state
+checkpoint session handoff                          # Generate handoff document
+checkpoint session clear                            # Clear when done
+```
+
 ### Quick Reference
 
 The main workflow document:
@@ -312,12 +349,17 @@ cat CHECKPOINT.md
 
 ## Troubleshooting
 
+**General Setup Issues**
+- Run `checkpoint doctor` to diagnose problems
+- It validates setup and suggests specific fixes
+
 **"Not a git repository"**
 - Checkpoint requires git
 - Run `git init` first
 
 **"Checkpoint not initialized"**
 - Run `checkpoint init` first
+- Then run `checkpoint doctor` to verify setup
 
 **"Checkpoint in progress"**
 - You have an unfinished checkpoint

@@ -1,4 +1,4 @@
-module go-llm
+module github.com/dmoose/checkpoint
 
 go 1.25.1
 

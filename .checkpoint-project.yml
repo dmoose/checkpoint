@@ -359,3 +359,20 @@ recommended_additions:
     design_principles:
         - principle: Never write .checkpoint-* from MCP
           rationale: Preserve append-only guarantees; CLI remains sole writer
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2026-01-12T09:38:19-08:00"
+recommended_additions:
+    key_insights:
+        - insight: 'Zsh completion requires #compdef on first line for autoloading'
+          rationale: Must use specific directive format, not arbitrary comments
+        - insight: Tool independence is the key value proposition for LLM-assisted development
+          rationale: README should emphasize that context travels with project, not locked in any tool
+    established_patterns:
+        - pattern: internal/detect package for project auto-detection
+          rationale: Separates detection logic from init command, reusable by doctor
+          examples: DetectProject() returns ProjectInfo with language, commands, frameworks
+    design_principles:
+        - principle: Auto-detect project settings in init rather than requiring templates
+          rationale: Better UX - works out of the box for common project types

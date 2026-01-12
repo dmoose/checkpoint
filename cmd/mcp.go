@@ -15,8 +15,8 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 	"gopkg.in/yaml.v3"
 
-	"go-llm/internal/prompts"
-	"go-llm/pkg/config"
+	"github.com/dmoose/checkpoint/internal/prompts"
+	"github.com/dmoose/checkpoint/pkg/config"
 )
 
 // MCP starts a stdio MCP server that serves read-only project data.

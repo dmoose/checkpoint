@@ -1,240 +1,135 @@
-# checkpoint (Go CLI)
+# checkpoint
 
-Checkpoint is a small, append-only changelog tool that helps you capture what changed when you commit code, and enables a macOS Swift app to generate daily summaries across projects.
+Structured development history that you own.
 
-It pairs a Go CLI with a simple YAML schema. Each "checkpoint" is one Git commit and one YAML document appended to a repository-local changelog. The macOS app discovers projects by the presence of the status file and reads the changelog to build per-day summaries.
+## The Problem
 
-## Architecture
+LLM-assisted development loses context between sessions. Your decisions, failed approaches, and project patterns vanish when the conversation ends. That knowledge gets locked in chat histories you can't search, IDE plugins you might switch away from, or just forgotten.
 
-- Go CLI (this repo)
-  - `start`: validates readiness and shows next steps from last checkpoint
-  - `check`: creates an editable input file with embedded instructions, current `git status`, and a path to a diff file
-  - `commit`: validates the input, appends a YAML document to the changelog, stages all changes, creates a Git commit, then back-fills the commit hash into the last changelog document
-  - `lint`: validates checkpoint input before committing
-  - `init`: writes `CHECKPOINT.md` with workflow and schema guidance, creates `.checkpoint/` directory with examples, guides, and prompts
-  - `examples`: shows example checkpoint entries demonstrating best practices
-  - `guide`: displays detailed guides for checkpoint usage
-  - `prompt`: shows LLM prompts from project library with variable substitution
-  - `summary`: displays project overview and recent activity
+## The Solution
 
-- Files created in the repo
-  - `.checkpoint-input` (untracked): the editable input with instructions and placeholders
-  - `.checkpoint-diff` (untracked): context for the LLM/user (staged and unstaged diff)
-  - `.checkpoint-changelog.yaml` (tracked): append-only YAML, one document per checkpoint with an array of changes
-  - `.checkpoint-context.yml` (tracked): append-only context log capturing reasoning and decisions
-  - `.checkpoint-project.yml` (tracked): project-wide patterns and conventions (human-curated)
-  - `.checkpoint-status.yaml` (untracked): last-commit metadata with project identity for discovery
-  - `.checkpoint/` (tracked): directory containing examples, guides, prompts, and templates
+Checkpoint captures **what changed and why** in git-tracked YAML files that travel with your project. Not locked in any tool. Not dependent on any LLM provider. Just structured data in your repo that any future LLM, IDE, or developer can read.
 
-- macOS Swift app (separate project)
-  - Recursively discovers projects by `.checkpoint-status.yaml`
-  - Uses `project_id` and `path_hash` from status file for project identification and deduplication
-  - Reads `.checkpoint-changelog.yaml` (multi-document YAML)
-  - Buckets changes by local day and generates per-project and cross-project summaries
+**What you get:**
+- Append-only changelog linking every commit to its reasoning
+- Decision history with alternatives considered and why they were rejected
+- Failed approaches so you don't repeat mistakes
+- Project patterns that emerge over time
+- Next steps that persist across sessions
 
-## Data model (YAML)
+**Tool independence:** Switch LLMs, switch IDEs, switch developers—the context stays with the project.
 
-### Changelog Document
+## How It Works
 
-The `.checkpoint-changelog.yaml` file contains:
-1. A meta document (first document, created once)
-2. One checkpoint document per commit
-
-**Meta Document (first document in changelog):**
+Each checkpoint = one git commit + structured metadata:
 
 ```yaml
----
-schema_version: "1"
-document_type: "meta"
-project_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"  # ULID, unique project identifier
-path_hash: "abcdef1234567890"              # SHA256 hash of project path (first 16 chars)
-created_at: "2025-01-01T12:00:00Z"
-tool_version: "1.0.0"
-languages: []                               # Detected project languages
-```
-
-**Checkpoint Document (one per commit):**
-
-```yaml
----
-schema_version: "1"
-timestamp: "2025-10-22T16:00:00Z"
-commit_hash: "abc123..."  # backfilled after commit
 changes:
-  - summary: "Implement feature X"
-    details: "Optional longer description"
-    change_type: "feature"   # feature|fix|refactor|docs|perf|other
-    scope: "module/subsystem"
+  - summary: "Add JWT authentication"
+    change_type: "feature"
+    scope: "auth"
+context:
+  problem_statement: "Need stateless auth for horizontal scaling"
+  decisions_made:
+    - decision: "Use JWT over sessions"
+      rationale: "Stateless, no shared session store needed"
+      alternatives_considered:
+        - "Redis sessions (rejected - added infrastructure)"
+  failed_approaches:
+    - approach: "Tried passport.js"
+      why_failed: "Too much magic, hard to customize"
 next_steps:
-  - summary: "Plan follow-up work"
-    details: "Optional"
-    priority: "low|med|high"
-    scope: "affected component"
-```
-
-### Status File
-
-The `.checkpoint-status.yaml` file contains project identity and last commit metadata for discovery:
-
-```yaml
-project_id: "01ARZ3NDEKTSV4RRFFQ69G5FAV"  # Mirrored from changelog meta
-path_hash: "abcdef1234567890"              # Mirrored from changelog meta
-last_commit_hash: "abc123..."
-last_commit_timestamp: "2025-10-22T16:00:00Z"
-last_commit_message: "Checkpoint: feature - Add new feature"
-status: "success"
-changes_count: 3
-next_steps:
-  - summary: "Follow-up task"
+  - summary: "Add refresh token rotation"
     priority: "high"
-    scope: "module"
 ```
 
-The `project_id` and `path_hash` are copied from the changelog meta document during each commit, enabling:
-- Unique project identification without parsing the full changelog
-- Detection of moved/renamed projects via path_hash comparison
-- Project deduplication across different discovery locations
+This lives in `.checkpoint-changelog.yaml`—append-only, git-tracked, searchable.
 
-## Workflow
+## Installation
 
-1) Start session (optional but recommended)
+```bash
+go install github.com/dmoose/checkpoint@latest
+```
 
-- Run: `checkpoint start` to see project status, next steps, and validate readiness
+Or build from source:
+```bash
+git clone https://github.com/dmoose/checkpoint.git
+cd checkpoint
+go build -o checkpoint .
+```
 
-2) Create an input
+## Quick Start
 
-- Run: `checkpoint check [path]`
-- Edit `.checkpoint-input`: describe all changes in `changes[]`, `context`, and any `next_steps[]`
+```bash
+checkpoint init          # Initialize (auto-detects language/tools)
+checkpoint doctor        # Verify setup
 
-3) Check your work (optional but recommended)
-
-- Run: `checkpoint lint [path]` to catch obvious mistakes before commit
-
-4) Commit
-
-- Run: `checkpoint commit [flags] [path]`
-  - Stages all changes (`git add -A`)
-  - Appends a YAML document to `.checkpoint-changelog.yaml`
-  - Appends context to `.checkpoint-context.yml`
-  - Updates `.checkpoint-project.yml` with recommendations
-  - Creates a single Git commit
-  - Back-fills `commit_hash` in the last changelog document (no second commit)
-
-5) Summaries
-
-- Run: `checkpoint summary` to see project overview and recent activity
-- macOS app reads `.checkpoint-changelog.yaml` and generates daily summaries
+# Work session
+checkpoint start         # See status and next steps
+# ... make changes ...
+checkpoint check         # Generate input file
+# Edit .checkpoint-input with what changed and why
+checkpoint commit        # Commit with metadata
+```
 
 ## Commands
 
-- `checkpoint start [path]`
-  - Validates readiness and shows next steps from last checkpoint
-  - Checks git status and checkpoint initialization
-  - Displays planned work
+| Command | Purpose |
+|---------|---------|
+| `start` | Begin session, see next steps from last checkpoint |
+| `check` | Generate input file for describing changes |
+| `commit` | Commit with structured metadata |
+| `explain` | Get project context (tools, guidelines, patterns) |
+| `explain history` | View recent decisions and patterns |
+| `search <query>` | Search changelog and context |
+| `learn "insight"` | Capture knowledge mid-session |
+| `session handoff` | Generate context doc for next LLM |
 
-- `checkpoint check [path]`
-  - Generates `.checkpoint-input` and `.checkpoint-diff`
-  - Guards against concurrent checkpoints with lock files
+Run `checkpoint help` for full command list.
 
-- `checkpoint lint [path]`
-  - Check checkpoint input for obvious mistakes and issues before commit
-  - Validates input file and catches placeholder text, vague summaries, validation errors
+## Files
 
-- `checkpoint commit [path]`
-  - Validates input, appends to `.checkpoint-changelog.yaml`, commits, and back-fills commit hash
-  - Flags:
-    - `-n, --dry-run`       Show the commit message and staged files without committing
-    - `--changelog-only`    Stage only the changelog instead of all changes
+**Git-tracked (permanent):**
+- `.checkpoint-changelog.yaml` - Append-only changelog
+- `.checkpoint-context.yml` - Decisions, patterns, failed approaches
+- `.checkpoint-project.yml` - Project-wide patterns (human-curated)
+- `.checkpoint/` - Config, prompts, examples, guides
 
-- `checkpoint summary [path]`
-  - Show project overview and recent activity
-  - Display checkpoints, status, next steps, and patterns
-  - Flags:
-    - `--json`              Output machine-readable JSON format
+**Not tracked (temporary):**
+- `.checkpoint-input` - Edit during checkpoint
+- `.checkpoint-diff` - Diff context for LLM
 
-- `checkpoint init [path]`
-  - Writes `CHECKPOINT.md` with usage guidance
-  - Creates `.checkpoint/` directory with examples, guides, and prompts
-  - Safe to run multiple times (won't overwrite existing data files)
+## LLM Workflow
 
-- `checkpoint clean [path]`
-  - Removes `.checkpoint-input` and `.checkpoint-diff` to abort and restart
+1. Start session: share `checkpoint start` output with LLM
+2. Work: LLM makes changes
+3. Checkpoint: run `checkpoint check`, LLM fills `.checkpoint-input`
+4. Commit: run `checkpoint commit`
+5. Handoff: run `checkpoint session handoff` for next session
 
-- `checkpoint examples [category] [path]`
-  - Show example checkpoint entries and best practices
-  - Available categories: feature, bugfix, refactor, context, anti-patterns
+The LLM reads project context via `checkpoint explain` and learns patterns from history via `checkpoint search`.
 
-- `checkpoint guide [topic] [path]`
-  - Show detailed guides and documentation
-  - Available topics: first-time-user, llm-workflow, best-practices
-
-- `checkpoint prompt [id] [path]`
-  - Show LLM prompts from project library with variable substitution
-  - Usage: `checkpoint prompt [id] [--var key=value]`
-  - Examples: session-start, fill-checkpoint, implement-feature, fix-bug, code-review
-
-- `checkpoint mcp [--root DIR]...`
-  - Start MCP stdio server (read-only) for multi-project access by project_id
-  - Roots precedence: `--root` (repeatable) > `CHECKPOINT_ROOTS` env (comma-separated) > `~/.config/checkpoint/config.json`
-  - Tool: `project` with params `{ project_id }` returns structured project info; responses echo `project_id`
-
-## Validation
-
-Before committing, the tool validates:
-- Required fields (`schema_version`, `timestamp`, and at least one item in `changes[]`)
-- `change_type` must be one of: feature, fix, refactor, docs, perf, other
-- Obvious mistakes:
-  - Placeholder text like `[FILL IN ...]`
-  - Overlong summaries (>80 chars)
-  - Invalid `next_steps[].priority` (must be low|med|high)
-
-If validation fails, errors are printed and the commit is aborted.
-
-## Design choices
-
-- Append-only changelog: one YAML document per checkpoint; corruption is isolated to the tail
-- Backfill commit hash: the hash is a convenience written into the last document after the commit (without another commit)
-- Stage-all by default: the changelog reflects exactly what was committed
-- Minimal dependencies: standard library + `yaml.v3`
-
-## Error Handling
-
-The tool provides helpful error messages with hints for common issues:
-- Missing input files suggest running `checkpoint check` first
-- YAML parsing errors suggest checking syntax or running `checkpoint clean` to restart
-- Git repository issues provide specific hints for resolution
-- File permission problems indicate which files need attention
-
-## LLM Prompts
-
-The prompts system provides a library of curated LLM prompts for common development tasks:
+## Shell Completion
 
 ```bash
-checkpoint prompt                          # List available prompts
-checkpoint prompt fill-checkpoint          # Show checkpoint fill prompt
-checkpoint prompt implement-feature \
-  --var feature_name="Auth" \
-  --var priority="high"                    # Show prompt with variables
+# Bash
+checkpoint completion bash >> ~/.bashrc
+
+# Zsh
+checkpoint completion zsh > ~/.oh-my-zsh/completions/_checkpoint
+
+# Fish
+checkpoint completion fish > ~/.config/fish/completions/checkpoint.fish
 ```
 
-Prompts support variable substitution:
-- Automatic variables: `{{project_name}}`, `{{project_path}}`
-- Global variables: defined in `.checkpoint/prompts/prompts.yaml`
-- User variables: provided via `--var` flags
+## Documentation
 
-Customize prompts by editing files in `.checkpoint/prompts/`.
-
-## Typical .gitignore entries
-
-```
-.checkpoint-input
-.checkpoint-diff
-.checkpoint-status.yaml
-.checkpoint-lock
+```bash
+checkpoint guide first-time-user  # Getting started
+checkpoint guide llm-workflow     # LLM integration patterns
+checkpoint examples               # Example checkpoints
 ```
 
-These files are intentionally tracked:
-- `.checkpoint-changelog.yaml` - changelog history
-- `.checkpoint-context.yml` - context log
-- `.checkpoint-project.yml` - project patterns
-- `.checkpoint/` - examples, guides, and prompts
+## License
+
+Apache 2.0

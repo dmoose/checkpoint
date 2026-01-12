@@ -428,11 +428,12 @@ Suggest which to merge, which to refine, and which to delete.
 
 **Checkpoint in automation:**
 ```bash
-# In CI, verify checkpoint consistency
-checkpoint verify  # (future feature)
+# Run tests before checkpoint commit
+checkpoint doctor  # Verify setup
+go test ./...      # Run tests
 
-# Check for placeholder text in last commit
-checkpoint lint --last-commit  # (future feature)
+# Search history for patterns
+checkpoint search "database"
 ```
 
 ### With Project Documentation

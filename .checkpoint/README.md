@@ -15,14 +15,14 @@ This directory contains supporting materials for the checkpoint workflow.
   - Context writing guidelines
   - Best practices
 
-- **prompts/** - LLM prompt templates (planned)
+- **prompts/** - LLM prompt templates
   - Session start prompts
   - Checkpoint filling prompts
-  - Review and curation prompts
+  - Feature implementation and bug fix prompts
 
-- **templates/** - Customizable templates (planned)
-  - Custom input templates
-  - Project-specific patterns
+- **skills/** - Skill definitions for LLM context
+  - Local project-specific skills
+  - References to global skills
 
 ## Usage
 

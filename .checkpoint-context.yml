@@ -442,3 +442,46 @@ context:
         - decision: Never write .checkpoint-* from MCP
           rationale: Preserve append-only guarantees; CLI remains sole writer
           scope: project
+---
+schema_version: "1"
+timestamp: "2026-01-12T09:38:19-08:00"
+context:
+    problem_statement: 'Prepare checkpoint for public release: proper module path, shell completion, better onboarding, tool independence messaging'
+    key_insights:
+        - insight: 'Zsh completion requires #compdef on first line for autoloading'
+          impact: Must use specific directive format, not arbitrary comments
+          scope: project
+        - insight: Learnings captured via 'checkpoint learn' weren't being surfaced anywhere
+          impact: Added explain learnings topic to make captured insights accessible
+          scope: checkpoint
+        - insight: Tool independence is the key value proposition for LLM-assisted development
+          impact: README should emphasize that context travels with project, not locked in any tool
+          scope: project
+    decisions_made:
+        - decision: Embed completion scripts directly in Go code
+          rationale: Single binary with no external files, simpler distribution
+          alternatives_considered:
+            - External completion files
+            - Generated completions from command structure
+          scope: checkpoint
+        - decision: Auto-detect project settings in init rather than requiring templates
+          rationale: Better UX - works out of the box for common project types
+          alternatives_considered:
+            - Only template-based initialization
+            - Interactive prompts during init
+          scope: project
+    failed_approaches:
+        - approach: Used _arguments in zsh completion
+          why_failed: 'Error: _arguments:comparguments:327: can only be called from completion function'
+          lessons_learned: Zsh completion functions must use simpler patterns that work at source time
+          scope: checkpoint
+    established_patterns:
+        - pattern: internal/detect package for project auto-detection
+          rationale: Separates detection logic from init command, reusable by doctor
+          examples: DetectProject() returns ProjectInfo with language, commands, frameworks
+          scope: project
+    conversation_context:
+        - exchange: User emphasized tool independence as key value
+          outcome: README rewritten to lead with problem/solution framing about context loss in LLM sessions
+        - exchange: User called FUTURE-FEATURES.md 'LLM generated fantasy of world domination'
+          outcome: Cut from 419 to 42 lines, keeping only realistic near-term features

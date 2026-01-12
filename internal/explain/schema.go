@@ -99,3 +99,9 @@ type Skill struct {
 	Content string
 	IsLocal bool
 }
+
+// Learning represents a captured insight from learnings.yml
+type Learning struct {
+	Timestamp string `yaml:"timestamp"`
+	Learning  string `yaml:"learning"`
+}

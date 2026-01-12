@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go-llm/internal/file"
-	"go-llm/internal/prompts"
+	"github.com/dmoose/checkpoint/internal/file"
+	"github.com/dmoose/checkpoint/internal/prompts"
 )
 
 // Prompt displays LLM prompts from .checkpoint/prompts/

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go-llm/pkg/config"
+	"github.com/dmoose/checkpoint/pkg/config"
 )
 
 // Clean removes artifacts created by the 'check' command so the user can abort and re-run

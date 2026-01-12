@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"go-llm/internal/file"
-	"go-llm/internal/schema"
-	"go-llm/pkg/config"
+	"github.com/dmoose/checkpoint/internal/file"
+	"github.com/dmoose/checkpoint/internal/schema"
+	"github.com/dmoose/checkpoint/pkg/config"
 )
 
 // Lint checks the checkpoint input for obvious mistakes and issues

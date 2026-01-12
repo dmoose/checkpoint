@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"go-llm/internal/explain"
+	"github.com/dmoose/checkpoint/internal/explain"
 )
 
 // ExplainOptions holds flags for the explain command
@@ -42,6 +42,8 @@ func Explain(projectPath string, opts ExplainOptions) {
 		output = ctx.RenderGuidelines()
 	case "skills":
 		output = ctx.RenderSkills()
+	case "learnings":
+		output = ctx.RenderLearnings()
 	case "skill":
 		if opts.SkillName == "" {
 			fmt.Fprintf(os.Stderr, "error: skill name required\n")
@@ -60,7 +62,7 @@ func Explain(projectPath string, opts ExplainOptions) {
 			output = skillOutput
 		} else {
 			fmt.Fprintf(os.Stderr, "unknown topic: %s\n", opts.Topic)
-			fmt.Fprintf(os.Stderr, "available: project, tools, guidelines, skills, skill <name>, history, next\n")
+			fmt.Fprintf(os.Stderr, "available: project, tools, guidelines, skills, learnings, skill <name>, history, next\n")
 			os.Exit(1)
 		}
 	}
@@ -93,6 +95,8 @@ func outputJSON(ctx *explain.ExplainOutput, topic string) {
 			Config *explain.SkillsConfig `json:"config"`
 			Skills []explain.Skill       `json:"skills"`
 		}{ctx.Skills, ctx.SkillDefs}
+	case "learnings":
+		data = ctx.Learnings
 	default:
 		data = struct {
 			Project    *explain.ProjectConfig    `json:"project"`
@@ -100,7 +104,8 @@ func outputJSON(ctx *explain.ExplainOutput, topic string) {
 			Guidelines *explain.GuidelinesConfig `json:"guidelines"`
 			Skills     *explain.SkillsConfig     `json:"skills_config"`
 			SkillDefs  []explain.Skill           `json:"skills"`
-		}{ctx.Project, ctx.Tools, ctx.Guidelines, ctx.Skills, ctx.SkillDefs}
+			Learnings  []explain.Learning        `json:"learnings"`
+		}{ctx.Project, ctx.Tools, ctx.Guidelines, ctx.Skills, ctx.SkillDefs, ctx.Learnings}
 	}
 
 	enc := json.NewEncoder(os.Stdout)

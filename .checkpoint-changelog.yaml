@@ -988,3 +988,153 @@ next_steps:
     - summary: Add tests for roots cache, rescan-on-miss, duplicate detection
       priority: high
       scope: cmd/mcp
+---
+schema_version: "1"
+timestamp: "2026-01-12T09:38:19-08:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint/README.md
+      additions: 5
+      deletions: 5
+    - path: .checkpoint/guides/first-time-user.md
+      additions: 50
+      deletions: 8
+    - path: .checkpoint/guides/llm-workflow.md
+      additions: 5
+      deletions: 4
+    - path: FUTURE-FEATURES.md
+      additions: 42
+      deletions: 419
+    - path: README.md
+      additions: 94
+      deletions: 199
+    - path: WARP.md
+      additions: 0
+      deletions: 69
+    - path: checkpoint
+      additions: 0
+      deletions: 0
+    - path: cmd/check.go
+      additions: 4
+      deletions: 4
+    - path: cmd/clean.go
+      additions: 1
+      deletions: 1
+    - path: cmd/clean_test.go
+      additions: 2
+      deletions: 2
+    - path: cmd/commit.go
+      additions: 7
+      deletions: 7
+    - path: cmd/commit_test.go
+      additions: 3
+      deletions: 3
+    - path: cmd/examples.go
+      additions: 1
+      deletions: 1
+    - path: cmd/explain.go
+      additions: 8
+      deletions: 3
+    - path: cmd/guide.go
+      additions: 1
+      deletions: 1
+    - path: cmd/help.go
+      additions: 22
+      deletions: 1
+    - path: cmd/init.go
+      additions: 278
+      deletions: 13
+    - path: cmd/learn.go
+      additions: 2
+      deletions: 2
+    - path: cmd/lint.go
+      additions: 3
+      deletions: 3
+    - path: cmd/mcp.go
+      additions: 2
+      deletions: 2
+    - path: cmd/prompt.go
+      additions: 2
+      deletions: 2
+    - path: cmd/search.go
+      additions: 1
+      deletions: 1
+    - path: cmd/session.go
+      additions: 1
+      deletions: 1
+    - path: cmd/skill.go
+      additions: 2
+      deletions: 2
+    - path: cmd/start.go
+      additions: 4
+      deletions: 4
+    - path: cmd/start_test.go
+      additions: 2
+      deletions: 2
+    - path: cmd/summary.go
+      additions: 3
+      deletions: 3
+    - path: go.mod
+      additions: 1
+      deletions: 1
+    - path: integration_test.go
+      additions: 3
+      deletions: 3
+    - path: internal/changelog/changelog.go
+      additions: 2
+      deletions: 2
+    - path: internal/changelog/changelog_test.go
+      additions: 1
+      deletions: 1
+    - path: internal/explain/explain.go
+      additions: 76
+      deletions: 1
+    - path: internal/explain/history.go
+      additions: 1
+      deletions: 1
+    - path: internal/explain/schema.go
+      additions: 6
+      deletions: 0
+    - path: internal/project/project.go
+      additions: 1
+      deletions: 1
+    - path: internal/schema/schema.go
+      additions: 2
+      deletions: 2
+    - path: main.go
+      additions: 22
+      deletions: 2
+changes:
+    - summary: Add shell completion for bash, zsh, fish
+      details: 'New cmd/completion.go with embedded completion scripts. Zsh uses #compdef directive for Oh My Zsh compatibility.'
+      change_type: feature
+      scope: cmd
+    - summary: Add doctor command with project auto-detection
+      details: Validates setup, detects language/tools from go.mod/package.json/Makefile, suggests fixes. New internal/detect package.
+      change_type: feature
+      scope: cmd, internal/detect
+    - summary: Surface learnings in explain command
+      details: New 'checkpoint explain learnings' topic displays captured insights. Added Learning struct and RenderLearnings method.
+      change_type: feature
+      scope: internal/explain
+    - summary: Rename module to github.com/dmoose/checkpoint
+      details: Changed from go-llm to proper GitHub path for go install support
+      change_type: refactor
+      scope: go.mod, all imports
+    - summary: Rewrite README with problem/solution framing
+      details: 'Emphasizes tool independence: data stays with project, not locked in IDE/LLM. Includes installation, quick start, shell completion.'
+      change_type: docs
+      scope: README
+    - summary: Add LICENSE and GitHub CI
+      details: Apache 2.0 license, basic CI workflow, updated guides with doctor/session docs
+      change_type: docs
+      scope: project
+next_steps:
+    - summary: Add tests for doctor and detect packages
+      details: 'Cover auto-detection scenarios: Go, Node, Python, Rust, Ruby projects'
+      priority: high
+      scope: cmd/doctor, internal/detect
+    - summary: Create release workflow
+      details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
+      priority: high
+      scope: .github/workflows

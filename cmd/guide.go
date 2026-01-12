@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go-llm/internal/file"
+	"github.com/dmoose/checkpoint/internal/file"
 )
 
 // Guide displays guide documents from .checkpoint/guides/

@@ -117,15 +117,29 @@ func createSessionTemplate() SessionState {
 			"[What needs clarification before or during implementation?]",
 		},
 
-		// Active work section
+		// Active work section - update as you progress
 		CurrentFocus: "[What are you working on right now?]",
-		Progress:     []string{},
-		Blockers:     []Blocker{},
-		Decisions:    []SessionDecision{},
-		Learnings:    []string{},
+		Progress: []string{
+			"[Add items here as you complete them]",
+		},
+		Blockers: []Blocker{
+			{
+				Issue:     "[What's blocking progress?]",
+				WaitingOn: "[Who or what are you waiting on?]",
+			},
+		},
+		Decisions: []SessionDecision{
+			{
+				Decision:  "[What did you decide?]",
+				Rationale: "[Why did you choose this approach?]",
+			},
+		},
+		Learnings: []string{
+			"[What did you learn during implementation?]",
+		},
 		ModifiedFiles: []string{},
 
-		// Handoff section (populated by checkpoint session handoff)
+		// Handoff section - populated by 'checkpoint session handoff'
 		Handoff: nil,
 	}
 }

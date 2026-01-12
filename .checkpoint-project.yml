@@ -416,3 +416,18 @@ recommended_additions:
     design_principles:
         - principle: Session is ephemeral - cleared on commit by default
           rationale: Completed work unit should start fresh. Historical record lives in changelog next_steps.
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2026-01-12T14:27:04-08:00"
+recommended_additions:
+    key_insights:
+        - insight: Templates should be self-documenting - include all fields with placeholder prompts
+          rationale: LLMs can understand and use features without needing external documentation in context
+    established_patterns:
+        - pattern: Templates include all valid fields with placeholder prompts
+          rationale: Makes schema discoverable from the file itself without external documentation
+          examples: Session template shows progress, blockers, decisions, learnings with example structure
+    design_principles:
+        - principle: Include all schema fields in template with placeholder prompts
+          rationale: Self-documenting templates reduce assumptions about what context the LLM has access to

@@ -559,3 +559,26 @@ context:
           outcome: 'Designed three-section schema: Planning, Active Work, Handoff'
         - exchange: Discussed whether to auto-seed from last checkpoint next_steps
           outcome: Decided against - user should curate what's relevant for this session
+---
+schema_version: "1"
+timestamp: "2026-01-12T14:27:04-08:00"
+context:
+    problem_statement: Session template only included planning fields, leaving execution-time fields (progress, blockers, decisions, learnings) empty. An LLM reading the session file wouldn't know these fields exist without external schema knowledge.
+    key_insights:
+        - insight: Templates should be self-documenting - include all fields with placeholder prompts
+          impact: LLMs can understand and use features without needing external documentation in context
+          scope: project
+    decisions_made:
+        - decision: Include all schema fields in template with placeholder prompts
+          rationale: Self-documenting templates reduce assumptions about what context the LLM has access to
+          alternatives_considered:
+            - Keep minimal template and document elsewhere - rejected, assumes LLM has schema in context
+          scope: project
+    established_patterns:
+        - pattern: Templates include all valid fields with placeholder prompts
+          rationale: Makes schema discoverable from the file itself without external documentation
+          examples: Session template shows progress, blockers, decisions, learnings with example structure
+          scope: project
+    conversation_context:
+        - exchange: User questioned not having execution-time fields in blank template
+          outcome: Added all fields with placeholder prompts to make template self-documenting

@@ -79,30 +79,45 @@ checkpoint plan
 This creates `.checkpoint-session.yaml` with a template for planning:
 
 ```yaml
-# Planning
+schema_version: "1"
+created: "2026-01-12T14:00:00-08:00"
+updated: "2026-01-12T14:00:00-08:00"
+
+# Planning section
 goals:
-  - "What do you want to accomplish?"
-approach: "How will you tackle this?"
+  - "[What do you want to accomplish this session?]"
+approach: "[How will you tackle this? What's the general plan?]"
 next_actions:
-  - summary: "First task"
-    priority: "high"
-    status: "pending"
+  - summary: "[First task to work on]"
+    priority: "high"        # high, med, low
+    status: "pending"       # pending, in_progress, done, blocked
     blocked_by: ""
 risks:
-  - "What could go wrong?"
+  - "[What could go wrong? What should you watch out for?]"
 open_questions:
-  - "What needs clarification?"
+  - "[What needs clarification before or during implementation?]"
 
-# Active Work (updated during session)
-current_focus: "What you're working on now"
-progress: []
-blockers: []
-decisions: []
-learnings: []
-modified_files: []
+# Active Work section - update as you progress
+current_focus: "[What are you working on right now?]"
+progress:
+  - "[Add items here as you complete them]"
+blockers:
+  - issue: "[What's blocking progress?]"
+    waiting_on: "[Who or what are you waiting on?]"
+decisions:
+  - decision: "[What did you decide?]"
+    rationale: "[Why did you choose this approach?]"
+learnings:
+  - "[What did you learn during implementation?]"
+modified_files: []  # auto-updated by checkpoint session save
 
-# Handoff (added by checkpoint session handoff)
-handoff: null
+# Handoff section - populated by 'checkpoint session handoff'
+# handoff:
+#   timestamp: ""
+#   summary: ""
+#   unfinished: []
+#   context_for_next: ""
+#   recommended_start: ""
 ```
 
 ### During Work

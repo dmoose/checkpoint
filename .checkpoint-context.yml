@@ -520,3 +520,42 @@ context:
     conversation_context:
         - exchange: User asked to assess Cobra value before committing to migration
           outcome: Analysis showed 540-line main.go and 4+ touch points per flag justified the dependency
+---
+schema_version: "1"
+timestamp: "2026-01-12T14:04:16-08:00"
+context:
+    problem_statement: Session was originally designed only for emergency handoff when closing an LLM session. It needed to become a living planning document similar to Claude's plan mode - enabling explicit planning before execution and continuous tracking during work.
+    key_insights:
+        - insight: 'Session and next_steps serve different purposes: ephemeral planning vs historical record'
+          impact: Keep both - session for active planning, next_steps in checkpoint for permanent history
+          scope: project
+        - insight: Plan mode (explicit planning phase) improves complex task execution
+          impact: LLMs work better when they plan before coding; session enables this workflow
+          scope: project
+    decisions_made:
+        - decision: Session is ephemeral - cleared on commit by default
+          rationale: Completed work unit should start fresh. Historical record lives in changelog next_steps.
+          alternatives_considered:
+            - Keep session always - rejected, causes stale planning state
+            - Auto-archive sessions - rejected, adds complexity without clear value
+          scope: project
+        - decision: Handoff replaces rather than appends
+          rationale: Simpler model - session represents single handoff point, not chain of handoffs
+          scope: checkpoint
+        - decision: next_actions not auto-seeded from last checkpoint
+          rationale: User decides what's relevant for this session; prevents carrying stale tasks
+          scope: checkpoint
+    established_patterns:
+        - pattern: Session file cleared on commit, preserved with --keep-session
+          rationale: Clean slate for new work unit; explicit flag for multi-commit sessions
+          examples: checkpoint commit clears session; checkpoint commit --keep-session preserves
+          scope: project
+        - pattern: Rich task tracking with status in session next_actions
+          rationale: 'Enables progress tracking: pending → in_progress → done/blocked'
+          examples: next_actions[].status field with blocked_by for dependencies
+          scope: project
+    conversation_context:
+        - exchange: User proposed expanding session from handoff to planning document
+          outcome: 'Designed three-section schema: Planning, Active Work, Handoff'
+        - exchange: Discussed whether to auto-seed from last checkpoint next_steps
+          outcome: Decided against - user should curate what's relevant for this session

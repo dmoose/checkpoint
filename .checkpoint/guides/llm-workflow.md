@@ -66,6 +66,90 @@ Human reviews `.checkpoint-input`, then:
 checkpoint commit
 ```
 
+## Session Planning (Optional)
+
+For complex work, use session planning to stay organized:
+
+### Starting a Planning Session
+
+```bash
+checkpoint plan
+```
+
+This creates `.checkpoint-session.yaml` with a template for planning:
+
+```yaml
+# Planning
+goals:
+  - "What do you want to accomplish?"
+approach: "How will you tackle this?"
+next_actions:
+  - summary: "First task"
+    priority: "high"
+    status: "pending"
+    blocked_by: ""
+risks:
+  - "What could go wrong?"
+open_questions:
+  - "What needs clarification?"
+
+# Active Work (updated during session)
+current_focus: "What you're working on now"
+progress: []
+blockers: []
+decisions: []
+learnings: []
+modified_files: []
+
+# Handoff (added by checkpoint session handoff)
+handoff: null
+```
+
+### During Work
+
+Update the session as you progress:
+- Mark `next_actions` status: `pending` → `in_progress` → `done`
+- Add items to `progress` as you complete things
+- Record `decisions` and their rationale
+- Capture `learnings` for future reference
+- Note any `blockers` encountered
+
+```bash
+checkpoint session        # View current session
+checkpoint session save   # Update modified files list
+```
+
+### Ending a Session
+
+**Option A: Commit (clears session)**
+```bash
+checkpoint commit         # Session is cleared after commit
+```
+
+**Option B: Handoff (preserves session)**
+```bash
+checkpoint session handoff  # Adds handoff context for next LLM
+```
+
+The handoff command auto-generates:
+- Summary of what was being worked on
+- List of unfinished tasks
+- Context for the next session
+- Recommended starting point
+
+**Option C: Keep session after commit**
+```bash
+checkpoint commit --keep-session  # Preserves session file
+```
+
+### Session Workflow
+
+```
+plan → work → commit (session cleared)
+  OR
+plan → work → handoff (session preserved for pickup)
+```
+
 ## LLM Responsibilities
 
 ### Analyzing Changes

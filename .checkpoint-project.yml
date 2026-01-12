@@ -396,3 +396,23 @@ recommended_additions:
           rationale: Industry standard for Go CLIs, eliminates boilerplate, provides built-in completions, help, and flag parsing
         - principle: Use --json flag pattern for machine-readable output
           rationale: Consistent flag name across commands, optional to preserve human-friendly default
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2026-01-12T14:04:16-08:00"
+recommended_additions:
+    key_insights:
+        - insight: 'Session and next_steps serve different purposes: ephemeral planning vs historical record'
+          rationale: Keep both - session for active planning, next_steps in checkpoint for permanent history
+        - insight: Plan mode (explicit planning phase) improves complex task execution
+          rationale: LLMs work better when they plan before coding; session enables this workflow
+    established_patterns:
+        - pattern: Session file cleared on commit, preserved with --keep-session
+          rationale: Clean slate for new work unit; explicit flag for multi-commit sessions
+          examples: checkpoint commit clears session; checkpoint commit --keep-session preserves
+        - pattern: Rich task tracking with status in session next_actions
+          rationale: 'Enables progress tracking: pending → in_progress → done/blocked'
+          examples: next_actions[].status field with blocked_by for dependencies
+    design_principles:
+        - principle: Session is ephemeral - cleared on commit by default
+          rationale: Completed work unit should start fresh. Historical record lives in changelog next_steps.

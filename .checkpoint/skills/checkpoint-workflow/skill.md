@@ -20,10 +20,19 @@ checkpoint start
 ```
 Shows project status, outstanding next_steps, and validates readiness.
 
-### 2. Do Work
-Make your code changes as usual.
+### 2. Plan (Optional)
+```bash
+checkpoint plan
+```
+Creates `.checkpoint-session.yaml` for planning complex work:
+- Goals, approach, and prioritized next actions
+- Track progress, decisions, and learnings during work
+- Session is cleared on commit (or preserved with `--keep-session`)
 
-### 3. Prepare Checkpoint
+### 3. Do Work
+Make your code changes as usual. Update session progress if using planning.
+
+### 4. Prepare Checkpoint
 ```bash
 checkpoint check
 ```
@@ -31,7 +40,7 @@ Creates:
 - `.checkpoint-input` - Template to fill with change descriptions
 - `.checkpoint-diff` - Git diff for context
 
-### 4. Fill Input
+### 5. Fill Input
 Edit `.checkpoint-input` with:
 
 **changes[]** - What changed
@@ -48,20 +57,33 @@ Edit `.checkpoint-input` with:
 **next_steps[]** - What's planned
 - summary, priority (low|med|high), scope
 
-### 5. Validate
+### 6. Validate
 ```bash
 checkpoint lint
 ```
 Catches common mistakes before commit.
 
-### 6. Commit
+### 7. Commit
 ```bash
-checkpoint commit
+checkpoint commit              # Clears session
+checkpoint commit --keep-session  # Preserves session
 ```
 - Stages all changes
 - Appends to changelog
 - Creates git commit
 - Backfills commit hash
+- Clears session file (unless --keep-session)
+
+## Session Commands
+
+```bash
+checkpoint plan              # Create planning session
+checkpoint plan --fresh      # Replace existing session
+checkpoint session           # View current session
+checkpoint session save      # Update modified files
+checkpoint session handoff   # Prepare for LLM handoff
+checkpoint session clear     # Remove session
+```
 
 ## Tips
 
@@ -69,6 +91,7 @@ checkpoint commit
 - Capture reasoning in context - the "why" is more valuable than "what"
 - Mark project-wide patterns with `scope: project`
 - Run `checkpoint explain` to understand project context before starting
+- Use `checkpoint plan` for complex multi-step work
 
 ## Related Commands
 

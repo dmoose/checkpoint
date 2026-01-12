@@ -21,12 +21,14 @@ import (
 var commitOpts struct {
 	dryRun        bool
 	changelogOnly bool
+	keepSession   bool
 }
 
 func init() {
 	rootCmd.AddCommand(commitCmd)
 	commitCmd.Flags().BoolVarP(&commitOpts.dryRun, "dry-run", "n", false, "Show commit message and staged files without committing")
 	commitCmd.Flags().BoolVar(&commitOpts.changelogOnly, "changelog-only", false, "Stage only changelog instead of all changes")
+	commitCmd.Flags().BoolVar(&commitOpts.keepSession, "keep-session", false, "Preserve session file after commit (default: cleared)")
 }
 
 var commitCmd = &cobra.Command{
@@ -45,13 +47,18 @@ Then backfills commit hash into the last changelog document.`,
 			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
 			os.Exit(1)
 		}
-		CommitWithOptions(absPath, CommitOptions{DryRun: commitOpts.dryRun, ChangelogOnly: commitOpts.changelogOnly}, Version)
+		CommitWithOptions(absPath, CommitOptions{
+			DryRun:        commitOpts.dryRun,
+			ChangelogOnly: commitOpts.changelogOnly,
+			KeepSession:   commitOpts.keepSession,
+		}, Version)
 	},
 }
 
 type CommitOptions struct {
 	DryRun        bool
 	ChangelogOnly bool
+	KeepSession   bool
 }
 
 // Commit implements Phase 3: parse input, append to changelog, git commit, write status
@@ -227,6 +234,20 @@ func CommitWithOptions(projectPath string, opts CommitOptions, version string) {
 	if file.Exists(lockPath) {
 		if err := os.Remove(lockPath); err != nil {
 			fmt.Fprintf(os.Stderr, "warning: failed to remove lock file: %v\n", err)
+		}
+	}
+
+	// Clear session file unless --keep-session is set
+	sessionPath := filepath.Join(projectPath, sessionFileName)
+	if file.Exists(sessionPath) {
+		if opts.KeepSession {
+			fmt.Println("Session preserved (--keep-session)")
+		} else {
+			if err := os.Remove(sessionPath); err != nil {
+				fmt.Fprintf(os.Stderr, "warning: failed to remove session file: %v\n", err)
+			} else {
+				fmt.Println("Session cleared.")
+			}
 		}
 	}
 

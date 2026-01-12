@@ -1141,7 +1141,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-01-12T13:20:13-08:00"
-commit_hash: ""
+commit_hash: 19fb19a543d04a3cc1504ec150b02121cf7edfdf
 files_changed:
     - path: .checkpoint-changelog.yaml
       additions: 1
@@ -1240,6 +1240,62 @@ changes:
       details: Cobra provides help automatically with consistent formatting across all commands.
       change_type: refactor
       scope: cmd/help
+next_steps:
+    - summary: Add tests for doctor and detect packages
+      details: 'Cover auto-detection scenarios: Go, Node, Python, Rust, Ruby projects'
+      priority: high
+      scope: cmd/doctor, internal/detect
+    - summary: Create release workflow
+      details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
+      priority: high
+      scope: .github/workflows
+---
+schema_version: "1"
+timestamp: "2026-01-12T14:04:16-08:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: .checkpoint/guides/llm-workflow.md
+      additions: 84
+      deletions: 0
+    - path: .checkpoint/prompts/session-start.md
+      additions: 19
+      deletions: 0
+    - path: .checkpoint/skills/checkpoint-workflow/skill.md
+      additions: 30
+      deletions: 7
+    - path: .gitignore
+      additions: 1
+      deletions: 0
+    - path: cmd/commit.go
+      additions: 22
+      deletions: 1
+    - path: cmd/session.go
+      additions: 268
+      deletions: 135
+changes:
+    - summary: Expand session from handoff-only to planning document
+      details: Session now supports full planning workflow with goals, approach, prioritized next_actions (with status tracking), risks, open_questions, progress, blockers, decisions, and learnings. Enables LLM and user to plan work before executing.
+      change_type: feature
+      scope: cmd/session
+    - summary: Add checkpoint plan command to create planning sessions
+      details: Creates .checkpoint-session.yaml with template structure. Supports --fresh flag to replace existing session. Template includes all schema sections with placeholder prompts.
+      change_type: feature
+      scope: cmd/plan
+    - summary: Add session cleanup to commit with --keep-session flag
+      details: Commit now clears session file by default (work unit complete). Use --keep-session to preserve session for continued work across commits.
+      change_type: feature
+      scope: cmd/commit
+    - summary: Rewrite handoff to update session file instead of printing
+      details: Handoff command now appends/replaces handoff section in session file with auto-generated summary, unfinished tasks, context for next session, and recommended start point.
+      change_type: refactor
+      scope: cmd/session
+    - summary: Add session planning documentation to guides and prompts
+      details: Updated llm-workflow.md with Session Planning section, checkpoint-workflow skill with session commands, and session-start.md prompt with planning workflow option.
+      change_type: docs
+      scope: .checkpoint
 next_steps:
     - summary: Add tests for doctor and detect packages
       details: 'Cover auto-detection scenarios: Go, Node, Python, Rust, Ruby projects'

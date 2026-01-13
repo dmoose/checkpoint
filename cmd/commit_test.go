@@ -20,7 +20,7 @@ func TestCommitValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Initialize git repo
 	if err := runGitCmd(tmpDir, "init"); err != nil {
@@ -139,7 +139,7 @@ next_steps:
 			}
 
 			// Clean up input file
-			os.Remove(inputPath)
+			_ = os.Remove(inputPath)
 		})
 	}
 }
@@ -180,7 +180,7 @@ func TestCommitDryRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Initialize git repo
 	if err := runGitCmd(tmpDir, "init"); err != nil {
@@ -217,7 +217,7 @@ changes:
 	CommitWithOptions(tmpDir, CommitOptions{DryRun: true}, "test-version")
 
 	// Restore and read output
-	w.Close()
+	_ = w.Close()
 	os.Stdout = originalStdout
 	buf := make([]byte, 1024)
 	n, _ := r.Read(buf)
@@ -247,7 +247,7 @@ func TestGenerateStatusFileWithProjectMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Initialize git repo
 	if err := runGitCmd(tmpDir, "init"); err != nil {

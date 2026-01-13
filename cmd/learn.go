@@ -146,7 +146,7 @@ func addGuideline(checkpointDir, content string) error {
 
 	var guidelines explain.GuidelinesConfig
 	if data, err := os.ReadFile(guidelinesPath); err == nil {
-		yaml.Unmarshal(data, &guidelines)
+		_ = yaml.Unmarshal(data, &guidelines)
 	}
 	guidelines.SchemaVersion = "1"
 
@@ -176,7 +176,7 @@ func addAvoid(checkpointDir, content string) error {
 
 	var guidelines explain.GuidelinesConfig
 	if data, err := os.ReadFile(guidelinesPath); err == nil {
-		yaml.Unmarshal(data, &guidelines)
+		_ = yaml.Unmarshal(data, &guidelines)
 	}
 	guidelines.SchemaVersion = "1"
 
@@ -206,7 +206,7 @@ func addPrinciple(checkpointDir, content string) error {
 
 	var guidelines explain.GuidelinesConfig
 	if data, err := os.ReadFile(guidelinesPath); err == nil {
-		yaml.Unmarshal(data, &guidelines)
+		_ = yaml.Unmarshal(data, &guidelines)
 	}
 	guidelines.SchemaVersion = "1"
 
@@ -236,7 +236,7 @@ func addPattern(checkpointDir, content string) error {
 
 	var guidelines explain.GuidelinesConfig
 	if data, err := os.ReadFile(guidelinesPath); err == nil {
-		yaml.Unmarshal(data, &guidelines)
+		_ = yaml.Unmarshal(data, &guidelines)
 	}
 	guidelines.SchemaVersion = "1"
 
@@ -281,7 +281,7 @@ func addTool(checkpointDir, name, command string) error {
 
 	var tools explain.ToolsConfig
 	if data, err := os.ReadFile(toolsPath); err == nil {
-		yaml.Unmarshal(data, &tools)
+		_ = yaml.Unmarshal(data, &tools)
 	}
 	tools.SchemaVersion = "1"
 
@@ -319,7 +319,7 @@ func addLearning(checkpointDir, content string) error {
 	if err != nil {
 		return fmt.Errorf("open learnings file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	if _, err := f.WriteString(entry); err != nil {
 		return fmt.Errorf("write learning: %w", err)
@@ -411,7 +411,7 @@ func listLearnings(projectPath string, jsonOutput bool) {
 	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		enc.Encode(map[string]any{"learnings": learnings})
+		_ = enc.Encode(map[string]any{"learnings": learnings})
 		return
 	}
 

@@ -466,7 +466,7 @@ func AppendRecommendations(projectPath, timestamp string, additions ProjectAddit
 	if err != nil {
 		return fmt.Errorf("open project file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	content := "---\n" + string(yamlData)
 	if _, err := f.WriteString(content); err != nil {
@@ -482,7 +482,7 @@ func ReadProjectDocument(projectPath string) (*ProjectDocument, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open project file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Decode only the first document
 	decoder := yaml.NewDecoder(f)

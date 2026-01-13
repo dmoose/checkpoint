@@ -16,7 +16,7 @@ func TestCleanCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Test clean when no files exist (should not error)
 	Clean(tmpDir)
@@ -68,7 +68,7 @@ func TestCleanCommandOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create some checkpoint files
 	inputPath := filepath.Join(tmpDir, config.InputFileName)
@@ -88,7 +88,7 @@ func TestCleanCommandOutput(t *testing.T) {
 
 	Clean(tmpDir)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = originalStdout
 
 	// Read output
@@ -107,7 +107,7 @@ func TestCleanPartialFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create only input file (not diff file)
 	inputPath := filepath.Join(tmpDir, config.InputFileName)
@@ -129,7 +129,7 @@ func TestCleanPreservesOtherFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create checkpoint files
 	inputPath := filepath.Join(tmpDir, config.InputFileName)
@@ -176,7 +176,7 @@ func TestCleanReadOnlyFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create input file and make it read-only
 	inputPath := filepath.Join(tmpDir, config.InputFileName)
@@ -196,7 +196,7 @@ func TestCleanReadOnlyFiles(t *testing.T) {
 
 	Clean(tmpDir)
 
-	w.Close()
+	_ = w.Close()
 	os.Stderr = originalStderr
 
 	// Read stderr output
@@ -212,5 +212,5 @@ func TestCleanReadOnlyFiles(t *testing.T) {
 	}
 
 	// Clean up by making file writable again
-	os.Chmod(inputPath, 0644)
+	_ = os.Chmod(inputPath, 0644)
 }

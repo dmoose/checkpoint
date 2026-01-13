@@ -14,7 +14,7 @@ func TestIsGitRepository(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Test non-git directory - should return false with no error
 	ok, err := IsGitRepository(tmpDir)
@@ -53,7 +53,7 @@ func TestIsGitRepository(t *testing.T) {
 
 	// Test subdirectory of git repo
 	subDir := filepath.Join(tmpDir, "subdir")
-	os.MkdirAll(subDir, 0755)
+	_ = os.MkdirAll(subDir, 0755)
 	ok, err = IsGitRepository(subDir)
 	if !ok {
 		t.Errorf("expected true for subdirectory of git repo")
@@ -140,7 +140,7 @@ func TestStageAll(t *testing.T) {
 	files := []string{"file1.txt", "file2.txt", "subdir/file3.txt"}
 	for _, file := range files {
 		filePath := filepath.Join(tmpDir, file)
-		os.MkdirAll(filepath.Dir(filePath), 0755)
+		_ = os.MkdirAll(filepath.Dir(filePath), 0755)
 		err := os.WriteFile(filePath, []byte("test content\n"), 0644)
 		if err != nil {
 			t.Fatalf("failed to write test file %s: %v", file, err)
@@ -213,18 +213,18 @@ func TestGetStatus(t *testing.T) {
 	// Create some files in different states
 	// Untracked file
 	untracked := filepath.Join(tmpDir, "untracked.txt")
-	os.WriteFile(untracked, []byte("untracked\n"), 0644)
+	_ = os.WriteFile(untracked, []byte("untracked\n"), 0644)
 
 	// Modified file (first commit it, then modify)
 	modified := filepath.Join(tmpDir, "modified.txt")
-	os.WriteFile(modified, []byte("original\n"), 0644)
+	_ = os.WriteFile(modified, []byte("original\n"), 0644)
 	runGitCmd(t, tmpDir, "add", "modified.txt")
 	runGitCmd(t, tmpDir, "commit", "-m", "Add modified.txt")
-	os.WriteFile(modified, []byte("original\nmodified\n"), 0644)
+	_ = os.WriteFile(modified, []byte("original\nmodified\n"), 0644)
 
 	// Staged file
 	staged := filepath.Join(tmpDir, "staged.txt")
-	os.WriteFile(staged, []byte("staged\n"), 0644)
+	_ = os.WriteFile(staged, []byte("staged\n"), 0644)
 	runGitCmd(t, tmpDir, "add", "staged.txt")
 
 	// Get status
@@ -258,7 +258,7 @@ func setupGitRepo(t *testing.T) (string, func()) {
 	cmd := exec.Command("git", "init")
 	cmd.Dir = tmpDir
 	if err := cmd.Run(); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		t.Skipf("git not available, skipping test: %v", err)
 	}
 
@@ -267,7 +267,7 @@ func setupGitRepo(t *testing.T) (string, func()) {
 	runGitCmd(t, tmpDir, "config", "user.name", "Test User")
 
 	cleanup := func() {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 	}
 
 	return tmpDir, cleanup

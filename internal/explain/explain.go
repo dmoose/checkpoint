@@ -459,27 +459,27 @@ func (e *ExplainOutput) RenderGuidelines() string {
 func renderFlexibleValue(sb *strings.Builder, val interface{}, indent string) {
 	switch v := val.(type) {
 	case string:
-		sb.WriteString(fmt.Sprintf("%s%s\n", indent, v))
+		fmt.Fprintf(sb, "%s%s\n", indent, v)
 	case []interface{}:
 		for _, item := range v {
-			sb.WriteString(fmt.Sprintf("%s- %v\n", indent, item))
+			fmt.Fprintf(sb, "%s- %v\n", indent, item)
 		}
 	case map[string]interface{}:
 		for key, subval := range v {
 			switch sv := subval.(type) {
 			case string:
-				sb.WriteString(fmt.Sprintf("%s**%s**: %s\n", indent, key, sv))
+				fmt.Fprintf(sb, "%s**%s**: %s\n", indent, key, sv)
 			case []interface{}:
-				sb.WriteString(fmt.Sprintf("%s**%s**:\n", indent, key))
+				fmt.Fprintf(sb, "%s**%s**:\n", indent, key)
 				for _, item := range sv {
-					sb.WriteString(fmt.Sprintf("%s  - %v\n", indent, item))
+					fmt.Fprintf(sb, "%s  - %v\n", indent, item)
 				}
 			default:
-				sb.WriteString(fmt.Sprintf("%s**%s**: %v\n", indent, key, sv))
+				fmt.Fprintf(sb, "%s**%s**: %v\n", indent, key, sv)
 			}
 		}
 	default:
-		sb.WriteString(fmt.Sprintf("%s%v\n", indent, v))
+		fmt.Fprintf(sb, "%s%v\n", indent, v)
 	}
 }
 

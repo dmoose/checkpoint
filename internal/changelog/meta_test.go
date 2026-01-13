@@ -267,8 +267,8 @@ func TestPathHashConsistency(t *testing.T) {
 	changelogPath3 := filepath.Join(tmpDir, "project2", ".checkpoint-changelog.yaml")
 
 	// Ensure directories exist
-	os.MkdirAll(filepath.Dir(changelogPath1), 0755)
-	os.MkdirAll(filepath.Dir(changelogPath3), 0755)
+	_ = os.MkdirAll(filepath.Dir(changelogPath1), 0755)
+	_ = os.MkdirAll(filepath.Dir(changelogPath3), 0755)
 
 	// Create meta documents for same path - should have same hash
 	meta1, err := createMetaDocument(changelogPath1, "1.0.0")

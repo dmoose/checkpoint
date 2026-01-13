@@ -28,30 +28,6 @@ func Execute(version string) {
 	}
 }
 
-// getProjectPath resolves the project path from args or defaults to current directory
-func getProjectPath(args []string) string {
-	if len(args) > 0 {
-		return args[0]
-	}
-	return "."
-}
-
-// resolveAbsPath converts a path to absolute, exiting on error
-func resolveAbsPath(path string) string {
-	abs, err := os.Getwd()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: cannot get working directory: %v\n", err)
-		os.Exit(1)
-	}
-	if path == "." {
-		return abs
-	}
-	if path[0] == '/' {
-		return path
-	}
-	return abs + "/" + path
-}
-
 func init() {
 	// Add version command
 	rootCmd.AddCommand(&cobra.Command{

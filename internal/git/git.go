@@ -68,10 +68,7 @@ func GetDiff(path string, staged bool) (string, error) {
 func GetCombinedDiff(path string) (string, error) {
 	var b strings.Builder
 
-	unstaged, err1 := runGit(path, []string{"diff"})
-	if err1 != nil && !isNoHeadError(err1) {
-		// still include whatever output we have
-	}
+	unstaged, _ := runGit(path, []string{"diff"})
 	staged, _ := runGit(path, []string{"diff", "--staged"})
 
 	if strings.TrimSpace(unstaged) != "" {

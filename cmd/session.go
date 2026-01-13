@@ -156,7 +156,7 @@ func showSession(projectPath string, jsonOutput bool) {
 	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		enc.Encode(session)
+		_ = enc.Encode(session)
 		return
 	}
 

@@ -127,7 +127,7 @@ func Search(projectPath string, opts SearchOptions) {
 		}
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		enc.Encode(output)
+		_ = enc.Encode(output)
 		return
 	}
 

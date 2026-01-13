@@ -123,7 +123,7 @@ func listSkills(projectPath string, jsonOutput bool) {
 
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		enc.Encode(output)
+		_ = enc.Encode(output)
 		return
 	}
 
@@ -391,7 +391,7 @@ func createSkill(projectPath string, name string) {
 	var skillsConfig explain.SkillsConfig
 
 	if data, err := os.ReadFile(skillsPath); err == nil {
-		yaml.Unmarshal(data, &skillsConfig)
+		_ = yaml.Unmarshal(data, &skillsConfig)
 	}
 	skillsConfig.SchemaVersion = "1"
 
@@ -407,7 +407,7 @@ func createSkill(projectPath string, name string) {
 
 	data, _ := yaml.Marshal(&skillsConfig)
 	content := "schema_version: \"1\"\n\n" + strings.TrimPrefix(string(data), "schema_version: \"1\"\n")
-	os.WriteFile(skillsPath, []byte(content), 0644)
+	_ = os.WriteFile(skillsPath, []byte(content), 0644)
 
 	fmt.Printf("✓ Created skill '%s' at %s\n", name, skillPath)
 	fmt.Printf("  Edit the skill.md file to add content\n")
@@ -439,7 +439,7 @@ func InitGlobalSkills() error {
 		}
 		skillPath := filepath.Join(skillDir, "skill.md")
 		if _, err := os.Stat(skillPath); os.IsNotExist(err) {
-			os.WriteFile(skillPath, []byte(content), 0644)
+			_ = os.WriteFile(skillPath, []byte(content), 0644)
 		}
 	}
 

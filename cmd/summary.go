@@ -154,7 +154,7 @@ func extractRecentCheckpoints(content string, count int) []recentCheckpoint {
 
 	// Skip meta document
 	var metaDoc map[string]interface{}
-	decoder.Decode(&metaDoc)
+	_ = decoder.Decode(&metaDoc)
 
 	// Parse checkpoint documents
 	for {
@@ -198,7 +198,7 @@ func extractLastCheckpointInfo(statusContent string) (string, string) {
 		LastCommitHash      string `yaml:"last_commit_hash"`
 		LastCommitTimestamp string `yaml:"last_commit_timestamp"`
 	}
-	yaml.Unmarshal([]byte(statusContent), &status)
+	_ = yaml.Unmarshal([]byte(statusContent), &status)
 	return status.LastCommitHash, status.LastCommitTimestamp
 }
 
@@ -210,7 +210,7 @@ func extractNextStepsFromStatusFile(statusContent string) []nextStepItem {
 			Scope    string `yaml:"scope"`
 		} `yaml:"next_steps"`
 	}
-	yaml.Unmarshal([]byte(statusContent), &status)
+	_ = yaml.Unmarshal([]byte(statusContent), &status)
 
 	var items []nextStepItem
 	for _, ns := range status.NextSteps {

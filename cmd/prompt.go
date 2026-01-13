@@ -111,7 +111,7 @@ func listPrompts(config *prompts.PromptsConfig, jsonOutput bool) {
 		}
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		enc.Encode(map[string]any{"prompts": output})
+		_ = enc.Encode(map[string]any{"prompts": output})
 		return
 	}
 
@@ -132,12 +132,14 @@ func listPrompts(config *prompts.PromptsConfig, jsonOutput bool) {
 	categoryOrder := []string{"checkpoint", "development"}
 	for _, category := range categoryOrder {
 		if prompts, ok := categories[category]; ok {
-			// Capitalize category name
-			categoryName := strings.Title(category)
-			if category == "checkpoint" {
+			var categoryName string
+			switch category {
+			case "checkpoint":
 				categoryName = "Checkpoint Workflow"
-			} else if category == "development" {
+			case "development":
 				categoryName = "Development"
+			default:
+				categoryName = strings.ToUpper(category[:1]) + category[1:]
 			}
 
 			fmt.Printf("%s:\n", categoryName)
@@ -151,7 +153,7 @@ func listPrompts(config *prompts.PromptsConfig, jsonOutput bool) {
 
 	// Display any remaining categories
 	for category, prompts := range categories {
-		categoryName := strings.Title(category)
+		categoryName := strings.ToUpper(category[:1]) + category[1:]
 		fmt.Printf("%s:\n", categoryName)
 		for _, p := range prompts {
 			fmt.Printf("  %-20s %s\n", p.ID, p.Description)

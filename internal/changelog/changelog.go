@@ -31,7 +31,7 @@ func AppendEntry(path, doc string) error {
 	if err != nil {
 		return fmt.Errorf("open changelog: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Verify we're at the expected position
 	pos, err := f.Seek(0, 2) // Seek to end

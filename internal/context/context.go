@@ -70,7 +70,7 @@ func AppendContextEntry(contextPath string, entry *ContextEntry) error {
 	if err != nil {
 		return fmt.Errorf("open context file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Append with document separator
 	content := "---\n" + string(yamlData)
@@ -90,7 +90,7 @@ func GetRecentContextEntries(contextPath string, count int) ([]ContextEntry, err
 		}
 		return nil, fmt.Errorf("open context file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Decode all documents
 	decoder := yaml.NewDecoder(f)

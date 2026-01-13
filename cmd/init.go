@@ -472,9 +472,10 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 	created := 0
 	skipped := 0
 
-	// Create project.yml
-	projectYmlPath := filepath.Join(checkpointDir, config.ExplainProjectYml)
-	if file.Exists(projectYmlPath) {
+	// Create project.yaml (check for legacy .yml too)
+	projectYamlPath := filepath.Join(checkpointDir, config.ExplainProjectYaml)
+	projectYmlLegacy := filepath.Join(checkpointDir, config.ExplainProjectYmlLegacy)
+	if file.Exists(projectYamlPath) || file.Exists(projectYmlLegacy) {
 		skipped++
 	} else {
 		var sb strings.Builder
@@ -505,16 +506,17 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 		sb.WriteString("  #   - path: src/\n")
 		sb.WriteString("  #     purpose: Source code\n")
 
-		if err := file.WriteFile(projectYmlPath, sb.String()); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: could not create project.yml: %v\n", err)
+		if err := file.WriteFile(projectYamlPath, sb.String()); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not create project.yaml: %v\n", err)
 		} else {
 			created++
 		}
 	}
 
-	// Create tools.yml
-	toolsYmlPath := filepath.Join(checkpointDir, config.ExplainToolsYml)
-	if file.Exists(toolsYmlPath) {
+	// Create tools.yaml (check for legacy .yml too)
+	toolsYamlPath := filepath.Join(checkpointDir, config.ExplainToolsYaml)
+	toolsYmlLegacy := filepath.Join(checkpointDir, config.ExplainToolsYmlLegacy)
+	if file.Exists(toolsYamlPath) || file.Exists(toolsYmlLegacy) {
 		skipped++
 	} else {
 		var sb strings.Builder
@@ -580,16 +582,17 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 			sb.WriteString("#     notes: Run tests\n")
 		}
 
-		if err := file.WriteFile(toolsYmlPath, sb.String()); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: could not create tools.yml: %v\n", err)
+		if err := file.WriteFile(toolsYamlPath, sb.String()); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not create tools.yaml: %v\n", err)
 		} else {
 			created++
 		}
 	}
 
-	// Create guidelines.yml
-	guidelinesYmlPath := filepath.Join(checkpointDir, config.ExplainGuidelinesYml)
-	if file.Exists(guidelinesYmlPath) {
+	// Create guidelines.yaml (check for legacy .yml too)
+	guidelinesYamlPath := filepath.Join(checkpointDir, config.ExplainGuidelinesYaml)
+	guidelinesYmlLegacy := filepath.Join(checkpointDir, config.ExplainGuidelinesYmlLegacy)
+	if file.Exists(guidelinesYamlPath) || file.Exists(guidelinesYmlLegacy) {
 		skipped++
 	} else {
 		var sb strings.Builder
@@ -625,16 +628,17 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 		sb.WriteString("  # - Keep it simple\n")
 		sb.WriteString("  # - Prefer composition over inheritance\n")
 
-		if err := file.WriteFile(guidelinesYmlPath, sb.String()); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: could not create guidelines.yml: %v\n", err)
+		if err := file.WriteFile(guidelinesYamlPath, sb.String()); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not create guidelines.yaml: %v\n", err)
 		} else {
 			created++
 		}
 	}
 
-	// Create skills.yml
-	skillsYmlPath := filepath.Join(checkpointDir, config.ExplainSkillsYml)
-	if file.Exists(skillsYmlPath) {
+	// Create skills.yaml (check for legacy .yml too)
+	skillsYamlPath := filepath.Join(checkpointDir, config.ExplainSkillsYaml)
+	skillsYmlLegacy := filepath.Join(checkpointDir, config.ExplainSkillsYmlLegacy)
+	if file.Exists(skillsYamlPath) || file.Exists(skillsYmlLegacy) {
 		skipped++
 	} else {
 		var sb strings.Builder
@@ -648,8 +652,8 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 		sb.WriteString("#   - git\n")
 		sb.WriteString("#   - ripgrep\n")
 
-		if err := file.WriteFile(skillsYmlPath, sb.String()); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: could not create skills.yml: %v\n", err)
+		if err := file.WriteFile(skillsYamlPath, sb.String()); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not create skills.yaml: %v\n", err)
 		} else {
 			created++
 		}

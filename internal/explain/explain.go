@@ -30,36 +30,36 @@ func LoadExplainContext(projectPath string) (*ExplainOutput, error) {
 		ProjectPath: projectPath,
 	}
 
-	// Load project.yml
-	projectYml := filepath.Join(checkpointDir, config.ExplainProjectYml)
-	if data, err := os.ReadFile(projectYml); err == nil {
+	// Load project.yaml (with .yml fallback)
+	projectYaml := findYamlFile(checkpointDir, config.ExplainProjectYaml, config.ExplainProjectYmlLegacy)
+	if data, err := os.ReadFile(projectYaml); err == nil {
 		var proj ProjectConfig
 		if err := yaml.Unmarshal(data, &proj); err == nil {
 			output.Project = &proj
 		}
 	}
 
-	// Load tools.yml
-	toolsYml := filepath.Join(checkpointDir, config.ExplainToolsYml)
-	if data, err := os.ReadFile(toolsYml); err == nil {
+	// Load tools.yaml (with .yml fallback)
+	toolsYaml := findYamlFile(checkpointDir, config.ExplainToolsYaml, config.ExplainToolsYmlLegacy)
+	if data, err := os.ReadFile(toolsYaml); err == nil {
 		var tools ToolsConfig
 		if err := yaml.Unmarshal(data, &tools); err == nil {
 			output.Tools = &tools
 		}
 	}
 
-	// Load guidelines.yml
-	guidelinesYml := filepath.Join(checkpointDir, config.ExplainGuidelinesYml)
-	if data, err := os.ReadFile(guidelinesYml); err == nil {
+	// Load guidelines.yaml (with .yml fallback)
+	guidelinesYaml := findYamlFile(checkpointDir, config.ExplainGuidelinesYaml, config.ExplainGuidelinesYmlLegacy)
+	if data, err := os.ReadFile(guidelinesYaml); err == nil {
 		var guidelines GuidelinesConfig
 		if err := yaml.Unmarshal(data, &guidelines); err == nil {
 			output.Guidelines = &guidelines
 		}
 	}
 
-	// Load skills.yml
-	skillsYml := filepath.Join(checkpointDir, config.ExplainSkillsYml)
-	if data, err := os.ReadFile(skillsYml); err == nil {
+	// Load skills.yaml (with .yml fallback)
+	skillsYaml := findYamlFile(checkpointDir, config.ExplainSkillsYaml, config.ExplainSkillsYmlLegacy)
+	if data, err := os.ReadFile(skillsYaml); err == nil {
 		var skills SkillsConfig
 		if err := yaml.Unmarshal(data, &skills); err == nil {
 			output.Skills = &skills
@@ -69,13 +69,26 @@ func LoadExplainContext(projectPath string) (*ExplainOutput, error) {
 	// Load skill definitions
 	output.SkillDefs = loadSkills(projectPath, output.Skills)
 
-	// Load learnings.yml (multi-document YAML)
-	learningsYml := filepath.Join(checkpointDir, "learnings.yml")
-	if data, err := os.ReadFile(learningsYml); err == nil {
+	// Load learnings.yaml (with .yml fallback)
+	learningsYaml := findYamlFile(checkpointDir, "learnings.yaml", "learnings.yml")
+	if data, err := os.ReadFile(learningsYaml); err == nil {
 		output.Learnings = loadLearnings(data)
 	}
 
 	return output, nil
+}
+
+// findYamlFile returns the path to a yaml file, checking primary first then legacy
+func findYamlFile(dir, primary, legacy string) string {
+	primaryPath := filepath.Join(dir, primary)
+	if _, err := os.Stat(primaryPath); err == nil {
+		return primaryPath
+	}
+	legacyPath := filepath.Join(dir, legacy)
+	if _, err := os.Stat(legacyPath); err == nil {
+		return legacyPath
+	}
+	return primaryPath // Return primary for creation
 }
 
 // loadLearnings parses multi-document YAML learnings file

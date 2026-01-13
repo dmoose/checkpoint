@@ -68,7 +68,9 @@ checkpoint commit
 
 ## Session Planning (Optional)
 
-For complex work, use session planning to stay organized:
+For complex work, use session planning to stay organized.
+
+**Key concept:** Sessions are transient working documents, not permanent records. They exist to maintain focus during work and are discarded after commit. Don't treat them as task trackers—if something becomes irrelevant, delete it or ignore it. The session is a scratchpad, not a contract.
 
 ### Starting a Planning Session
 
@@ -122,12 +124,14 @@ modified_files: []  # auto-updated by checkpoint session save
 
 ### During Work
 
-Update the session as you progress:
-- Mark `next_actions` status: `pending` → `in_progress` → `done`
-- Add items to `progress` as you complete things
-- Record `decisions` and their rationale
+Update the session as useful—it's your working scratchpad:
+- Update `current_focus` to reflect what you're doing now
+- Add to `progress` as you complete things
+- Record `decisions` and their rationale (these are valuable context)
 - Capture `learnings` for future reference
 - Note any `blockers` encountered
+
+**Note:** You don't need to mark `next_actions` as done. If an action is complete or no longer relevant, delete it or leave it—the session is cleared on commit anyway. Focus on what helps you work, not on maintaining the document.
 
 ```bash
 checkpoint session        # View current session

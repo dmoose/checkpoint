@@ -8,6 +8,7 @@ import (
 
 	"github.com/dmoose/checkpoint/internal/detect"
 	"github.com/dmoose/checkpoint/internal/explain"
+	"github.com/dmoose/checkpoint/internal/file"
 	"github.com/dmoose/checkpoint/pkg/config"
 
 	"github.com/spf13/cobra"
@@ -245,13 +246,16 @@ func checkCheckpointDir(projectPath string) CheckResult {
 }
 
 func checkProjectYml(projectPath string) CheckResult {
-	projectYmlPath := filepath.Join(projectPath, config.CheckpointDir, config.ExplainProjectYml)
-	data, err := os.ReadFile(projectYmlPath)
+	projectYamlPath := file.FindWithFallback(
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainProjectYaml),
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainProjectYmlLegacy),
+	)
+	data, err := os.ReadFile(projectYamlPath)
 	if err != nil {
 		return CheckResult{
 			Name:    "Project Config",
 			Status:  "missing",
-			Message: "project.yml not found",
+			Message: "project.yaml not found",
 			Fix:     "checkpoint init",
 			AutoFix: false,
 		}
@@ -296,13 +300,16 @@ func checkProjectYml(projectPath string) CheckResult {
 }
 
 func checkToolsYml(projectPath string) CheckResult {
-	toolsYmlPath := filepath.Join(projectPath, config.CheckpointDir, config.ExplainToolsYml)
-	data, err := os.ReadFile(toolsYmlPath)
+	toolsYamlPath := file.FindWithFallback(
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainToolsYaml),
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainToolsYmlLegacy),
+	)
+	data, err := os.ReadFile(toolsYamlPath)
 	if err != nil {
 		return CheckResult{
 			Name:    "Tools Config",
 			Status:  "missing",
-			Message: "tools.yml not found",
+			Message: "tools.yaml not found",
 			Fix:     "checkpoint init",
 			AutoFix: false,
 		}
@@ -372,8 +379,11 @@ func checkToolsYml(projectPath string) CheckResult {
 }
 
 func checkGuidelinesYml(projectPath string) CheckResult {
-	guidelinesYmlPath := filepath.Join(projectPath, config.CheckpointDir, config.ExplainGuidelinesYml)
-	data, err := os.ReadFile(guidelinesYmlPath)
+	guidelinesYamlPath := file.FindWithFallback(
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainGuidelinesYaml),
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainGuidelinesYmlLegacy),
+	)
+	data, err := os.ReadFile(guidelinesYamlPath)
 	if err != nil {
 		return CheckResult{
 			Name:    "Guidelines Config",
@@ -445,8 +455,11 @@ func checkChangelog(projectPath string) CheckResult {
 }
 
 func checkSkills(projectPath string) CheckResult {
-	skillsYmlPath := filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYml)
-	if _, err := os.Stat(skillsYmlPath); err != nil {
+	skillsYamlPath := file.FindWithFallback(
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYaml),
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainSkillsYmlLegacy),
+	)
+	if _, err := os.Stat(skillsYamlPath); err != nil {
 		return CheckResult{
 			Name:    "Skills",
 			Status:  "ok", // Optional

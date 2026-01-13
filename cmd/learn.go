@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dmoose/checkpoint/internal/explain"
+	"github.com/dmoose/checkpoint/internal/file"
 	"github.com/dmoose/checkpoint/pkg/config"
 
 	"github.com/spf13/cobra"
@@ -138,7 +139,10 @@ func Learn(projectPath string, opts LearnOptions) {
 }
 
 func addGuideline(checkpointDir, content string) error {
-	guidelinesPath := filepath.Join(checkpointDir, config.ExplainGuidelinesYml)
+	guidelinesPath := file.FindWithFallback(
+		filepath.Join(checkpointDir, config.ExplainGuidelinesYaml),
+		filepath.Join(checkpointDir, config.ExplainGuidelinesYmlLegacy),
+	)
 
 	var guidelines explain.GuidelinesConfig
 	if data, err := os.ReadFile(guidelinesPath); err == nil {
@@ -165,7 +169,10 @@ func addGuideline(checkpointDir, content string) error {
 }
 
 func addAvoid(checkpointDir, content string) error {
-	guidelinesPath := filepath.Join(checkpointDir, config.ExplainGuidelinesYml)
+	guidelinesPath := file.FindWithFallback(
+		filepath.Join(checkpointDir, config.ExplainGuidelinesYaml),
+		filepath.Join(checkpointDir, config.ExplainGuidelinesYmlLegacy),
+	)
 
 	var guidelines explain.GuidelinesConfig
 	if data, err := os.ReadFile(guidelinesPath); err == nil {
@@ -192,7 +199,10 @@ func addAvoid(checkpointDir, content string) error {
 }
 
 func addPrinciple(checkpointDir, content string) error {
-	guidelinesPath := filepath.Join(checkpointDir, config.ExplainGuidelinesYml)
+	guidelinesPath := file.FindWithFallback(
+		filepath.Join(checkpointDir, config.ExplainGuidelinesYaml),
+		filepath.Join(checkpointDir, config.ExplainGuidelinesYmlLegacy),
+	)
 
 	var guidelines explain.GuidelinesConfig
 	if data, err := os.ReadFile(guidelinesPath); err == nil {
@@ -219,7 +229,10 @@ func addPrinciple(checkpointDir, content string) error {
 }
 
 func addPattern(checkpointDir, content string) error {
-	guidelinesPath := filepath.Join(checkpointDir, config.ExplainGuidelinesYml)
+	guidelinesPath := file.FindWithFallback(
+		filepath.Join(checkpointDir, config.ExplainGuidelinesYaml),
+		filepath.Join(checkpointDir, config.ExplainGuidelinesYmlLegacy),
+	)
 
 	var guidelines explain.GuidelinesConfig
 	if data, err := os.ReadFile(guidelinesPath); err == nil {
@@ -261,7 +274,10 @@ func addTool(checkpointDir, name, command string) error {
 		}
 	}
 
-	toolsPath := filepath.Join(checkpointDir, config.ExplainToolsYml)
+	toolsPath := file.FindWithFallback(
+		filepath.Join(checkpointDir, config.ExplainToolsYaml),
+		filepath.Join(checkpointDir, config.ExplainToolsYmlLegacy),
+	)
 
 	var tools explain.ToolsConfig
 	if data, err := os.ReadFile(toolsPath); err == nil {

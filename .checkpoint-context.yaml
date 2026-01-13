@@ -32,3 +32,26 @@ context:
           outcome: Added tests for validation, parsing, slice operations. Skipped file I/O mocking.
         - exchange: User noted .yml vs .yaml inconsistency was visually annoying
           outcome: Standardized on .yaml with backward compatibility for existing .yml files
+---
+schema_version: "1"
+timestamp: "2026-01-13T08:33:53-08:00"
+context:
+    problem_statement: Project lacked user-facing documentation for workflows and LLM tool integration before GitHub release
+    key_insights:
+        - insight: Documentation must reflect actual code behavior - initial drafts had incorrect file paths and auto-update claims
+          impact: Always verify docs against actual implementation before publishing
+        - insight: User controls checkpoint timing - this is intentional for clean handoff and review opportunity
+          impact: Documentation must emphasize user responsibility, not automate away the review step
+          scope: project
+    decisions_made:
+        - decision: 'Three-tier documentation: QUICKSTART (5 min), USER-GUIDE (comprehensive), LLM-INTEGRATION (tool-specific)'
+          rationale: Different users need different depth - quick start for evaluation, full guide for adoption, integration for specific tools
+        - decision: Emphasize user decides when to checkpoint throughout docs
+          rationale: The review step before commit is a feature, not friction - ensures quality context capture
+    failed_approaches:
+        - approach: Initial LLM-INTEGRATION.md claimed CHECKPOINT.md was auto-updated and referenced non-existent .claude directory
+          why_failed: Assumptions made without verifying actual file structure and behavior
+          lessons_learned: Read actual code and list files before documenting behavior
+    conversation_context:
+        - exchange: User pointed out multiple inaccuracies in initial docs - wrong session file path, incorrect auto-update claim, missing plan command
+          outcome: Rewrote docs after re-reading plan.go, session.go, CHECKPOINT.md, and CLAUDE.md to ensure accuracy

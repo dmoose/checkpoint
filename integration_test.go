@@ -19,7 +19,7 @@ func TestCompleteWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Initialize git repository
 	setupGitRepo(t, tmpDir)
@@ -129,7 +129,7 @@ func TestDryRunWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	setupGitRepo(t, tmpDir)
 
@@ -158,7 +158,7 @@ func TestDryRunWorkflow(t *testing.T) {
     scope: "[FILL IN: affected component]"`, `  - summary: "Update test file"
     change_type: "feature"
     scope: "core"`)
-	file.WriteFile(inputPath, editedContent)
+	_ = file.WriteFile(inputPath, editedContent)
 
 	// Run commit with dry-run
 	cmd.CommitWithOptions(tmpDir, cmd.CommitOptions{DryRun: true}, "test-version")
@@ -188,7 +188,7 @@ func TestCleanWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	setupGitRepo(t, tmpDir)
 
@@ -234,7 +234,7 @@ func TestConcurrentCheckpointPrevention(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	setupGitRepo(t, tmpDir)
 
@@ -278,7 +278,7 @@ func TestConcurrentCheckpointPrevention(t *testing.T) {
 		t.Errorf("lock file should still exist to prevent concurrent checkpoints")
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stderr = originalStderr
 
 	// Clean up
@@ -291,7 +291,7 @@ func TestInitWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	setupGitRepo(t, tmpDir)
 
@@ -334,7 +334,7 @@ func TestErrorHandling(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Test check in non-git directory
 	originalStderr := os.Stderr
@@ -343,7 +343,7 @@ func TestErrorHandling(t *testing.T) {
 
 	// This should fail because it's not a git repository
 	// We'll skip actually testing the exit behavior since it's hard to mock
-	w.Close()
+	_ = w.Close()
 	os.Stderr = originalStderr
 
 	// For now, just verify the directory structure

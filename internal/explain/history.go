@@ -445,12 +445,12 @@ func renderNextStep(sb *strings.Builder, step NextStepWithSource) {
 	if step.Scope != "" {
 		scope = fmt.Sprintf(" [%s]", step.Scope)
 	}
-	sb.WriteString(fmt.Sprintf("- %s%s\n", step.Summary, scope))
+	fmt.Fprintf(sb, "- %s%s\n", step.Summary, scope)
 	if step.Details != "" {
-		sb.WriteString(fmt.Sprintf("  %s\n", step.Details))
+		fmt.Fprintf(sb, "  %s\n", step.Details)
 	}
 	if step.FromCommit != "" {
-		sb.WriteString(fmt.Sprintf("  *(from %s)*\n", step.FromCommit[:minInt(8, len(step.FromCommit))]))
+		fmt.Fprintf(sb, "  *(from %s)*\n", step.FromCommit[:minInt(8, len(step.FromCommit))])
 	}
 }
 

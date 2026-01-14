@@ -17,7 +17,7 @@ func TestStartCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Initialize git repository
 	setupGitRepo(t, tmpDir)
@@ -49,7 +49,7 @@ next_steps: []
 
 	success := startInternal(tmpDir)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = originalStdout
 
 	// Read output
@@ -85,7 +85,7 @@ func TestStartWithoutGitRepo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Capture stdout and stderr
 	originalStdout := os.Stdout
@@ -96,7 +96,7 @@ func TestStartWithoutGitRepo(t *testing.T) {
 
 	success := startInternal(tmpDir)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = originalStdout
 	os.Stderr = originalStderr
 
@@ -123,7 +123,7 @@ func TestStartWithoutCheckpointInit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Initialize git repository
 	setupGitRepo(t, tmpDir)
@@ -137,7 +137,7 @@ func TestStartWithoutCheckpointInit(t *testing.T) {
 
 	success := startInternal(tmpDir)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = originalStdout
 	os.Stderr = originalStderr
 
@@ -161,7 +161,7 @@ func TestStartWithCheckpointInProgress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	setupGitRepo(t, tmpDir)
 
@@ -184,7 +184,7 @@ func TestStartWithCheckpointInProgress(t *testing.T) {
 
 	success := startInternal(tmpDir)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = originalStdout
 
 	buf := make([]byte, 4096)
@@ -208,7 +208,7 @@ func TestStartWithNextSteps(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	setupGitRepo(t, tmpDir)
 
@@ -243,7 +243,7 @@ next_steps:
 
 	success := startInternal(tmpDir)
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = originalStdout
 
 	buf := make([]byte, 4096)
@@ -339,7 +339,7 @@ func TestCountPendingRecommendations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	projectPath := filepath.Join(tmpDir, config.ProjectFileName)
 
@@ -382,6 +382,6 @@ func setupGitRepo(t *testing.T, dir string) {
 	}
 
 	// Configure git for commits
-	exec.Command("git", "-C", dir, "config", "user.email", "test@example.com").Run()
-	exec.Command("git", "-C", dir, "config", "user.name", "Test User").Run()
+	_ = exec.Command("git", "-C", dir, "config", "user.email", "test@example.com").Run()
+	_ = exec.Command("git", "-C", dir, "config", "user.name", "Test User").Run()
 }

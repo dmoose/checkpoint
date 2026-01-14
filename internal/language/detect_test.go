@@ -15,7 +15,7 @@ func TestDetectLanguages(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create test files
 	testFiles := map[string]string{
@@ -78,7 +78,7 @@ func TestDetectLanguagesWithOnlySourceFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create only source files, no project files
 	testFiles := map[string]string{
@@ -111,7 +111,7 @@ func TestDetectLanguagesSwiftProject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create Swift project structure
 	testFiles := map[string]string{
@@ -237,7 +237,7 @@ func TestIgnorePatterns(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create files that should be ignored
 	ignoredFiles := map[string]string{

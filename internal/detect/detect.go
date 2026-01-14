@@ -348,7 +348,7 @@ func detectMakefileCommands(projectPath string, info *ProjectInfo) {
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	targets := make(map[string]bool)
 	scanner := bufio.NewScanner(file)

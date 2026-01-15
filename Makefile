@@ -99,11 +99,22 @@ fmt:
 	@echo "Formatting code..."
 	go fmt ./...
 
-# Run linter (requires golangci-lint)
+# Required tool versions (keep in sync with CI)
+GOLANGCI_LINT_VERSION := v2.8.0
+
+# Run linter (requires golangci-lint v2)
 .PHONY: lint
 lint:
 	@echo "Running linter..."
-	@which golangci-lint > /dev/null || (echo "golangci-lint not found. Install it with: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; exit 1)
+	@if ! which golangci-lint > /dev/null 2>&1; then \
+		echo "golangci-lint not found. Installing $(GOLANGCI_LINT_VERSION)..."; \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
+	fi
+	@installed_version=$$(golangci-lint version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1); \
+	if [ "$${installed_version%%.*}" != "v2" ]; then \
+		echo "golangci-lint v2 required (found $$installed_version). Installing $(GOLANGCI_LINT_VERSION)..."; \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION); \
+	fi
 	golangci-lint run ./...
 
 # Vet code
@@ -178,7 +189,7 @@ help:
 	@echo "  test-race     - Run tests with race detector"
 	@echo "  bench         - Run benchmarks"
 	@echo "  fmt           - Format code"
-	@echo "  lint          - Run linter (requires golangci-lint)"
+	@echo "  lint          - Run linter (auto-installs golangci-lint v2 if needed)"
 	@echo "  vet           - Run go vet"
 	@echo "  check         - Run fmt, vet, lint, and test"
 	@echo "  clean         - Clean all build artifacts"

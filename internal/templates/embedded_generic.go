@@ -23,6 +23,29 @@ dependencies:
   external: []
 
 integrations: []
+
+# AI collaboration boundaries - what AI can do without asking
+ai_authority:
+  autonomous:
+    - "Bug fixes with clear reproduction steps"
+    - "Test additions for existing code"
+    - "Documentation updates"
+    - "Code formatting and style fixes"
+  requires_approval:
+    - "New features"
+    - "Architecture changes"
+    - "Dependency additions"
+    - "API or interface changes"
+    - "Database schema changes"
+  notes: ""
+
+# Project-wide lessons from failed approaches (accumulates over time)
+lessons_learned: []
+
+# Project roadmap and deferred items
+roadmap:
+  planned: []
+  deferred: []
 `
 
 const genericToolsYml = `schema_version: "1"
@@ -62,6 +85,18 @@ maintenance:
   deps:
     command: echo "No dependency command configured"
     notes: Configure dependency installation
+
+# Pre-commit verification (runs automatically before checkpoint commit)
+verify:
+  pre_commit: []
+  # Example:
+  # pre_commit:
+  #   - command: make check
+  #     description: Run all quality checks
+  #     required: true
+  #   - command: go build ./...
+  #     description: Ensure compilation
+  #     required: true
 `
 
 const genericGuidelinesYml = `schema_version: "1"
@@ -107,6 +142,16 @@ avoid:
 # Guiding principles
 principles:
   - (Add your guiding principles)
+
+# Human-AI collaboration protocol
+collaboration:
+  protocol: "propose → approve → implement → summarize"
+  principles:
+    - "Ask for clarification rather than assuming"
+    - "Human approves architecture and features, AI proposes implementation"
+    - "Summarize completed work before moving to next task"
+    - "Reference project patterns before introducing new ones"
+    - "Check ai_authority in project.yaml for what requires approval"
 `
 
 const genericSkillsYml = `schema_version: "1"

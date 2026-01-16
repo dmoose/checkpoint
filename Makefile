@@ -6,8 +6,10 @@ MODULE_NAME := github.com/dmoose/checkpoint
 BIN_DIR := bin
 BUILD_DIR := build
 MAIN_FILE := main.go
-VERSION := $(shell grep 'const version' main.go | cut -d'"' -f2)
-LDFLAGS := -ldflags "-X main.version=$(VERSION) -s -w"
+VERSION := 0.1.0
+COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE) -s -w"
 PLATFORMS := linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 GO_FILES := $(shell find . -name '*.go' -not -path './vendor/*')
 INSTALL_PATH := $(HOME)/.local/bin
@@ -206,8 +208,10 @@ help:
 .PHONY: version
 version:
 	@echo "Version: $(VERSION)"
-	@echo "Module: $(MODULE_NAME)"
-	@echo "Binary: $(BINARY_NAME)"
+	@echo "Commit:  $(COMMIT)"
+	@echo "Date:    $(DATE)"
+	@echo "Module:  $(MODULE_NAME)"
+	@echo "Binary:  $(BINARY_NAME)"
 
 # Create release archives (requires build-all)
 .PHONY: release

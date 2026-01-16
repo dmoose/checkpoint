@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dmoose/checkpoint/internal/explain"
 	"github.com/dmoose/checkpoint/internal/file"
 	"github.com/dmoose/checkpoint/internal/git"
 	"github.com/dmoose/checkpoint/internal/schema"
@@ -136,6 +137,9 @@ func startInternal(projectPath string) bool {
 	}
 
 	showNextSteps(projectPath)
+
+	// Show AI authority boundaries and lessons learned
+	showAIContext(projectPath)
 
 	fmt.Println("\nREADY TO WORK")
 	fmt.Println(strings.Repeat("━", 60))
@@ -280,5 +284,60 @@ func showNextSteps(projectPath string) {
 			fmt.Printf("    %s\n", step.Details)
 		}
 		num++
+	}
+}
+
+// showAIContext displays AI authority boundaries and lessons learned
+func showAIContext(projectPath string) {
+	projectYamlPath := file.FindWithFallback(
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainProjectYaml),
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainProjectYmlLegacy),
+	)
+
+	data, err := file.ReadFile(projectYamlPath)
+	if err != nil {
+		return
+	}
+
+	var proj explain.ProjectConfig
+	if err := yaml.Unmarshal([]byte(data), &proj); err != nil {
+		return
+	}
+
+	// Show AI authority if configured
+	if len(proj.AIAuthority.Autonomous) > 0 || len(proj.AIAuthority.RequiresApproval) > 0 {
+		fmt.Println("\nAI COLLABORATION BOUNDARIES")
+		fmt.Println(strings.Repeat("━", 60))
+
+		if len(proj.AIAuthority.Autonomous) > 0 {
+			fmt.Println("Autonomous (no approval needed):")
+			for _, item := range proj.AIAuthority.Autonomous {
+				fmt.Printf("  • %s\n", item)
+			}
+		}
+
+		if len(proj.AIAuthority.RequiresApproval) > 0 {
+			fmt.Println("Requires approval:")
+			for _, item := range proj.AIAuthority.RequiresApproval {
+				fmt.Printf("  • %s\n", item)
+			}
+		}
+
+		if proj.AIAuthority.Notes != "" {
+			fmt.Printf("\nNote: %s\n", proj.AIAuthority.Notes)
+		}
+	}
+
+	// Show lessons learned if any exist
+	if len(proj.LessonsLearned) > 0 {
+		fmt.Println("\nLESSONS LEARNED (avoid repeating)")
+		fmt.Println(strings.Repeat("━", 60))
+
+		for _, lesson := range proj.LessonsLearned {
+			fmt.Printf("• %s: %s\n", lesson.Topic, lesson.Lesson)
+			if lesson.FailedApproach != "" {
+				fmt.Printf("  (Failed: %s)\n", lesson.FailedApproach)
+			}
+		}
 	}
 }

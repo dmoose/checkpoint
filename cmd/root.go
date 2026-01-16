@@ -7,8 +7,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Version is set by main.go
-var Version = "dev"
+// BuildInfo contains version information injected at build time
+type BuildInfo struct {
+	Version string
+	Commit  string
+	Date    string
+}
+
+// Build holds the current build information
+var Build = BuildInfo{
+	Version: "dev",
+	Commit:  "unknown",
+	Date:    "unknown",
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "checkpoint",
@@ -21,8 +32,8 @@ decisions, and failed approaches.`,
 }
 
 // Execute runs the root command
-func Execute(version string) {
-	Version = version
+func Execute(info BuildInfo) {
+	Build = info
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
@@ -34,7 +45,13 @@ func init() {
 		Use:   "version",
 		Short: "Display version information",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("checkpoint version %s\n", Version)
+			fmt.Printf("checkpoint %s\n", Build.Version)
+			if Build.Commit != "unknown" {
+				fmt.Printf("  commit: %s\n", Build.Commit)
+			}
+			if Build.Date != "unknown" {
+				fmt.Printf("  built:  %s\n", Build.Date)
+			}
 		},
 	})
 }

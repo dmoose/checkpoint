@@ -2,15 +2,54 @@ package explain
 
 // ProjectConfig represents .checkpoint/project.yml
 type ProjectConfig struct {
-	SchemaVersion string              `yaml:"schema_version"`
-	Name          string              `yaml:"name"`
-	Type          string              `yaml:"type"`
-	Purpose       string              `yaml:"purpose"`
-	Repository    string              `yaml:"repository,omitempty"`
-	Architecture  ArchitectureConfig  `yaml:"architecture,omitempty"`
-	Languages     LanguagesConfig     `yaml:"languages,omitempty"`
-	Dependencies  DependenciesConfig  `yaml:"dependencies,omitempty"`
-	Integrations  []IntegrationConfig `yaml:"integrations,omitempty"`
+	SchemaVersion  string               `yaml:"schema_version"`
+	Name           string               `yaml:"name"`
+	Type           string               `yaml:"type"`
+	Purpose        string               `yaml:"purpose"`
+	Repository     string               `yaml:"repository,omitempty"`
+	Architecture   ArchitectureConfig   `yaml:"architecture,omitempty"`
+	Languages      LanguagesConfig      `yaml:"languages,omitempty"`
+	Dependencies   DependenciesConfig   `yaml:"dependencies,omitempty"`
+	Integrations   []IntegrationConfig  `yaml:"integrations,omitempty"`
+	AIAuthority    AIAuthorityConfig    `yaml:"ai_authority,omitempty"`
+	LessonsLearned []LessonLearnedEntry `yaml:"lessons_learned,omitempty"`
+	Roadmap        RoadmapConfig        `yaml:"roadmap,omitempty"`
+}
+
+// AIAuthorityConfig defines what AI can do autonomously vs requiring approval
+type AIAuthorityConfig struct {
+	Autonomous       []string `yaml:"autonomous,omitempty"`
+	RequiresApproval []string `yaml:"requires_approval,omitempty"`
+	Notes            string   `yaml:"notes,omitempty"`
+}
+
+// LessonLearnedEntry captures project-wide lessons from failed approaches
+type LessonLearnedEntry struct {
+	Topic           string `yaml:"topic"`
+	FailedApproach  string `yaml:"failed_approach"`
+	WhyFailed       string `yaml:"why_failed"`
+	Lesson          string `yaml:"lesson"`
+	Date            string `yaml:"date,omitempty"`
+}
+
+// RoadmapConfig captures project-level future considerations
+type RoadmapConfig struct {
+	Planned  []RoadmapItem `yaml:"planned,omitempty"`
+	Deferred []DeferredItem `yaml:"deferred,omitempty"`
+}
+
+// RoadmapItem represents a planned future task
+type RoadmapItem struct {
+	Summary  string   `yaml:"summary"`
+	Priority string   `yaml:"priority,omitempty"`
+	Blockers []string `yaml:"blockers,omitempty"`
+}
+
+// DeferredItem represents a task that was considered but deferred
+type DeferredItem struct {
+	Summary        string `yaml:"summary"`
+	Reason         string `yaml:"reason"`
+	ReconsiderWhen string `yaml:"reconsider_when,omitempty"`
 }
 
 type ArchitectureConfig struct {
@@ -56,6 +95,19 @@ type ToolsConfig struct {
 	Run           map[string]ToolCommand `yaml:"run,omitempty"`
 	Checkpoint    map[string]ToolCommand `yaml:"checkpoint,omitempty"`
 	Maintenance   map[string]ToolCommand `yaml:"maintenance,omitempty"`
+	Verify        VerifyConfig           `yaml:"verify,omitempty"`
+}
+
+// VerifyConfig defines pre-commit verification commands
+type VerifyConfig struct {
+	PreCommit []VerifyCommand `yaml:"pre_commit,omitempty"`
+}
+
+// VerifyCommand represents a verification command to run before commit
+type VerifyCommand struct {
+	Command     string `yaml:"command"`
+	Description string `yaml:"description,omitempty"`
+	Required    bool   `yaml:"required"`
 }
 
 type ToolCommand struct {
@@ -77,6 +129,13 @@ type GuidelinesConfig struct {
 	Rules         []string               `yaml:"rules,omitempty"`
 	Avoid         []string               `yaml:"avoid,omitempty"`
 	Principles    []string               `yaml:"principles,omitempty"`
+	Collaboration CollaborationConfig    `yaml:"collaboration,omitempty"`
+}
+
+// CollaborationConfig defines the human-AI collaboration protocol
+type CollaborationConfig struct {
+	Protocol   string   `yaml:"protocol,omitempty"`
+	Principles []string `yaml:"principles,omitempty"`
 }
 
 // SkillsConfig represents .checkpoint/skills.yml

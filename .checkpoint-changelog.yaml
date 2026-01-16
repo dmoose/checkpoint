@@ -1463,3 +1463,53 @@ next_steps:
       details: Configure github.com/dmoose/checkpoint remote, push main branch
       priority: high
       scope: git
+---
+schema_version: "1"
+timestamp: "2026-01-15T13:07:34-08:00"
+commit_hash: ""
+changes:
+    - summary: Add AI collaboration boundaries to project schema
+      details: New ai_authority section defines what AI can do autonomously vs requiring approval, displayed in checkpoint start
+      change_type: feature
+      scope: internal/explain
+    - summary: Add pre-commit verification to checkpoint commit
+      details: Reads verify.pre_commit from tools.yaml and runs commands before committing. Adds --skip-verify flag to bypass
+      change_type: feature
+      scope: cmd/commit
+    - summary: Add lessons_learned and roadmap to project schema
+      details: Project-wide failed approaches and future planning sections for accumulated project wisdom
+      change_type: feature
+      scope: internal/explain
+    - summary: Add collaboration protocol to guidelines schema
+      details: 'Formalizes human-AI collaboration workflow: propose, approve, implement, summarize'
+      change_type: feature
+      scope: internal/explain
+    - summary: Embed guides in binary for portable access
+      details: Guides (llm-workflow, best-practices, first-time-user) now embedded as string constants, work from any directory
+      change_type: feature
+      scope: internal/guides
+    - summary: Add version tracking with git commit hash
+      details: BuildInfo struct with version/commit/date injected via ldflags at build time
+      change_type: feature
+      scope: cmd/root
+    - summary: Add LLM guidance note to checkpoint check output
+      details: Explains session file is transient, input should capture what future maintainers need
+      change_type: feature
+      scope: cmd/check
+    - summary: Update init templates with new schema sections
+      details: All templates (generic, go-cli, go-lib) include ai_authority, verify, collaboration defaults
+      change_type: feature
+      scope: internal/templates
+    - summary: Fix doctor lint requirement being too strict
+      details: Removed lint from required checks - too environment-specific
+      change_type: fix
+      scope: cmd/doctor
+    - summary: Fix init fallback template field names
+      details: Changed description to purpose, language to languages.primary to match schema
+      change_type: fix
+      scope: cmd/init
+next_steps:
+    - summary: Create release workflow
+      details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
+      priority: high
+      scope: .github/workflows

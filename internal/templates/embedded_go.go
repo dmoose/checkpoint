@@ -25,6 +25,30 @@ languages:
 
 dependencies:
   external: []
+
+# AI collaboration boundaries - what AI can do without asking
+ai_authority:
+  autonomous:
+    - "Bug fixes with clear reproduction steps"
+    - "Test additions for existing code"
+    - "Documentation updates"
+    - "Code formatting (go fmt)"
+    - "Adding error handling"
+  requires_approval:
+    - "New features"
+    - "Architecture changes"
+    - "Dependency additions"
+    - "API or interface changes"
+    - "Changes to cmd/ command structure"
+  notes: ""
+
+# Project-wide lessons from failed approaches (accumulates over time)
+lessons_learned: []
+
+# Project roadmap and deferred items
+roadmap:
+  planned: []
+  deferred: []
 `
 
 const goCliToolsYml = `schema_version: "1"
@@ -87,6 +111,16 @@ maintenance:
   update:
     command: go get -u ./...
     notes: Update dependencies
+
+# Pre-commit verification (runs automatically before checkpoint commit)
+verify:
+  pre_commit:
+    - command: go build ./...
+      description: Ensure compilation
+      required: true
+    - command: go test ./...
+      description: Run tests
+      required: true
 `
 
 const goCliGuidelinesYml = `schema_version: "1"
@@ -143,6 +177,16 @@ principles:
   - "Explicit is better than implicit"
   - "Return errors, don't panic"
   - "Accept interfaces, return structs"
+
+# Human-AI collaboration protocol
+collaboration:
+  protocol: "propose → approve → implement → summarize"
+  principles:
+    - "Ask for clarification rather than assuming"
+    - "Human approves architecture and features, AI proposes implementation"
+    - "Summarize completed work before moving to next task"
+    - "Reference project patterns before introducing new ones"
+    - "Check ai_authority in project.yaml for what requires approval"
 `
 
 const goCliSkillsYml = `schema_version: "1"
@@ -181,6 +225,26 @@ languages:
 
 dependencies:
   external: []
+
+# AI collaboration boundaries
+ai_authority:
+  autonomous:
+    - "Bug fixes with clear reproduction steps"
+    - "Test additions for existing code"
+    - "Documentation updates"
+    - "Code formatting (go fmt)"
+  requires_approval:
+    - "New features"
+    - "Public API changes"
+    - "Dependency additions"
+    - "Breaking changes"
+  notes: ""
+
+lessons_learned: []
+
+roadmap:
+  planned: []
+  deferred: []
 `
 
 const goLibToolsYml = `schema_version: "1"
@@ -220,4 +284,10 @@ maintenance:
   tidy:
     command: go mod tidy
     notes: Clean up go.mod
+
+verify:
+  pre_commit:
+    - command: go test ./...
+      description: Run tests
+      required: true
 `

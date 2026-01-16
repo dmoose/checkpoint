@@ -3,12 +3,14 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/dmoose/checkpoint/internal/changelog"
 	"github.com/dmoose/checkpoint/internal/context"
+	"github.com/dmoose/checkpoint/internal/explain"
 	"github.com/dmoose/checkpoint/internal/file"
 	"github.com/dmoose/checkpoint/internal/git"
 	"github.com/dmoose/checkpoint/internal/project"
@@ -16,12 +18,14 @@ import (
 	"github.com/dmoose/checkpoint/pkg/config"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var commitOpts struct {
 	dryRun        bool
 	changelogOnly bool
 	keepSession   bool
+	skipVerify    bool
 }
 
 func init() {
@@ -29,6 +33,7 @@ func init() {
 	commitCmd.Flags().BoolVarP(&commitOpts.dryRun, "dry-run", "n", false, "Show commit message and staged files without committing")
 	commitCmd.Flags().BoolVar(&commitOpts.changelogOnly, "changelog-only", false, "Stage only changelog instead of all changes")
 	commitCmd.Flags().BoolVar(&commitOpts.keepSession, "keep-session", false, "Preserve session file after commit (default: cleared)")
+	commitCmd.Flags().BoolVar(&commitOpts.skipVerify, "skip-verify", false, "Skip pre-commit verification commands")
 }
 
 var commitCmd = &cobra.Command{
@@ -51,7 +56,8 @@ Then backfills commit hash into the last changelog document.`,
 			DryRun:        commitOpts.dryRun,
 			ChangelogOnly: commitOpts.changelogOnly,
 			KeepSession:   commitOpts.keepSession,
-		}, Version)
+			SkipVerify:    commitOpts.skipVerify,
+		}, Build.Version)
 	},
 }
 
@@ -59,6 +65,7 @@ type CommitOptions struct {
 	DryRun        bool
 	ChangelogOnly bool
 	KeepSession   bool
+	SkipVerify    bool
 }
 
 // Commit implements Phase 3: parse input, append to changelog, git commit, write status
@@ -109,6 +116,15 @@ func CommitWithOptions(projectPath string, opts CommitOptions, version string) {
 		fmt.Fprintf(os.Stderr, "error: validation failed: %v\n", err)
 		fmt.Fprintf(os.Stderr, "hint: edit %s to fix the issues above\n", inputPath)
 		os.Exit(1)
+	}
+
+	// Run pre-commit verification unless skipped
+	if !opts.SkipVerify && !opts.DryRun {
+		if !runPreCommitVerification(projectPath) {
+			fmt.Fprintf(os.Stderr, "\nerror: pre-commit verification failed\n")
+			fmt.Fprintf(os.Stderr, "hint: fix the issues above or use --skip-verify to bypass\n")
+			os.Exit(1)
+		}
 	}
 
 	// Fill timestamp if missing
@@ -414,4 +430,76 @@ func generateStatusFile(entry *schema.CheckpointEntry, commitMsg string, project
 		}
 	}
 	return b.String()
+}
+
+// runPreCommitVerification runs verification commands from tools.yaml
+func runPreCommitVerification(projectPath string) bool {
+	toolsYamlPath := file.FindWithFallback(
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainToolsYaml),
+		filepath.Join(projectPath, config.CheckpointDir, config.ExplainToolsYmlLegacy),
+	)
+
+	data, err := file.ReadFile(toolsYamlPath)
+	if err != nil {
+		// No tools.yaml, skip verification
+		return true
+	}
+
+	var tools explain.ToolsConfig
+	if err := yaml.Unmarshal([]byte(data), &tools); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to parse tools.yaml: %v\n", err)
+		return true
+	}
+
+	if len(tools.Verify.PreCommit) == 0 {
+		// No verification commands configured
+		return true
+	}
+
+	fmt.Println("\nPRE-COMMIT VERIFICATION")
+	fmt.Println(strings.Repeat("━", 60))
+
+	allPassed := true
+	for _, cmd := range tools.Verify.PreCommit {
+		desc := cmd.Description
+		if desc == "" {
+			desc = cmd.Command
+		}
+		fmt.Printf("Running: %s... ", desc)
+
+		// Run the command
+		shellCmd := exec.Command("sh", "-c", cmd.Command)
+		shellCmd.Dir = projectPath
+		output, err := shellCmd.CombinedOutput()
+
+		if err != nil {
+			fmt.Println("FAILED")
+			if len(output) > 0 {
+				fmt.Printf("  Output:\n%s\n", indentOutput(string(output)))
+			}
+			if cmd.Required {
+				allPassed = false
+			} else {
+				fmt.Println("  (non-required, continuing)")
+			}
+		} else {
+			fmt.Println("OK")
+		}
+	}
+
+	if allPassed {
+		fmt.Println("✓ All verification checks passed")
+	}
+
+	return allPassed
+}
+
+// indentOutput adds indentation to command output for display
+func indentOutput(output string) string {
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	var result []string
+	for _, line := range lines {
+		result = append(result, "    "+line)
+	}
+	return strings.Join(result, "\n")
 }

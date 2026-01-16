@@ -55,3 +55,42 @@ context:
     conversation_context:
         - exchange: User pointed out multiple inaccuracies in initial docs - wrong session file path, incorrect auto-update claim, missing plan command
           outcome: Rewrote docs after re-reading plan.go, session.go, CHECKPOINT.md, and CLAUDE.md to ensure accuracy
+---
+schema_version: "1"
+timestamp: "2026-01-15T13:07:34-08:00"
+context:
+    problem_statement: Checkpoint lacked formal structure for AI collaboration boundaries, pre-commit quality gates, and accumulated project wisdom. Guides only worked within the checkpoint project directory.
+    key_insights:
+        - insight: Explicit AI authority boundaries reduce back-and-forth during sessions
+          impact: LLMs can work more autonomously within defined scope
+          scope: project
+        - insight: Embedding guides in binary ensures portable documentation
+          impact: Users don't need guide files in each project
+          scope: checkpoint
+        - insight: Pre-commit verification catches issues before they enter history
+          impact: Maintains code quality with minimal friction
+          scope: project
+    decisions_made:
+        - decision: Embed guides as string constants rather than using go:embed
+          rationale: Simpler, matches existing template pattern, avoids file path issues
+          alternatives_considered:
+            - go:embed directive (more complex, directory structure dependency)
+            - External guide files (not portable)
+          scope: checkpoint
+        - decision: Make pre-commit verification automatic with --skip-verify escape hatch
+          rationale: Quality gates should be opt-out not opt-in for effectiveness
+          alternatives_considered:
+            - Optional flag to enable (too easy to skip)
+            - Git pre-commit hook (requires separate setup)
+          scope: project
+        - decision: Add ai_authority to project schema rather than separate file
+          rationale: Project configuration belongs together, reduces file proliferation
+          scope: checkpoint
+    established_patterns:
+        - pattern: 'Use scope: project to mark items for project-wide application'
+          rationale: Enables automatic extraction of reusable patterns from checkpoints
+          examples: ai_authority defaults, collaboration protocol, verification approach
+          scope: project
+    conversation_context:
+        - exchange: Reviewed Bebop-style development methodology for inspiration
+          outcome: Adopted decision authority matrix, communication protocol, and quality gates concepts

@@ -3,10 +3,9 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/dmoose/checkpoint/internal/file"
+	"github.com/dmoose/checkpoint/internal/guides"
 
 	"github.com/spf13/cobra"
 )
@@ -18,64 +17,39 @@ func init() {
 var guideCmd = &cobra.Command{
 	Use:   "guide [topic]",
 	Short: "Show detailed guides and documentation",
-	Long: `Displays guide documents from .checkpoint/guides/.
+	Long: `Displays built-in guide documents.
 Topics: first-time-user, llm-workflow, best-practices`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectPath := "."
 		topic := ""
 		if len(args) > 0 {
 			topic = args[0]
 		}
-		absPath, err := filepath.Abs(projectPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
-			os.Exit(1)
-		}
-		Guide(absPath, topic)
+		Guide(topic)
 	},
 }
 
-// Guide displays guide documents from .checkpoint/guides/
-func Guide(projectPath string, topic string) {
-	guidesDir := filepath.Join(projectPath, ".checkpoint", "guides")
-
-	// Check if guides directory exists
-	if !file.Exists(guidesDir) {
-		fmt.Fprintf(os.Stderr, "Guides directory not found at %s\n", guidesDir)
-		fmt.Fprintf(os.Stderr, "Hint: Run 'checkpoint init' to create the directory structure\n")
-		os.Exit(1)
-	}
-
+// Guide displays guide documents from embedded content
+func Guide(topic string) {
 	// If no topic specified, list available guides
 	if topic == "" {
-		listGuides(guidesDir)
+		listGuides()
 		return
 	}
 
 	// Show specific guide
-	showGuide(guidesDir, topic)
+	showGuide(topic)
 }
 
 // listGuides shows available guide topics
-func listGuides(guidesDir string) {
+func listGuides() {
 	fmt.Println("\nCHECKPOINT GUIDES")
 	fmt.Println(strings.Repeat("━", 60))
 	fmt.Println("\nAvailable guides:")
 	fmt.Println()
 
-	guides := map[string]string{
-		"first-time-user": "Complete walkthrough for first-time users",
-		"llm-workflow":    "LLM integration patterns and workflow",
-		"best-practices":  "Best practices for effective checkpoints",
-	}
-
-	for name, desc := range guides {
-		guidePath := filepath.Join(guidesDir, name+".md")
-
-		if file.Exists(guidePath) {
-			fmt.Printf("  %-20s %s\n", name, desc)
-		}
+	for name, guide := range guides.EmbeddedGuides {
+		fmt.Printf("  %-20s %s\n", name, guide.Description)
 	}
 
 	fmt.Println()
@@ -90,23 +64,11 @@ func listGuides(guidesDir string) {
 }
 
 // showGuide displays a specific guide
-func showGuide(guidesDir string, topic string) {
-	// Map topic to filename
-	filename := topic + ".md"
-
-	guidePath := filepath.Join(guidesDir, filename)
-
-	// Check if guide exists
-	if !file.Exists(guidePath) {
+func showGuide(topic string) {
+	guide, ok := guides.GetGuide(topic)
+	if !ok {
 		fmt.Fprintf(os.Stderr, "Guide '%s' not found\n", topic)
 		fmt.Fprintf(os.Stderr, "Run 'checkpoint guide' to see available guides\n")
-		os.Exit(1)
-	}
-
-	// Read and display the guide
-	content, err := file.ReadFile(guidePath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading guide: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -114,5 +76,5 @@ func showGuide(guidesDir string, topic string) {
 	fmt.Printf("GUIDE: %s\n", strings.ToUpper(strings.ReplaceAll(topic, "-", " ")))
 	fmt.Println(strings.Repeat("━", 60))
 	fmt.Println()
-	fmt.Println(content)
+	fmt.Println(guide.Content)
 }

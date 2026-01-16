@@ -43,7 +43,7 @@ Auto-detects project language and sets up config files.`,
 			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
 			os.Exit(1)
 		}
-		InitWithOptions(absPath, Version, InitOptions{Template: initOpts.template, ListTemplates: initOpts.listTemplates})
+		InitWithOptions(absPath, Build.Version, InitOptions{Template: initOpts.template, ListTemplates: initOpts.listTemplates})
 	},
 }
 
@@ -482,15 +482,16 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 		sb.WriteString("schema_version: \"1\"\n\n")
 		sb.WriteString(fmt.Sprintf("name: %s\n", info.Name))
 		if info.Description != "" {
-			sb.WriteString(fmt.Sprintf("description: %s\n", info.Description))
+			sb.WriteString(fmt.Sprintf("purpose: %s\n", info.Description))
 		} else {
-			sb.WriteString("description: \"\" # TODO: Add project description\n")
+			sb.WriteString("purpose: \"\" # TODO: Add project purpose/description\n")
 		}
-		sb.WriteString(fmt.Sprintf("language: %s\n", info.Language))
+		sb.WriteString("languages:\n")
+		sb.WriteString(fmt.Sprintf("  primary: %s\n", info.Language))
 		if len(info.Languages) > 1 {
-			sb.WriteString("additional_languages:\n")
+			sb.WriteString("  additional:\n")
 			for _, lang := range info.Languages[1:] {
-				sb.WriteString(fmt.Sprintf("  - %s\n", lang))
+				sb.WriteString(fmt.Sprintf("    - %s\n", lang))
 			}
 		}
 		if len(info.Frameworks) > 0 {

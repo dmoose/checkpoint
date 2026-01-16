@@ -126,4 +126,8 @@ func Check(projectPath string) {
 	fmt.Printf("Input: %s\n", inputPath)
 	fmt.Printf("Diff:  %s\n", diffPath)
 	fmt.Printf("Next: open the input, fill changes[], then run: checkpoint commit %s\n", projectPath)
+	fmt.Println()
+	fmt.Println("Note for LLMs: The .checkpoint-session.yaml is transient (deleted on commit).")
+	fmt.Println("Only record in .checkpoint-input what future maintainers need to understand")
+	fmt.Println("this commit - the \"what\" and \"why\", not your current working context.")
 }

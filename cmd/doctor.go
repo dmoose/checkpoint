@@ -325,10 +325,9 @@ func checkToolsYml(projectPath string) CheckResult {
 		}
 	}
 
-	// Check for essential commands
+	// Check for common commands (build and test are typical; lint is optional)
 	hasTest := len(tools.Test) > 0
 	hasBuild := len(tools.Build) > 0
-	hasLint := len(tools.Lint) > 0 || len(tools.Check) > 0
 
 	missing := []string{}
 	if !hasTest {
@@ -336,9 +335,6 @@ func checkToolsYml(projectPath string) CheckResult {
 	}
 	if !hasBuild {
 		missing = append(missing, "build")
-	}
-	if !hasLint {
-		missing = append(missing, "lint")
 	}
 
 	if len(missing) > 0 {
@@ -350,9 +346,6 @@ func checkToolsYml(projectPath string) CheckResult {
 		}
 		if !hasBuild && info.BuildCmd != "" {
 			fixes = append(fixes, fmt.Sprintf("checkpoint learn --tool build '%s'", info.BuildCmd))
-		}
-		if !hasLint && info.LintCmd != "" {
-			fixes = append(fixes, fmt.Sprintf("checkpoint learn --tool lint '%s'", info.LintCmd))
 		}
 
 		fix := strings.Join(fixes, " && ")

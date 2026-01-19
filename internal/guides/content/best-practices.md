@@ -1,6 +1,4 @@
-package guides
-
-const bestPracticesGuide = `# Checkpoint Best Practices
+# Checkpoint Best Practices
 
 This guide covers proven practices for getting the most value from checkpoint.
 
@@ -63,13 +61,13 @@ Failed approaches are valuable teaching moments.
 **Why:** Prevents repeating mistakes. Shows future developers what was tried and why it failed.
 
 **Example:**
-` + "```yaml" + `
+```yaml
 failed_approaches:
   - approach: "Tried caching with Redis TTL only"
     why_failed: "Couldn't invalidate cache when underlying data changed; led to stale data shown to users"
     lessons_learned: "Need explicit invalidation mechanism for data that can change; TTL alone insufficient for cache coherency"
     scope: "project"
-` + "```" + `
+```
 
 **Practice:**
 - Document every significant approach that failed
@@ -78,7 +76,7 @@ failed_approaches:
 
 ### 5. Mark Project Patterns Explicitly
 
-Use ` + "`scope: project`" + ` to identify reusable patterns and principles.
+Use `scope: project` to identify reusable patterns and principles.
 
 **When to use scope: project:**
 - Establishes pattern for entire codebase
@@ -87,13 +85,13 @@ Use ` + "`scope: project`" + ` to identify reusable patterns and principles.
 - Would be valuable in project documentation
 
 **Example:**
-` + "```yaml" + `
+```yaml
 established_patterns:
   - pattern: "All API endpoints validate input before processing"
     rationale: "Prevents injection attacks, ensures data consistency, provides clear error messages"
     examples: "User registration, login, profile updates, data imports"
     scope: "project"
-` + "```" + `
+```
 
 **Practice:**
 - Review each context item: "Does this apply project-wide?"
@@ -191,24 +189,24 @@ established_patterns:
 - "Validation logic duplicated across 15 handlers, causing inconsistent error messages and difficult maintenance"
 
 **Template:**
-` + "```" + `
+```
 [Problem description] causing [impact/symptoms]. [Context on how it was discovered or why it matters].
-` + "```" + `
+```
 
 ### Key Insights
 
 **Purpose:** Capture what you learned during implementation.
 
 **Structure:**
-` + "```yaml" + `
+```yaml
 key_insights:
   - insight: "[What you learned]"
     impact: "[Why it matters / how it affects future work]"
     scope: "[checkpoint|project]"
-` + "```" + `
+```
 
 **Examples:**
-` + "```yaml" + `
+```yaml
 - insight: "N+1 queries are common when using ORM eager loading incorrectly"
   impact: "Established code review checklist item; affects all ORM usage project-wide"
   scope: "project"
@@ -216,7 +214,7 @@ key_insights:
 - insight: "Redis caching reduced dashboard load from 8s to 400ms"
   impact: "Meets 2s SLA with 5x margin; reduces database load by 90%"
   scope: "checkpoint"
-` + "```" + `
+```
 
 **Guidelines:**
 - Be specific and technical
@@ -229,7 +227,7 @@ key_insights:
 **Purpose:** Document significant choices and their rationale.
 
 **Structure:**
-` + "```yaml" + `
+```yaml
 decisions_made:
   - decision: "[What you decided]"
     rationale: "[Why this approach]"
@@ -238,10 +236,10 @@ decisions_made:
       - "[Alternative 2 (why rejected)]"
     constraints_that_influenced: "[What limited your options]"
     scope: "[checkpoint|project]"
-` + "```" + `
+```
 
 **Example:**
-` + "```yaml" + `
+```yaml
 - decision: "Use Redis for session storage with 7-day TTL"
   rationale: "Sub-millisecond reads handle our 5000 QPS; built-in expiration simplifies lifecycle management"
   alternatives_considered:
@@ -250,7 +248,7 @@ decisions_made:
     - "JWT only (rejected - can't invalidate compromised sessions)"
   constraints_that_influenced: "Must support session invalidation, handle 5000 QPS, survive app restarts, minimal operational complexity"
   scope: "project"
-` + "```" + `
+```
 
 **Guidelines:**
 - Explain why you chose this approach
@@ -264,21 +262,21 @@ decisions_made:
 **Purpose:** Document conventions for future code to follow.
 
 **Structure:**
-` + "```yaml" + `
+```yaml
 established_patterns:
   - pattern: "[What pattern/convention]"
     rationale: "[Why this works for your codebase]"
     examples: "[Where to apply it]"
     scope: "[checkpoint|project]"
-` + "```" + `
+```
 
 **Example:**
-` + "```yaml" + `
+```yaml
 - pattern: "All database queries use connection pooling with max 50 connections"
   rationale: "Prevents connection exhaustion while maintaining performance; 50 conns sufficient for our load (2000 QPS)"
   examples: "API handlers, background jobs, cron tasks, migrations"
   scope: "project"
-` + "```" + `
+```
 
 **Guidelines:**
 - Make patterns actionable
@@ -317,9 +315,9 @@ established_patterns:
 ### Daily Practice
 
 **Morning:**
-` + "```bash" + `
+```bash
 checkpoint start  # Review status and next steps
-` + "```" + `
+```
 
 **During work:**
 - Work normally
@@ -327,21 +325,21 @@ checkpoint start  # Review status and next steps
 - Group related changes
 
 **After each logical unit:**
-` + "```bash" + `
+```bash
 checkpoint check     # Create checkpoint
 # Fill input file
 checkpoint lint      # Validate
 checkpoint commit    # Commit
-` + "```" + `
+```
 
 **End of day:**
-- Review ` + "`.checkpoint-project.yml`" + ` recommendations
+- Review `.checkpoint-project.yml` recommendations
 - Merge valuable patterns into main document
 
 ### Team Coordination
 
 **Project setup:**
-1. One person runs ` + "`checkpoint init`" + `
+1. One person runs `checkpoint init`
 2. Commit checkpoint files
 3. Team pulls and uses
 
@@ -358,14 +356,14 @@ checkpoint commit    # Commit
 ### LLM Collaboration
 
 **Before asking LLM:**
-` + "```bash" + `
+```bash
 checkpoint start  # Share status with LLM
-` + "```" + `
+```
 
 **After LLM makes changes:**
-` + "```bash" + `
+```bash
 checkpoint check  # LLM fills checkpoint
-` + "```" + `
+```
 
 **Your review checklist:**
 - [ ] Summaries are specific
@@ -398,7 +396,7 @@ checkpoint check  # LLM fills checkpoint
 
 **Why:** Checkpoint is worthless without real information
 
-**Instead:** Always run ` + "`checkpoint lint`" + ` before committing
+**Instead:** Always run `checkpoint lint` before committing
 
 ### Copy-Paste Context
 
@@ -453,4 +451,4 @@ checkpoint check  # LLM fills checkpoint
 
 ---
 
-These practices evolve with your project. Start simple, add detail as value becomes clear.`
+These practices evolve with your project. Start simple, add detail as value becomes clear.

@@ -1,6 +1,4 @@
-package guides
-
-const firstTimeUserGuide = `# First-Time User Guide
+# First-Time User Guide
 
 Welcome to checkpoint! This guide will walk you through using checkpoint for the first time.
 
@@ -20,16 +18,16 @@ Checkpoint is a tool for capturing structured development history in a way that:
 
 In your project directory (must be a git repository):
 
-` + "```bash" + `
+```bash
 checkpoint init
-` + "```" + `
+```
 
 This creates:
-- ` + "`CHECKPOINT.md`" + ` - Workflow documentation
-- ` + "`.checkpoint-changelog.yaml`" + ` - Your append-only changelog
-- ` + "`.checkpoint-context.yml`" + ` - Decision history
-- ` + "`.checkpoint-project.yml`" + ` - Project patterns (you'll curate this)
-- ` + "`.checkpoint/`" + ` - Examples, guides, and config files
+- `CHECKPOINT.md` - Workflow documentation
+- `.checkpoint-changelog.yaml` - Your append-only changelog
+- `.checkpoint-context.yml` - Decision history
+- `.checkpoint-project.yml` - Project patterns (you'll curate this)
+- `.checkpoint/` - Examples, guides, and config files
 
 **Auto-detection:** Init automatically detects your project's language and build tools from go.mod, package.json, Makefile, etc., and pre-populates config files.
 
@@ -37,24 +35,24 @@ This creates:
 
 Check that everything is configured correctly:
 
-` + "```bash" + `
+```bash
 checkpoint doctor
-` + "```" + `
+```
 
 This validates your setup and suggests fixes for any issues:
 - Missing config files
 - Incomplete tool commands
 - Setup problems
 
-Use ` + "`checkpoint doctor --verbose`" + ` to see what was auto-detected.
+Use `checkpoint doctor --verbose` to see what was auto-detected.
 
 ### 3. Start a Work Session
 
 Before beginning work:
 
-` + "```bash" + `
+```bash
 checkpoint start
-` + "```" + `
+```
 
 This shows:
 - Project status checks
@@ -75,30 +73,30 @@ Work normally - checkpoint doesn't interfere with your development flow.
 
 When you're ready to commit:
 
-` + "```bash" + `
+```bash
 checkpoint check
-` + "```" + `
+```
 
 This creates:
-- ` + "`.checkpoint-input`" + ` - Template for you to fill
-- ` + "`.checkpoint-diff`" + ` - Full diff for reference
+- `.checkpoint-input` - Template for you to fill
+- `.checkpoint-diff` - Full diff for reference
 
 ### 6. Fill the Input File
 
-Open ` + "`.checkpoint-input`" + ` and describe your changes:
+Open `.checkpoint-input` and describe your changes:
 
 **Required sections:**
-- ` + "`changes[]`" + ` - What changed (be specific!)
-- ` + "`context`" + ` - Why you made these changes
+- `changes[]` - What changed (be specific!)
+- `context` - Why you made these changes
 
 **Tips:**
 - Keep summaries under 80 characters
 - Use present tense ("Add feature" not "Added feature")
 - Explain WHY in context, not just WHAT
-- Run ` + "`checkpoint examples`" + ` to see good examples
+- Run `checkpoint examples` to see good examples
 
 **Example:**
-` + "```yaml" + `
+```yaml
 changes:
   - summary: "Add password reset endpoint"
     details: "Implemented email-based reset with secure tokens"
@@ -117,15 +115,15 @@ context:
     - decision: "Use JWT tokens instead of random strings"
       rationale: "Self-contained, no database lookup needed"
       scope: "checkpoint"
-` + "```" + `
+```
 
 ### 7. Validate (Optional but Recommended)
 
 Check your work before committing:
 
-` + "```bash" + `
+```bash
 checkpoint lint
-` + "```" + `
+```
 
 This catches common mistakes:
 - Placeholder text left in
@@ -137,13 +135,13 @@ This catches common mistakes:
 
 When satisfied:
 
-` + "```bash" + `
+```bash
 checkpoint commit
-` + "```" + `
+```
 
 This:
 - Validates your input
-- Stages ALL changes (` + "`git add -A`" + `)
+- Stages ALL changes (`git add -A`)
 - Creates a git commit
 - Appends to the changelog
 - Captures context for future reference
@@ -154,37 +152,37 @@ Done! Your changes are committed with rich metadata.
 
 ### Tracked in Git (Permanent History)
 
-**` + "`.checkpoint-changelog.yaml`" + `**
+**`.checkpoint-changelog.yaml`**
 - Append-only changelog
 - One YAML document per checkpoint
 - Contains: changes, timestamps, commit hashes
 
-**` + "`.checkpoint-context.yml`" + `**
+**`.checkpoint-context.yml`**
 - Append-only context history
 - Captures reasoning and decisions
 - Maintains development continuity
 
-**` + "`.checkpoint-project.yml`" + `**
+**`.checkpoint-project.yml`**
 - Project-wide patterns and conventions
 - Human-curated (you maintain this)
 - Starts with recommendations, you review and merge
 
-**` + "`.checkpoint/`" + ` directory**
+**`.checkpoint/` directory**
 - Examples showing good checkpoints
 - Guides like this one
 - Tracked so whole team has same references
 
 ### Temporary Files (Not Tracked)
 
-**` + "`.checkpoint-input`" + `**
+**`.checkpoint-input`**
 - Template you fill during checkpoint
 - Deleted after commit
 
-**` + "`.checkpoint-diff`" + `**
+**`.checkpoint-diff`**
 - Full git diff for reference
 - Deleted after commit
 
-**` + "`.checkpoint-status.yaml`" + `**
+**`.checkpoint-status.yaml`**
 - Last commit metadata
 - Used by optional macOS app for discovery
 
@@ -192,36 +190,36 @@ Done! Your changes are committed with rich metadata.
 
 ### Solo Development
 
-1. ` + "`checkpoint start`" + ` - See what's next
+1. `checkpoint start` - See what's next
 2. Make changes
-3. ` + "`checkpoint check`" + ` - Create input
+3. `checkpoint check` - Create input
 4. Fill input file
-5. ` + "`checkpoint commit`" + ` - Commit changes
+5. `checkpoint commit` - Commit changes
 
 Repeat daily or after logical units of work.
 
 ### LLM-Assisted Development
 
 **Your role:**
-1. ` + "`checkpoint start`" + ` - Share status with LLM
+1. `checkpoint start` - Share status with LLM
 2. Describe what you want to build
 3. LLM makes changes
-4. ` + "`checkpoint check`" + ` - LLM prepares checkpoint
+4. `checkpoint check` - LLM prepares checkpoint
 5. Review the input file
-6. ` + "`checkpoint commit`" + ` - You commit
+6. `checkpoint commit` - You commit
 
 **LLM's role:**
-- Reads project patterns from ` + "`.checkpoint-project.yml`" + `
+- Reads project patterns from `.checkpoint-project.yml`
 - Makes code changes
-- Fills ` + "`.checkpoint-input`" + ` with changes and context
-- Runs ` + "`checkpoint lint`" + ` to validate
+- Fills `.checkpoint-input` with changes and context
+- Runs `checkpoint lint` to validate
 
-See ` + "`checkpoint guide llm-workflow`" + ` for detailed LLM integration patterns.
+See `checkpoint guide llm-workflow` for detailed LLM integration patterns.
 
 ### Team Development
 
 **Setup:**
-- One person runs ` + "`checkpoint init`" + `
+- One person runs `checkpoint init`
 - Commit checkpoint files to repository
 - Team members pull and start using
 
@@ -231,7 +229,7 @@ See ` + "`checkpoint guide llm-workflow`" + ` for detailed LLM integration patte
 - Project patterns document grows organically
 
 **Curation:**
-- Periodically review ` + "`.checkpoint-project.yml`" + ` recommendations
+- Periodically review `.checkpoint-project.yml` recommendations
 - Merge valuable patterns into main project document
 - Delete recommendations that don't apply
 
@@ -252,19 +250,19 @@ See ` + "`checkpoint guide llm-workflow`" + ` for detailed LLM integration patte
 - Separate unrelated changes into different checkpoints
 
 **Mark Project Patterns**
-` + "```yaml" + `
+```yaml
 key_insights:
   - insight: "All API errors use standardized format"
     scope: "project"  # This applies project-wide
-` + "```" + `
+```
 
 **Include Failed Approaches**
-` + "```yaml" + `
+```yaml
 failed_approaches:
   - approach: "Tried caching at database layer"
     why_failed: "Couldn't invalidate cache selectively"
     lessons_learned: "Cache at API layer for control"
-` + "```" + `
+```
 
 ### Avoid This
 
@@ -274,9 +272,9 @@ failed_approaches:
 - "Improve performance" - How much? Where?
 
 **Leaving Placeholders**
-` + "```yaml" + `
+```yaml
 summary: "[FILL IN: what changed]"  # Forgot to fill!
-` + "```" + `
+```
 
 **Too Many Unrelated Changes**
 - Don't mix: new feature + refactor + docs update + bug fix
@@ -296,76 +294,76 @@ summary: "[FILL IN: what changed]"  # Forgot to fill!
 
 See what good checkpoints look like:
 
-` + "```bash" + `
+```bash
 checkpoint examples              # List categories
 checkpoint examples feature      # See feature example
 checkpoint examples bugfix       # See bugfix example
 checkpoint examples anti-patterns # See common mistakes
-` + "```" + `
+```
 
 ### Read Guides
 
-` + "```bash" + `
+```bash
 checkpoint guide                  # List available guides
 checkpoint guide llm-workflow     # LLM integration patterns
 checkpoint guide best-practices   # Best practices guide
-` + "```" + `
+```
 
 ### Check Project Patterns
 
 Your project's established patterns:
 
-` + "```bash" + `
+```bash
 cat .checkpoint-project.yml
-` + "```" + `
+```
 
 ### View History and Next Steps
 
 See recent checkpoint history:
 
-` + "```bash" + `
+```bash
 checkpoint explain history    # Recent checkpoints, patterns, decisions
 checkpoint explain next       # All outstanding next steps by priority
-` + "```" + `
+```
 
 ### Manage Sessions (LLM Handoff)
 
 When switching between LLM sessions:
 
-` + "```bash" + `
+```bash
 checkpoint session save "Working on auth feature"  # Save current state
 checkpoint session                                  # Show session state
 checkpoint session handoff                          # Generate handoff document
 checkpoint session clear                            # Clear when done
-` + "```" + `
+```
 
 ### Quick Reference
 
 The main workflow document:
 
-` + "```bash" + `
+```bash
 cat CHECKPOINT.md
-` + "```" + `
+```
 
 ## Troubleshooting
 
 **General Setup Issues**
-- Run ` + "`checkpoint doctor`" + ` to diagnose problems
+- Run `checkpoint doctor` to diagnose problems
 - It validates setup and suggests specific fixes
 
 **"Not a git repository"**
 - Checkpoint requires git
-- Run ` + "`git init`" + ` first
+- Run `git init` first
 
 **"Checkpoint not initialized"**
-- Run ` + "`checkpoint init`" + ` first
-- Then run ` + "`checkpoint doctor`" + ` to verify setup
+- Run `checkpoint init` first
+- Then run `checkpoint doctor` to verify setup
 
 **"Checkpoint in progress"**
 - You have an unfinished checkpoint
 - Options:
-  - Continue: edit ` + "`.checkpoint-input`" + ` and ` + "`checkpoint commit`" + `
-  - Abort: ` + "`checkpoint clean`" + ` and start over
+  - Continue: edit `.checkpoint-input` and `checkpoint commit`
+  - Abort: `checkpoint clean` and start over
 
 **"Validation failed"**
 - Check error messages
@@ -373,7 +371,7 @@ cat CHECKPOINT.md
   - Placeholder text not filled in
   - Summary too long (>80 chars)
   - Invalid change_type or priority
-- Run ` + "`checkpoint lint`" + ` for specific errors
+- Run `checkpoint lint` for specific errors
 
 **Input file too long to edit**
 - Fixed in recent versions!
@@ -384,11 +382,11 @@ cat CHECKPOINT.md
 
 Once comfortable with basics:
 
-1. **Explore Examples**: ` + "`checkpoint examples`" + ` - See various checkpoint types
-2. **Learn Context Patterns**: ` + "`checkpoint examples context`" + ` - Effective context capture
-3. **LLM Integration**: ` + "`checkpoint guide llm-workflow`" + `
-4. **Project Curation**: Review ` + "`.checkpoint-project.yml`" + ` recommendations periodically
-5. **Customize**: Add your own examples and patterns to ` + "`.checkpoint/`" + `
+1. **Explore Examples**: `checkpoint examples` - See various checkpoint types
+2. **Learn Context Patterns**: `checkpoint examples context` - Effective context capture
+3. **LLM Integration**: `checkpoint guide llm-workflow`
+4. **Project Curation**: Review `.checkpoint-project.yml` recommendations periodically
+5. **Customize**: Add your own examples and patterns to `.checkpoint/`
 
 ## Philosophy
 
@@ -421,4 +419,4 @@ Checkpoint is designed around a few core principles:
 
 ---
 
-Welcome to checkpoint! Start with ` + "`checkpoint start`" + ` and build from there.`
+Welcome to checkpoint! Start with `checkpoint start` and build from there.

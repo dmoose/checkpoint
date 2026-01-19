@@ -1466,7 +1466,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-01-15T13:07:34-08:00"
-commit_hash: ""
+commit_hash: cf05bb19ad3726211724b7439fd0f76e69b237fd
 changes:
     - summary: Add AI collaboration boundaries to project schema
       details: New ai_authority section defines what AI can do autonomously vs requiring approval, displayed in checkpoint start
@@ -1508,6 +1508,24 @@ changes:
       details: Changed description to purpose, language to languages.primary to match schema
       change_type: fix
       scope: cmd/init
+next_steps:
+    - summary: Create release workflow
+      details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
+      priority: high
+      scope: .github/workflows
+---
+schema_version: "1"
+timestamp: "2026-01-15T13:41:32-08:00"
+commit_hash: ""
+changes:
+    - summary: Refactor guides to use go:embed instead of string constants
+      details: Move guide content from escaped Go strings to actual .md files in internal/guides/content/, loaded via embed.FS
+      change_type: refactor
+      scope: internal/guides
+    - summary: Refactor default skills to use go:embed instead of string constants
+      details: Create internal/skills/ package with content/*.md files, removing ~120 lines of escaped strings from cmd/skill.go
+      change_type: refactor
+      scope: internal/skills
 next_steps:
     - summary: Create release workflow
       details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64

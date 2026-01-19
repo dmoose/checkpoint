@@ -94,3 +94,30 @@ context:
     conversation_context:
         - exchange: Reviewed Bebop-style development methodology for inspiration
           outcome: Adopted decision authority matrix, communication protocol, and quality gates concepts
+---
+schema_version: "1"
+timestamp: "2026-01-15T13:41:32-08:00"
+context:
+    problem_statement: Guides and skills used large Go string constants with complex backtick escaping (` + "```" + `), making them hard to edit and maintain. Content was embedded in code rather than as actual markdown files.
+    key_insights:
+        - insight: go:embed with embed.FS provides cleaner content embedding than string constants
+          impact: Content files get proper syntax highlighting, no escaping needed, easier to edit
+          scope: project
+        - insight: embed directive requires content to be in child directories of the Go file
+          impact: Content must be organized in subdirectories (e.g., content/*.md) below the embedding package
+          scope: checkpoint
+    decisions_made:
+        - decision: Use //go:embed content/*.md pattern with embed.FS for both guides and skills
+          rationale: Consistent approach, auto-discovers files, simpler than individual file embeds
+          alternatives_considered:
+            - Individual //go:embed directives per file (more verbose)
+            - Keep string constants (hard to maintain with escaping)
+          scope: project
+        - decision: Store metadata (descriptions) separately from content files
+          rationale: Markdown files stay pure content, metadata in Go maps for flexibility
+          scope: checkpoint
+    established_patterns:
+        - pattern: Use internal/{feature}/content/*.md with go:embed for embedded documentation
+          rationale: Separates content from code, enables proper editing tooling, auto-discovery
+          examples: internal/guides/content/, internal/skills/content/
+          scope: project

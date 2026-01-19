@@ -9,6 +9,7 @@ import (
 
 	"github.com/dmoose/checkpoint/internal/explain"
 	"github.com/dmoose/checkpoint/internal/file"
+	"github.com/dmoose/checkpoint/internal/skills"
 	"github.com/dmoose/checkpoint/pkg/config"
 
 	"github.com/spf13/cobra"
@@ -425,14 +426,8 @@ func InitGlobalSkills() error {
 		return fmt.Errorf("create global skills directory: %w", err)
 	}
 
-	// Create default skills
-	defaultSkills := map[string]string{
-		"git":     gitSkillContent,
-		"ripgrep": ripgrepSkillContent,
-		"go":      goSkillContent,
-	}
-
-	for name, content := range defaultSkills {
+	// Create default skills from embedded content
+	for name, content := range skills.DefaultSkills() {
 		skillDir := filepath.Join(globalSkillsDir, name)
 		if err := os.MkdirAll(skillDir, 0755); err != nil {
 			continue
@@ -445,125 +440,3 @@ func InitGlobalSkills() error {
 
 	return nil
 }
-
-const gitSkillContent = `# Git
-
-Version control system for tracking changes.
-
-## Purpose
-
-Track code changes, collaborate with others, and maintain project history.
-
-## Common Commands
-
-` + "```bash" + `
-git status              # Show working tree status
-git diff                # Show unstaged changes
-git diff --staged       # Show staged changes
-git add <file>          # Stage file for commit
-git add -A              # Stage all changes
-git commit -m "msg"     # Commit staged changes
-git log --oneline -10   # Show recent commits
-git branch              # List branches
-git checkout <branch>   # Switch branches
-git pull                # Fetch and merge remote
-git push                # Push to remote
-` + "```" + `
-
-## Tips
-
-- Use descriptive commit messages
-- Commit often, push regularly
-- Review changes before committing with git diff
-- Use branches for features/experiments
-
-## With Checkpoint
-
-Always use ` + "`checkpoint commit`" + ` instead of raw ` + "`git commit`" + ` to maintain the changelog.
-`
-
-const ripgrepSkillContent = `# ripgrep (rg)
-
-Fast regex search tool for codebases.
-
-## Purpose
-
-Search for patterns across files quickly. Much faster than grep for large codebases.
-
-## Common Commands
-
-` + "```bash" + `
-rg "pattern"                    # Basic search
-rg "pattern" --type go          # Filter by filetype
-rg "pattern" -g "*.go"          # Glob filter
-rg "pattern" -A 3 -B 3          # With context lines
-rg "pattern" -l                 # Just filenames
-rg "pattern" -c                 # Count matches
-rg "pattern" -i                 # Case insensitive
-rg "pattern" -w                 # Word boundaries
-rg "func \w+\(" --type go       # Regex: find functions
-rg "TODO|FIXME"                 # Multiple patterns
-` + "```" + `
-
-## Tips
-
-- Use --type instead of glob for common languages (go, py, js, etc.)
-- Use -w for whole word matching
-- Use -F for literal strings (no regex)
-- Use --hidden to include dotfiles
-- Use -g '!vendor' to exclude directories
-
-## File Types
-
-` + "```bash" + `
-rg --type-list                  # Show all known types
-rg "pattern" -t go -t rust      # Multiple types
-` + "```" + `
-`
-
-const goSkillContent = `# Go
-
-Go programming language toolchain.
-
-## Purpose
-
-Build, test, and manage Go applications.
-
-## Common Commands
-
-` + "```bash" + `
-go build .              # Build current package
-go run .                # Build and run
-go test ./...           # Run all tests
-go test -v ./...        # Verbose tests
-go test -cover ./...    # With coverage
-go test -race ./...     # With race detector
-go fmt ./...            # Format code
-go vet ./...            # Static analysis
-go mod init <name>      # Initialize module
-go mod tidy             # Clean up go.mod
-go mod download         # Download dependencies
-go get <pkg>            # Add dependency
-go get -u ./...         # Update all dependencies
-` + "```" + `
-
-## Project Structure
-
-` + "```" + `
-myproject/
-├── main.go             # Entry point
-├── go.mod              # Module definition
-├── cmd/                # Command implementations
-├── internal/           # Private packages
-├── pkg/                # Public packages
-└── *_test.go           # Test files
-` + "```" + `
-
-## Tips
-
-- Run go fmt before committing
-- Use go vet to catch common mistakes
-- Use -race flag during development
-- Keep go.mod tidy with go mod tidy
-- Use internal/ for packages not meant for external use
-`

@@ -1,6 +1,4 @@
-package guides
-
-const llmWorkflowGuide = `# LLM Workflow Guide
+# LLM Workflow Guide
 
 This guide explains how to effectively use checkpoint in LLM-assisted development workflows.
 
@@ -14,9 +12,9 @@ Checkpoint is designed for human-LLM collaboration. The tool helps maintain deve
 
 ### 1. Human Starts Session
 
-` + "```bash" + `
+```bash
 checkpoint start
-` + "```" + `
+```
 
 **Human shares output with LLM:**
 - "Here's our project status. Let's work on [next step from list]"
@@ -36,37 +34,37 @@ LLM modifies code files as needed.
 
 When work is complete:
 
-` + "```bash" + `
+```bash
 checkpoint check
-` + "```" + `
+```
 
 ### 5. LLM Fills Input File
 
 LLM reads:
-- ` + "`.checkpoint-input`" + ` - Template to fill
-- ` + "`.checkpoint-diff`" + ` - Full diff of changes
-- ` + "`.checkpoint-project.yml`" + ` - Project patterns to follow
+- `.checkpoint-input` - Template to fill
+- `.checkpoint-diff` - Full diff of changes
+- `.checkpoint-project.yml` - Project patterns to follow
 
 LLM fills:
-- ` + "`changes[]`" + ` - What changed (specific summaries)
-- ` + "`context`" + ` - Why changes were made (critical!)
-- ` + "`next_steps[]`" + ` - What should be done next
+- `changes[]` - What changed (specific summaries)
+- `context` - Why changes were made (critical!)
+- `next_steps[]` - What should be done next
 
 ### 6. LLM Validates
 
-` + "```bash" + `
+```bash
 checkpoint lint
-` + "```" + `
+```
 
 Catches common mistakes before human review.
 
 ### 7. Human Reviews and Commits
 
-Human reviews ` + "`.checkpoint-input`" + `, then:
+Human reviews `.checkpoint-input`, then:
 
-` + "```bash" + `
+```bash
 checkpoint commit
-` + "```" + `
+```
 
 ## Session Planning (Optional)
 
@@ -76,42 +74,42 @@ For complex work, use session planning to stay organized.
 
 ### Starting a Planning Session
 
-` + "```bash" + `
+```bash
 checkpoint plan
-` + "```" + `
+```
 
-This creates ` + "`.checkpoint-session.yaml`" + ` with a template for planning.
+This creates `.checkpoint-session.yaml` with a template for planning.
 
 ### During Work
 
 Update the session as useful-it's your working scratchpad:
-- Update ` + "`current_focus`" + ` to reflect what you're doing now
-- Add to ` + "`progress`" + ` as you complete things
-- Record ` + "`decisions`" + ` and their rationale (these are valuable context)
-- Capture ` + "`learnings`" + ` for future reference
-- Note any ` + "`blockers`" + ` encountered
+- Update `current_focus` to reflect what you're doing now
+- Add to `progress` as you complete things
+- Record `decisions` and their rationale (these are valuable context)
+- Capture `learnings` for future reference
+- Note any `blockers` encountered
 
-` + "```bash" + `
+```bash
 checkpoint session        # View current session
 checkpoint session save   # Update modified files list
-` + "```" + `
+```
 
 ### Ending a Session
 
 **Option A: Commit (clears session)**
-` + "```bash" + `
+```bash
 checkpoint commit         # Session is cleared after commit
-` + "```" + `
+```
 
 **Option B: Handoff (preserves session)**
-` + "```bash" + `
+```bash
 checkpoint session handoff  # Adds handoff context for next LLM
-` + "```" + `
+```
 
 **Option C: Keep session after commit**
-` + "```bash" + `
+```bash
 checkpoint commit --keep-session  # Preserves session file
-` + "```" + `
+```
 
 ## LLM Responsibilities
 
@@ -123,7 +121,7 @@ checkpoint commit --keep-session  # Preserves session file
 - Identify distinct units of work
 
 **Example:**
-` + "```yaml" + `
+```yaml
 changes:
   - summary: "Add password reset endpoint"
     change_type: "feature"
@@ -136,7 +134,7 @@ changes:
   - summary: "Update API docs for password reset"
     change_type: "docs"
     scope: "api"
-` + "```" + `
+```
 
 ### Writing Summaries
 
@@ -170,7 +168,7 @@ The context section should explain:
 - **Patterns:** What should future work follow?
 
 **Example - Good Context:**
-` + "```yaml" + `
+```yaml
 context:
   problem_statement: "Password reset was broken - tokens weren't expiring, allowing indefinite reuse after reset"
 
@@ -191,10 +189,10 @@ context:
         - "15-minute expiration (rejected - too short for email delivery delays)"
       constraints_that_influenced: "Must handle email delivery delays up to 30 minutes"
       scope: "project"
-` + "```" + `
+```
 
 **Example - Poor Context:**
-` + "```yaml" + `
+```yaml
 context:
   problem_statement: "Fixed password reset"
 
@@ -205,17 +203,17 @@ context:
   decisions_made:
     - decision: "Used JWT"
       rationale: "Better than alternatives"
-` + "```" + `
+```
 
 ### Scope: Project vs Checkpoint
 
-**Use ` + "`scope: project`" + ` when:**
+**Use `scope: project` when:**
 - Establishes pattern for entire codebase
 - Should be followed in future work
 - Represents architectural decision
 - Would be valuable in project patterns document
 
-**Use ` + "`scope: checkpoint`" + ` (or omit) when:**
+**Use `scope: checkpoint` (or omit) when:**
 - Specific to this implementation
 - Technical detail that doesn't generalize
 - One-time decision
@@ -224,7 +222,7 @@ context:
 
 Before filling checkpoint input, LLM should read:
 
-### ` + "`.checkpoint-project.yml`" + `
+### `.checkpoint-project.yml`
 
 Contains project-wide patterns:
 - Dependencies and their rationale
@@ -233,64 +231,64 @@ Contains project-wide patterns:
 - Error handling approaches
 - Performance considerations
 
-### ` + "`.checkpoint-context.yml`" + `
+### `.checkpoint-context.yml`
 
 Recent checkpoint contexts (last few entries):
 - Recent decisions
 - Current work direction
 - Failed approaches to avoid
 
-### ` + "`.checkpoint/examples/`" + `
+### `.checkpoint/examples/`
 
 Reference examples:
-` + "```bash" + `
+```bash
 checkpoint examples feature      # See feature example
 checkpoint examples context      # See context examples
 checkpoint examples anti-patterns # Avoid mistakes
-` + "```" + `
+```
 
 ## Common LLM Mistakes
 
 ### 1. Vague Summaries
 
 **Bad:**
-` + "```yaml" + `
+```yaml
 - summary: "Update files"
   change_type: "other"
-` + "```" + `
+```
 
 **Good:**
-` + "```yaml" + `
+```yaml
 - summary: "Add input validation to user registration endpoint"
   change_type: "feature"
   scope: "api/handlers"
-` + "```" + `
+```
 
 ### 2. Missing Context
 
 **Bad:**
-` + "```yaml" + `
+```yaml
 context:
   problem_statement: "Need to fix bugs"
-` + "```" + `
+```
 
 **Good:**
-` + "```yaml" + `
+```yaml
 context:
   problem_statement: "User registration failing for emails with + character due to improper URL encoding in validation"
-` + "```" + `
+```
 
 ### 3. No Alternatives Documented
 
 **Bad:**
-` + "```yaml" + `
+```yaml
 decisions_made:
   - decision: "Used Redis"
     rationale: "It's fast"
-` + "```" + `
+```
 
 **Good:**
-` + "```yaml" + `
+```yaml
 decisions_made:
   - decision: "Use Redis for session storage with 7-day TTL"
     rationale: "Sub-millisecond reads, handles 5000 QPS, built-in expiration"
@@ -299,39 +297,39 @@ decisions_made:
       - "In-memory (rejected - doesn't survive restarts)"
       - "JWT only (rejected - can't invalidate sessions)"
     constraints_that_influenced: "Must support session invalidation, handle 5000 QPS, survive app restarts"
-` + "```" + `
+```
 
 ### 4. Forgetting scope: project
 
 **Bad:**
-` + "```yaml" + `
+```yaml
 established_patterns:
   - pattern: "All database queries use connection pooling"
     scope: "checkpoint"  # Should be project!
-` + "```" + `
+```
 
 **Good:**
-` + "```yaml" + `
+```yaml
 established_patterns:
   - pattern: "All database queries use connection pooling"
     rationale: "Prevents connection exhaustion, improves performance"
     examples: "API handlers, background jobs, cron tasks"
     scope: "project"
-` + "```" + `
+```
 
 ### 5. Past Tense
 
 **Bad:**
-` + "```yaml" + `
+```yaml
 changes:
   - summary: "Added authentication middleware"
-` + "```" + `
+```
 
 **Good:**
-` + "```yaml" + `
+```yaml
 changes:
   - summary: "Add authentication middleware"
-` + "```" + `
+```
 
 ## Advanced Patterns
 
@@ -339,32 +337,32 @@ changes:
 
 **Always document what didn't work:**
 
-` + "```yaml" + `
+```yaml
 failed_approaches:
   - approach: "Tried optimizing with database indexes only"
     why_failed: "Query time reduced to 5s but still exceeded 2s SLA; root cause was N+1 pattern (500 queries), not query speed"
     lessons_learned: "Profile before optimizing - measure actual bottleneck not assumed one. Query count matters more than query speed."
     scope: "project"
-` + "```" + `
+```
 
 ### Conversation Context
 
 **Capture key discussions:**
 
-` + "```yaml" + `
+```yaml
 conversation_context:
   - exchange: "Discussed whether to cache at API vs database layer"
     outcome: "API layer chosen - gives cache invalidation control and keeps database layer simple"
 
   - exchange: "Debated 5-minute vs 1-minute TTL for cache"
     outcome: "5-minute chosen after reviewing analytics - data updates every 2-3 minutes average, so 1min provides minimal benefit while doubling miss rate"
-` + "```" + `
+```
 
 ### Next Steps
 
 **Be specific and prioritized:**
 
-` + "```yaml" + `
+```yaml
 next_steps:
   - summary: "Add rate limiting to password reset endpoint"
     details: "Prevent brute force attacks, limit to 3 attempts per hour per email"
@@ -375,26 +373,26 @@ next_steps:
     details: "Track how many tokens expire unused - indicates TTL might be too short"
     priority: "med"
     scope: "observability"
-` + "```" + `
+```
 
 ## Prompt Templates
 
 ### Session Start Prompt
 
-` + "```" + `
+```
 I'm working on a checkpoint-managed project. Here's the current status:
 
 [paste output of: checkpoint start]
 
 Let's work on: [describe task]
 
-When we're done, I'll run ` + "`checkpoint check`" + ` and you'll fill the checkpoint input.
-` + "```" + `
+When we're done, I'll run `checkpoint check` and you'll fill the checkpoint input.
+```
 
 ### Checkpoint Filling Prompt
 
-` + "```" + `
-I've run ` + "`checkpoint check`" + `. Please:
+```
+I've run `checkpoint check`. Please:
 
 1. Read .checkpoint-diff to understand all changes
 2. Read .checkpoint-project.yml to understand project patterns
@@ -406,8 +404,8 @@ I've run ` + "`checkpoint check`" + `. Please:
    - List concrete next steps
 
 Focus on capturing reasoning and decisions, not just describing changes.
-Then run ` + "`checkpoint lint`" + ` to validate.
-` + "```" + `
+Then run `checkpoint lint` to validate.
+```
 
 ## Best Practices for LLMs
 
@@ -483,4 +481,4 @@ Then run ` + "`checkpoint lint`" + ` to validate.
 
 ---
 
-This workflow ensures rich context capture while maintaining development velocity.`
+This workflow ensures rich context capture while maintaining development velocity.

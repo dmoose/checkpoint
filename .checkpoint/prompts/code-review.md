@@ -8,7 +8,7 @@ Language: {{primary_language}}
 
 ### Code Quality
 - [ ] Clear, readable code
-- [ ] Follows project conventions (check `.checkpoint-project.yml`)
+- [ ] Follows project conventions (check `.checkpoint/project.yaml`)
 - [ ] Appropriate comments
 - [ ] No obvious bugs
 - [ ] Good error handling

@@ -68,7 +68,7 @@ func ListTemplates() ([]TemplateInfo, error) {
 	return templates, nil
 }
 
-// loadTemplateDescription reads description from template.yaml or first line of project.yml
+// loadTemplateDescription reads description from template.yaml or first line of project.yaml
 func loadTemplateDescription(templateDir string) string {
 	// Try template.yaml first
 	templateYaml := filepath.Join(templateDir, "template.yaml")
@@ -81,8 +81,8 @@ func loadTemplateDescription(templateDir string) string {
 		}
 	}
 
-	// Fall back to project.yml purpose field
-	projectYml := filepath.Join(templateDir, "project.yml")
+	// Fall back to project.yaml purpose field
+	projectYml := filepath.Join(templateDir, "project.yaml")
 	if data, err := os.ReadFile(projectYml); err == nil {
 		for _, line := range strings.Split(string(data), "\n") {
 			if strings.HasPrefix(line, "purpose:") {
@@ -118,7 +118,7 @@ func GetTemplate(name string) (*Template, error) {
 
 	// Load template files
 	files := make(map[string]string)
-	templateFiles := []string{"project.yml", "tools.yml", "guidelines.yml", "skills.yml"}
+	templateFiles := []string{"project.yaml", "tools.yaml", "guidelines.yaml", "skills.yaml"}
 	for _, filename := range templateFiles {
 		path := filepath.Join(templateDir, filename)
 		if data, err := os.ReadFile(path); err == nil {
@@ -178,10 +178,10 @@ var embeddedTemplates = map[string]Template{
 		Description: "Go command-line application",
 		IsEmbedded:  true,
 		Files: map[string]string{
-			"project.yml":    goCliProjectYml,
-			"tools.yml":      goCliToolsYml,
-			"guidelines.yml": goCliGuidelinesYml,
-			"skills.yml":     goCliSkillsYml,
+			"project.yaml":    goCliProjectYml,
+			"tools.yaml":      goCliToolsYml,
+			"guidelines.yaml": goCliGuidelinesYml,
+			"skills.yaml":     goCliSkillsYml,
 		},
 	},
 	"go-lib": {
@@ -189,10 +189,10 @@ var embeddedTemplates = map[string]Template{
 		Description: "Go library package",
 		IsEmbedded:  true,
 		Files: map[string]string{
-			"project.yml":    goLibProjectYml,
-			"tools.yml":      goLibToolsYml,
-			"guidelines.yml": goCliGuidelinesYml, // Reuse Go guidelines
-			"skills.yml":     goCliSkillsYml,
+			"project.yaml":    goLibProjectYml,
+			"tools.yaml":      goLibToolsYml,
+			"guidelines.yaml": goCliGuidelinesYml, // Reuse Go guidelines
+			"skills.yaml":     goCliSkillsYml,
 		},
 	},
 	"node-api": {
@@ -200,10 +200,10 @@ var embeddedTemplates = map[string]Template{
 		Description: "Node.js API server",
 		IsEmbedded:  true,
 		Files: map[string]string{
-			"project.yml":    nodeApiProjectYml,
-			"tools.yml":      nodeApiToolsYml,
-			"guidelines.yml": nodeApiGuidelinesYml,
-			"skills.yml":     nodeApiSkillsYml,
+			"project.yaml":    nodeApiProjectYml,
+			"tools.yaml":      nodeApiToolsYml,
+			"guidelines.yaml": nodeApiGuidelinesYml,
+			"skills.yaml":     nodeApiSkillsYml,
 		},
 	},
 	"python-cli": {
@@ -211,10 +211,10 @@ var embeddedTemplates = map[string]Template{
 		Description: "Python command-line application",
 		IsEmbedded:  true,
 		Files: map[string]string{
-			"project.yml":    pythonCliProjectYml,
-			"tools.yml":      pythonCliToolsYml,
-			"guidelines.yml": pythonCliGuidelinesYml,
-			"skills.yml":     pythonCliSkillsYml,
+			"project.yaml":    pythonCliProjectYml,
+			"tools.yaml":      pythonCliToolsYml,
+			"guidelines.yaml": pythonCliGuidelinesYml,
+			"skills.yaml":     pythonCliSkillsYml,
 		},
 	},
 	"generic": {
@@ -222,10 +222,10 @@ var embeddedTemplates = map[string]Template{
 		Description: "Generic project template",
 		IsEmbedded:  true,
 		Files: map[string]string{
-			"project.yml":    genericProjectYml,
-			"tools.yml":      genericToolsYml,
-			"guidelines.yml": genericGuidelinesYml,
-			"skills.yml":     genericSkillsYml,
+			"project.yaml":    genericProjectYml,
+			"tools.yaml":      genericToolsYml,
+			"guidelines.yaml": genericGuidelinesYml,
+			"skills.yaml":     genericSkillsYml,
 		},
 	},
 }

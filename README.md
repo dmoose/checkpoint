@@ -1,4 +1,4 @@
-# checkpoint
+# checkpoint + guardrail
 
 [![GO](https://github.com/dmoose/checkpoint/actions/workflows/ci.yml/badge.svg)](https://github.com/dmoose/checkpoint/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/dmoose/checkpoint.svg)](https://pkg.go.dev/github.com/dmoose/checkpoint)
@@ -7,20 +7,23 @@
 
 Portable development context that travels with your project.
 
-## Why checkpoint exists
+## Why this exists
 
-Development context gets lost. Decisions made during implementation, alternatives considered, failed approaches—all of it disappears into chat logs, IDE-specific storage, or forgotten conversations. When you switch tools, change LLM providers, or onboard new developers, you start from zero.
+Development context gets lost. Decisions, failed approaches, and reasoning disappear into chat logs or IDE-specific storage. When you switch LLM providers, change tools, or return to code months later, you start from zero.
 
-Checkpoint solves this by storing structured development history in git-tracked YAML files. The context lives in your repository, not in any external tool.
+Checkpoint and guardrail solve this by storing structured development history and project knowledge in git-tracked YAML files. The context lives in your repository, not in any external tool.
 
-**What this means:**
+## Two tools, one knowledge base
 
-- Switch from Claude to GPT to Gemini—your project context remains
-- Change IDEs or coding assistants—history stays intact
-- Onboard a new developer or LLM—they can read what was tried and why
-- Revisit code months later—decisions and alternatives are documented
+This project provides two independent CLI binaries that share the same `.checkpoint/` directory:
 
-## What checkpoint captures
+**checkpoint** records what happened. It captures structured change history linked to git commits -- what changed, why, what was tried, and what comes next.
+
+**guardrail** manages what the LLM knows. It provides project context, coding guidelines, tool commands, and skills to any LLM-assisted workflow.
+
+Together they create a feedback loop: guardrail gives the LLM context before work begins, checkpoint captures context after work completes.
+
+## What gets captured
 
 Each checkpoint links a git commit to structured metadata:
 
@@ -35,9 +38,6 @@ context:
   decisions_made:
     - decision: "Token bucket algorithm over sliding window"
       rationale: "Better burst handling, simpler implementation"
-      alternatives_considered:
-        - "Sliding window (rejected - memory overhead per client)"
-        - "Fixed window (rejected - boundary spike issues)"
   failed_approaches:
     - approach: "Redis-based distributed rate limiting"
       why_failed: "Added infrastructure dependency for single-node deployment"
@@ -47,8 +47,6 @@ next_steps:
     priority: "med"
 ```
 
-This lives in `.checkpoint-changelog.yaml`—append-only, git-tracked, searchable.
-
 ## Installation
 
 ### From source
@@ -56,128 +54,79 @@ This lives in `.checkpoint-changelog.yaml`—append-only, git-tracked, searchabl
 ```bash
 git clone https://github.com/dmoose/checkpoint.git
 cd checkpoint
-make install-user    # Installs to ~/.local/bin
+make install-user    # Installs both binaries to ~/.local/bin
 ```
 
-Or with Go:
+### With Go
 
 ```bash
-go install github.com/dmoose/checkpoint@latest
+go install github.com/dmoose/checkpoint/cmd/checkpoint@latest
+go install github.com/dmoose/checkpoint/cmd/guardrail@latest
 ```
 
-### Verify installation
+### Verify
 
 ```bash
 checkpoint version
-checkpoint doctor    # Check setup
+guardrail doctor
 ```
 
 ## Quick start
 
 ```bash
-# Initialize in your project
 cd your-project
-checkpoint init
+
+# Initialize both tools
+checkpoint init      # Creates changelog, context files
+guardrail init       # Creates .checkpoint/ config directory
 
 # Start a session
-checkpoint start     # Shows status and next steps
+checkpoint start     # Shows status, next steps, AI boundaries
 
 # Make changes to your code...
 
-# Create a checkpoint
-checkpoint check     # Generates input file
-# Fill in .checkpoint-input (or have your LLM do it)
-checkpoint commit    # Commits with structured metadata
+# Record the checkpoint
+checkpoint check     # Generates input file from git diff
+# Fill in checkpoint-input (or have your LLM do it)
+checkpoint commit    # Validates, appends to changelog, git commits
 ```
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `init` | Initialize checkpoint in a project |
-| `start` | Begin session, show status and next steps |
-| `plan` | Create planning session (.checkpoint-session.yaml) |
-| `session` | View/manage current planning session |
-| `check` | Generate input file for describing changes |
-| `commit` | Validate input, append to changelog, git commit |
-| `lint` | Validate input file before commit |
-| `search <query>` | Search changelog and context history |
-| `explain` | Show project context (patterns, tools, guidelines) |
-| `doctor` | Verify checkpoint setup |
-
-Run `checkpoint help` for the full command list.
+| checkpoint | guardrail |
+|-----------|-----------|
+| `init` -- Initialize changelog files | `init` -- Create .checkpoint/ config |
+| `start` -- Begin session, show status | `explain` -- Show project context for LLMs |
+| `plan` -- Create planning session | `learn` -- Capture guidelines, patterns, anti-patterns |
+| `session` -- View/manage planning session | `skill` -- Manage LLM skill definitions |
+| `check` -- Generate input file for changes | `doctor` -- Verify knowledge base health |
+| `commit` -- Validate and git commit | `prompt` -- Manage prompt templates |
+| `lint` -- Validate input before commit | `guide` -- Show built-in guides |
+| `search` -- Search changelog history | `examples` -- Show example checkpoints |
+| `summary` -- Show changelog summary | `config` -- Get/set configuration values |
+| `clean` -- Remove temporary files | `completion` -- Shell completions |
+| `completion` -- Shell completions | |
 
 ## Files
 
 **Git-tracked (permanent):**
-- `.checkpoint-changelog.yaml` - Append-only changelog with all checkpoints
-- `.checkpoint-context.yaml` - Accumulated decisions, patterns, failed approaches
-- `.checkpoint-project.yaml` - Project-wide patterns and conventions
-- `.checkpoint/` - Configuration, prompts, guides
+- `.checkpoint-changelog.yaml` -- Append-only changelog with all checkpoints
+- `.checkpoint-context.yaml` -- Accumulated decisions, patterns, failed approaches
+- `.checkpoint/` -- Configuration: project, tools, guidelines, skills
 
 **Not tracked (work-in-progress):**
-- `.checkpoint-input` - Current checkpoint being edited
-- `.checkpoint-diff` - Diff context for current checkpoint
-- `.checkpoint-status.yaml` - Last commit metadata
-
-## LLM integration
-
-Checkpoint works with any LLM-assisted development workflow:
-
-1. Run `checkpoint start` and share output with your LLM
-2. Work on your task
-3. Run `checkpoint check` when done
-4. LLM reads `.checkpoint-input` and `.checkpoint-diff`, fills in the descriptions
-5. Review, then run `checkpoint commit`
-
-The LLM can reference project patterns via `checkpoint explain` and search history via `checkpoint search`.
-
-### Session planning
-
-For complex work:
-
-```bash
-checkpoint plan              # Create planning session
-checkpoint session           # View current session
-checkpoint session handoff   # Prepare context for next session
-```
-
-## Shell completion
-
-```bash
-# Bash
-checkpoint completion bash >> ~/.bashrc
-
-# Zsh
-checkpoint completion zsh > "${fpath[1]}/_checkpoint"
-
-# Fish
-checkpoint completion fish > ~/.config/fish/completions/checkpoint.fish
-```
+- `checkpoint-input` -- Current checkpoint being edited
+- `.checkpoint-diff` -- Diff context for current checkpoint
+- `.checkpoint-status.yaml` -- Last commit metadata
+- `.checkpoint-session.yaml` -- Current planning session
 
 ## Documentation
 
-**In-repo guides:**
-- [Quickstart](docs/QUICKSTART.md) - Get productive in 5 minutes
-- [User Guide](docs/USER-GUIDE.md) - Workflows, scenarios, best practices
-- [LLM Integration](docs/LLM-INTEGRATION.md) - Configuring Claude, Cursor, Aider, etc.
-
-**Built-in commands:**
-```bash
-checkpoint guide first-time-user  # Getting started
-checkpoint guide llm-workflow     # LLM integration patterns
-checkpoint examples               # Example checkpoints
-```
-
-## Development
-
-```bash
-make build          # Build to bin/
-make test           # Run tests
-make check          # Format, vet, lint, test
-make install-user   # Install to ~/.local/bin
-```
+- [Getting Started](docs/getting-started.md) -- Installation and first checkpoint
+- [Workflow](docs/workflow.md) -- Daily workflow for humans and LLMs
+- [LLM Integration](docs/llm-integration.md) -- Configuring Claude, Cursor, Aider, etc.
+- [Schema Reference](docs/schema-reference.md) -- Complete YAML schema documentation
 
 ## License
 
-Apache 2.0 - See [LICENSE](LICENSE)
+Apache 2.0 -- See [LICENSE](LICENSE)

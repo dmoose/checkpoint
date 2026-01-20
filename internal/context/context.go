@@ -16,12 +16,11 @@ type ContextEntry struct {
 
 // CheckpointContext represents the context captured at a checkpoint
 type CheckpointContext struct {
-	ProblemStatement    string             `yaml:"problem_statement"`
-	KeyInsights         []Insight          `yaml:"key_insights,omitempty"`
-	DecisionsMade       []Decision         `yaml:"decisions_made,omitempty"`
-	FailedApproaches    []FailedApproach   `yaml:"failed_approaches,omitempty"`
-	EstablishedPatterns []Pattern          `yaml:"established_patterns,omitempty"`
-	ConversationContext []ConversationItem `yaml:"conversation_context,omitempty"`
+	ProblemStatement string           `yaml:"problem_statement"`
+	KeyInsights      []Insight        `yaml:"key_insights,omitempty"`
+	DecisionsMade    []Decision       `yaml:"decisions_made,omitempty"`
+	FailedApproaches []FailedApproach `yaml:"failed_approaches,omitempty"`
+	KeyExchanges     []KeyExchange    `yaml:"key_exchanges,omitempty"`
 }
 
 type Insight struct {
@@ -45,16 +44,10 @@ type FailedApproach struct {
 	Scope          string `yaml:"scope,omitempty"` // checkpoint|project
 }
 
-type Pattern struct {
-	Pattern   string `yaml:"pattern"`
-	Rationale string `yaml:"rationale,omitempty"`
-	Examples  string `yaml:"examples,omitempty"`
-	Scope     string `yaml:"scope"` // checkpoint|project - required if present
-}
-
-type ConversationItem struct {
-	Exchange string `yaml:"exchange"`
-	Outcome  string `yaml:"outcome,omitempty"`
+type KeyExchange struct {
+	PromptSummary string `yaml:"prompt_summary"`
+	ApproachTaken string `yaml:"approach_taken,omitempty"`
+	HumanFeedback string `yaml:"human_feedback,omitempty"`
 }
 
 // AppendContextEntry appends a context entry to the context file
@@ -142,74 +135,33 @@ func GenerateContextTemplate() string {
 # Capture the reasoning and decision-making process for this checkpoint.
 # This helps maintain continuity across development sessions with LLM agents.
 #
-# SCOPE FIELD EXPLANATION:
-# - scope: checkpoint = Specific to this change, stored in context history
-# - scope: project = Project-wide pattern/principle, becomes recommendation in .checkpoint-project.yml
-#
-# PROJECT RECOMMENDATIONS:
-# Items marked with scope:project are extracted and appended as recommendations to .checkpoint-project.yml.
-# These appear as separate YAML documents after the main project document for human review.
-# The human curator later reviews these recommendations and incorporates relevant ones into the main
-# project document, or deletes them if not applicable.
-#
-# Project-scoped items can suggest additions to any project document section:
-# - key_insights: Project-wide learnings affecting all development
-# - established_patterns: Code/design patterns to follow throughout project
-# - failed_approaches: Anti-patterns to avoid project-wide
-# - design_principles: Core architectural principles
-# - dependencies: External libraries/tools the project relies on
-# - language_requirements: Minimum language/runtime versions needed
-# - deployment_targets: Platforms and architectures the project supports
-# - testing_methodologies: Testing approaches used across the project
-# - development_roles: Who does what in the development workflow
-# - error_handling_patterns: How errors are handled project-wide
-# - compatibility_strategy: How backward compatibility is maintained
-# - file_management: Lifecycle and ownership of project files
-# - security_considerations: Security concerns and mitigations
-# - performance_considerations: Performance characteristics and constraints
-# - cross_cutting_concerns: Encoding, timezones, formatting standards
+# SCOPE: checkpoint = this change only | project = becomes recommendation in .checkpoint/project.yaml
 
 context:
   problem_statement: "[REQUIRED: What problem is this checkpoint solving?]"
 
   key_insights:
-    - insight: "[REQUIRED: What did you learn during implementation?]"
-      impact: "[OPTIONAL: How does this affect future development?]"
-      scope: "[OPTIONAL: checkpoint|project - default is checkpoint]"
-      # Example project scope: "Minimal dependencies reduce external failure points"
-      # Example checkpoint scope: "This specific optimization improved performance by 50%"
+    - insight: "[What did you learn?]"
+      impact: "[How does this affect future development?]"
+      scope: "[checkpoint|project]"
 
   decisions_made:
-    - decision: "[REQUIRED: Significant architectural/implementation choice]"
-      rationale: "[REQUIRED: Why this approach over alternatives?]"
+    - decision: "[Significant choice made]"
+      rationale: "[Why this approach?]"
       alternatives_considered:
-        - "[OPTIONAL: Other approaches evaluated]"
-      constraints_that_influenced: "[OPTIONAL: Limitations that drove this choice]"
-      scope: "[OPTIONAL: checkpoint|project - default is checkpoint]"
-      # Example project scope: "Use append-only files for all historical data"
-      # Example checkpoint scope: "Used specific algorithm for this feature"
+        - "[Other approaches evaluated]"
+      scope: "[checkpoint|project]"
 
   failed_approaches:
-    - approach: "[OPTIONAL: What was tried but didn't work?]"
-      why_failed: "[OPTIONAL: Specific reason for failure]"
-      lessons_learned: "[OPTIONAL: What to avoid in future]"
-      scope: "[OPTIONAL: checkpoint|project - default is checkpoint]"
-      # Example project scope: "Automated aggregation creates noise; prefer human curation"
-      # Example checkpoint scope: "Tried optimization X but it degraded readability"
+    - approach: "[What didn't work?]"
+      why_failed: "[Why?]"
+      lessons_learned: "[What to avoid]"
+      scope: "[checkpoint|project]"
 
-  established_patterns:
-    - pattern: "[OPTIONAL: New convention established]"
-      rationale: "[OPTIONAL: Why this pattern works for this codebase]"
-      examples: "[OPTIONAL: Where this pattern should be applied]"
-      scope: "[REQUIRED if present: checkpoint|project]"
-      # Example project scope: "Table-driven tests for scenario coverage"
-      # Example checkpoint scope: "New helper function pattern for this module"
-
-  conversation_context:
-    - exchange: "[OPTIONAL: Key discussion points that influenced decisions]"
-      outcome: "[OPTIONAL: How this shaped the implementation]"
-      # These capture nuances from discussions that influenced the implementation
-      # Example: "Discussed whether to use library X - decided against due to size"
+  key_exchanges:
+    - prompt_summary: "[What the human asked the LLM to do]"
+      approach_taken: "[What the LLM proposed/did]"
+      human_feedback: "[How the human responded - approved, modified, rejected]"
 `
 }
 

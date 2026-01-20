@@ -16,7 +16,7 @@ Let's work on: {{task_description}}
 1. Implement the changes
 2. Test thoroughly
 3. When done, I'll run `checkpoint check`
-4. You'll analyze changes and fill `.checkpoint-input`
+4. You'll analyze changes and fill `checkpoint-input`
 5. I'll review and run `checkpoint commit`
 
 ### With Session Planning (for complex work)
@@ -24,7 +24,7 @@ Let's work on: {{task_description}}
 2. Fill in goals, approach, and next actions
 3. Work through the plan, updating as useful
 4. Run `checkpoint check` when ready
-5. Fill `.checkpoint-input`
+5. Fill `checkpoint-input`
 6. Run `checkpoint commit` (clears session)
 
 Sessions are disposable scratchpads—delete or ignore items that become irrelevant.
@@ -40,4 +40,4 @@ checkpoint session handoff   # Prepare for handoff to next LLM
 
 ## Project Patterns
 
-Check `.checkpoint-project.yml` for established patterns and conventions.
+Check `.checkpoint/project.yaml` for established patterns and conventions.

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dmoose/checkpoint/cmd"
+	cpk "github.com/dmoose/checkpoint/internal/app/checkpoint"
 	"github.com/dmoose/checkpoint/internal/file"
 	"github.com/dmoose/checkpoint/pkg/config"
 )
@@ -42,7 +42,7 @@ func TestCompleteWorkflow(t *testing.T) {
 	}
 
 	// Step 1: Run checkpoint check
-	cmd.Check(tmpDir)
+	cpk.Check(tmpDir)
 
 	// Verify input file was created
 	inputPath := filepath.Join(tmpDir, config.InputFileName)
@@ -76,7 +76,7 @@ func TestCompleteWorkflow(t *testing.T) {
 	}
 
 	// Step 3: Run checkpoint commit
-	cmd.Commit(tmpDir, "test-version")
+	cpk.Commit(tmpDir, "test-version")
 
 	// Verify changelog was created and contains our change
 	changelogPath := filepath.Join(tmpDir, config.ChangelogFileName)
@@ -147,7 +147,7 @@ func TestDryRunWorkflow(t *testing.T) {
 	}
 
 	// Run check
-	cmd.Check(tmpDir)
+	cpk.Check(tmpDir)
 
 	// Edit input file
 	inputPath := filepath.Join(tmpDir, config.InputFileName)
@@ -161,7 +161,7 @@ func TestDryRunWorkflow(t *testing.T) {
 	_ = file.WriteFile(inputPath, editedContent)
 
 	// Run commit with dry-run
-	cmd.CommitWithOptions(tmpDir, cmd.CommitOptions{DryRun: true}, "test-version")
+	cpk.CommitWithOptions(tmpDir, cpk.CommitOptions{DryRun: true}, "test-version")
 
 	// Verify no actual commit was made
 	output := runGitCmd(t, tmpDir, "log", "--oneline")
@@ -204,7 +204,7 @@ func TestCleanWorkflow(t *testing.T) {
 	if err := os.WriteFile(testFile, []byte("content\nmodified\n"), 0644); err != nil {
 		t.Fatalf("failed to modify test file: %v", err)
 	}
-	cmd.Check(tmpDir)
+	cpk.Check(tmpDir)
 
 	// Verify temporary files exist
 	inputPath := filepath.Join(tmpDir, config.InputFileName)
@@ -217,7 +217,7 @@ func TestCleanWorkflow(t *testing.T) {
 	}
 
 	// Run clean command
-	cmd.Clean(tmpDir)
+	cpk.Clean(tmpDir)
 
 	// Verify temporary files are removed
 	if file.Exists(inputPath) {
@@ -252,7 +252,7 @@ func TestConcurrentCheckpointPrevention(t *testing.T) {
 	}
 
 	// Run first check
-	cmd.Check(tmpDir)
+	cpk.Check(tmpDir)
 
 	// Verify lock file exists
 	lockPath := filepath.Join(tmpDir, config.LockFileName)
@@ -282,7 +282,7 @@ func TestConcurrentCheckpointPrevention(t *testing.T) {
 	os.Stderr = originalStderr
 
 	// Clean up
-	cmd.Clean(tmpDir)
+	cpk.Clean(tmpDir)
 }
 
 // TestInitWorkflow tests the init command
@@ -296,35 +296,27 @@ func TestInitWorkflow(t *testing.T) {
 	setupGitRepo(t, tmpDir)
 
 	// Run init command
-	cmd.Init(tmpDir, "test-version")
+	cpk.InitWithOptions(tmpDir, "test-version")
 
-	// Verify CHECKPOINT.md was created
-	checkpointMdPath := filepath.Join(tmpDir, config.CheckpointMdFileName)
-	if !file.Exists(checkpointMdPath) {
-		t.Fatalf("CHECKPOINT.md file not created at %s", checkpointMdPath)
+	// Verify changelog was created (checkpoint init now only creates changelog + gitignore)
+	changelogPath := filepath.Join(tmpDir, config.ChangelogFileName)
+	if !file.Exists(changelogPath) {
+		t.Fatalf("changelog file not created at %s", changelogPath)
 	}
 
-	// Verify content contains expected sections
-	content, err := file.ReadFile(checkpointMdPath)
+	// Verify .gitignore was updated
+	gitignorePath := filepath.Join(tmpDir, ".gitignore")
+	if !file.Exists(gitignorePath) {
+		t.Fatalf(".gitignore not created at %s", gitignorePath)
+	}
+
+	gitignoreContent, err := file.ReadFile(gitignorePath)
 	if err != nil {
-		t.Fatalf("failed to read CHECKPOINT.md: %v", err)
+		t.Fatalf("failed to read .gitignore: %v", err)
 	}
 
-	expectedSections := []string{
-		"# Checkpoint Workflow",
-		"Key files:",
-		"Basic workflow:",
-		"Schema (YAML):",
-		"## Learning Resources",
-		"## Quick Tips",
-		"## Commands",
-		"## LLM Prompts",
-	}
-
-	for _, section := range expectedSections {
-		if !strings.Contains(content, section) {
-			t.Errorf("CHECKPOINT.md missing expected section '%s'", section)
-		}
+	if !strings.Contains(gitignoreContent, "checkpoint-input") {
+		t.Errorf(".gitignore should contain checkpoint-input")
 	}
 }
 
@@ -358,9 +350,9 @@ func TestErrorHandling(t *testing.T) {
 
 // Helper function to set up a git repository
 func setupGitRepo(t *testing.T, dir string) {
-	cmd := exec.Command("git", "init")
-	cmd.Dir = dir
-	if err := cmd.Run(); err != nil {
+	gitCmd := exec.Command("git", "init")
+	gitCmd.Dir = dir
+	if err := gitCmd.Run(); err != nil {
 		t.Skipf("git not available, skipping test: %v", err)
 	}
 
@@ -370,9 +362,9 @@ func setupGitRepo(t *testing.T, dir string) {
 
 // Helper function to run git commands
 func runGitCmd(t *testing.T, dir string, args ...string) string {
-	cmd := exec.Command("git", args...)
-	cmd.Dir = dir
-	output, err := cmd.Output()
+	gitCmd := exec.Command("git", args...)
+	gitCmd.Dir = dir
+	output, err := gitCmd.Output()
 	if err != nil {
 		t.Fatalf("git command failed: %v\nOutput: %s", err, output)
 	}

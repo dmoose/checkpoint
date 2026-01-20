@@ -333,7 +333,7 @@ checkpoint commit    # Commit
 ```
 
 **End of day:**
-- Review `.checkpoint-project.yml` recommendations
+- Review `.checkpoint/project.yaml` recommendations
 - Merge valuable patterns into main document
 
 ### Team Coordination

@@ -1,12 +1,10 @@
-# Makefile for checkpoint project
+# Makefile for checkpoint + guardrail project
 
 # Variables
-BINARY_NAME := checkpoint
 MODULE_NAME := github.com/dmoose/checkpoint
 BIN_DIR := bin
 BUILD_DIR := build
-MAIN_FILE := main.go
-VERSION := 0.1.0
+VERSION := 0.2.0
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE) -s -w"
@@ -18,21 +16,33 @@ INSTALL_PATH := $(HOME)/.local/bin
 .PHONY: all
 all: build
 
-# Build the binary
+# Build both binaries
 .PHONY: build
-build: $(BIN_DIR)/$(BINARY_NAME)
+build: build-checkpoint build-guardrail
 
-$(BIN_DIR)/$(BINARY_NAME): $(GO_FILES)
+.PHONY: build-checkpoint
+build-checkpoint: $(BIN_DIR)/checkpoint
+
+$(BIN_DIR)/checkpoint: $(GO_FILES)
 	@mkdir -p $(BIN_DIR)
-	@echo "Building $(BINARY_NAME)..."
-	go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) $(MAIN_FILE)
+	@echo "Building checkpoint..."
+	go build $(LDFLAGS) -o $(BIN_DIR)/checkpoint ./cmd/checkpoint
+
+.PHONY: build-guardrail
+build-guardrail: $(BIN_DIR)/guardrail
+
+$(BIN_DIR)/guardrail: $(GO_FILES)
+	@mkdir -p $(BIN_DIR)
+	@echo "Building guardrail..."
+	go build $(LDFLAGS) -o $(BIN_DIR)/guardrail ./cmd/guardrail
 
 # Build for development (with race detector and debug info)
 .PHONY: build-dev
 build-dev:
 	@mkdir -p $(BIN_DIR)
-	@echo "Building $(BINARY_NAME) for development..."
-	go build -race -o $(BIN_DIR)/$(BINARY_NAME) $(MAIN_FILE)
+	@echo "Building for development..."
+	go build -race -o $(BIN_DIR)/checkpoint ./cmd/checkpoint
+	go build -race -o $(BIN_DIR)/guardrail ./cmd/guardrail
 
 # Cross-compile for multiple platforms
 .PHONY: build-all
@@ -42,32 +52,36 @@ build-all: clean-build
 	@for platform in $(PLATFORMS); do \
 		OS=$${platform%/*}; \
 		ARCH=$${platform#*/}; \
-		binary_name=$(BINARY_NAME); \
-		if [ "$$OS" = "windows" ]; then binary_name=$(BINARY_NAME).exe; fi; \
+		ext=""; \
+		if [ "$$OS" = "windows" ]; then ext=".exe"; fi; \
 		echo "Building for $$OS/$$ARCH..."; \
-		GOOS=$$OS GOARCH=$$ARCH go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-$$OS-$$ARCH/$$binary_name $(MAIN_FILE); \
+		GOOS=$$OS GOARCH=$$ARCH go build $(LDFLAGS) -o $(BUILD_DIR)/checkpoint-$$OS-$$ARCH/checkpoint$$ext ./cmd/checkpoint; \
+		GOOS=$$OS GOARCH=$$ARCH go build $(LDFLAGS) -o $(BUILD_DIR)/guardrail-$$OS-$$ARCH/guardrail$$ext ./cmd/guardrail; \
 	done
 
-# Install the binary to GOPATH/bin or GOBIN
+# Install both binaries to GOPATH/bin
 .PHONY: install
 install:
-	@echo "Installing $(BINARY_NAME) to GOPATH/bin..."
-	go install $(LDFLAGS) .
+	@echo "Installing checkpoint and guardrail to GOPATH/bin..."
+	go install $(LDFLAGS) ./cmd/checkpoint
+	go install $(LDFLAGS) ./cmd/guardrail
 
 # Install to user's local bin directory (~/.local/bin)
 .PHONY: install-user
 install-user: build
-	@echo "Installing $(BINARY_NAME) to $(INSTALL_PATH)..."
+	@echo "Installing to $(INSTALL_PATH)..."
 	@mkdir -p $(INSTALL_PATH)
-	@cp $(BIN_DIR)/$(BINARY_NAME) $(INSTALL_PATH)/$(BINARY_NAME)
-	@echo "Installed to $(INSTALL_PATH)/$(BINARY_NAME)"
+	@cp $(BIN_DIR)/checkpoint $(INSTALL_PATH)/checkpoint
+	@cp $(BIN_DIR)/guardrail $(INSTALL_PATH)/guardrail
+	@echo "Installed checkpoint and guardrail to $(INSTALL_PATH)"
 	@echo "Ensure $(INSTALL_PATH) is in your PATH"
 
 # Uninstall from user's local bin directory
 .PHONY: uninstall-user
 uninstall-user:
-	@echo "Removing $(BINARY_NAME) from $(INSTALL_PATH)..."
-	@rm -f $(INSTALL_PATH)/$(BINARY_NAME)
+	@echo "Removing binaries from $(INSTALL_PATH)..."
+	@rm -f $(INSTALL_PATH)/checkpoint
+	@rm -f $(INSTALL_PATH)/guardrail
 
 # Run tests
 .PHONY: test
@@ -162,15 +176,15 @@ update:
 	go get -u ./...
 	go mod tidy
 
-# Run the application
-.PHONY: run
-run: build
-	@$(BIN_DIR)/$(BINARY_NAME)
+# Run checkpoint with arguments (usage: make run-checkpoint ARGS="start")
+.PHONY: run-checkpoint
+run-checkpoint: build-checkpoint
+	@$(BIN_DIR)/checkpoint $(ARGS)
 
-# Run with arguments (usage: make run-with ARGS="check .")
-.PHONY: run-with
-run-with: build
-	@$(BIN_DIR)/$(BINARY_NAME) $(ARGS)
+# Run guardrail with arguments (usage: make run-guardrail ARGS="explain")
+.PHONY: run-guardrail
+run-guardrail: build-guardrail
+	@$(BIN_DIR)/guardrail $(ARGS)
 
 # Development workflow: format, vet, test, and build
 .PHONY: dev
@@ -180,29 +194,39 @@ dev: fmt vet test build
 .PHONY: help
 help:
 	@echo "Available targets:"
-	@echo "  build         - Build the binary to bin/ directory"
-	@echo "  build-dev     - Build with race detector and debug info"
-	@echo "  build-all     - Cross-compile for multiple platforms"
-	@echo "  install       - Install binary to GOPATH/bin"
-	@echo "  install-user  - Install binary to ~/.local/bin"
-	@echo "  uninstall-user- Remove binary from ~/.local/bin"
-	@echo "  test          - Run tests"
-	@echo "  test-coverage - Run tests with coverage report"
-	@echo "  test-race     - Run tests with race detector"
-	@echo "  bench         - Run benchmarks"
-	@echo "  fmt           - Format code"
-	@echo "  lint          - Run linter (auto-installs golangci-lint v2 if needed)"
-	@echo "  vet           - Run go vet"
-	@echo "  check         - Run fmt, vet, lint, and test"
-	@echo "  clean         - Clean all build artifacts"
-	@echo "  clean-build   - Clean build directory only"
-	@echo "  deps          - Download dependencies"
-	@echo "  tidy          - Tidy dependencies"
-	@echo "  update        - Update dependencies"
-	@echo "  run           - Build and run the application"
-	@echo "  run-with      - Build and run with arguments (use ARGS='...')"
-	@echo "  dev           - Development workflow (fmt, vet, test, build)"
-	@echo "  help          - Show this help message"
+	@echo ""
+	@echo "Build:"
+	@echo "  build              - Build both checkpoint and guardrail binaries"
+	@echo "  build-checkpoint   - Build only checkpoint binary"
+	@echo "  build-guardrail    - Build only guardrail binary"
+	@echo "  build-dev          - Build both with race detector"
+	@echo "  build-all          - Cross-compile for multiple platforms"
+	@echo ""
+	@echo "Install:"
+	@echo "  install            - Install both binaries to GOPATH/bin"
+	@echo "  install-user       - Install both to ~/.local/bin"
+	@echo "  uninstall-user     - Remove both from ~/.local/bin"
+	@echo ""
+	@echo "Test & Quality:"
+	@echo "  test               - Run tests"
+	@echo "  test-coverage      - Run tests with coverage report"
+	@echo "  test-race          - Run tests with race detector"
+	@echo "  bench              - Run benchmarks"
+	@echo "  fmt                - Format code"
+	@echo "  lint               - Run linter"
+	@echo "  vet                - Run go vet"
+	@echo "  check              - Run fmt, vet, lint, and test"
+	@echo ""
+	@echo "Run:"
+	@echo "  run-checkpoint     - Build and run checkpoint (use ARGS='...')"
+	@echo "  run-guardrail      - Build and run guardrail (use ARGS='...')"
+	@echo ""
+	@echo "Maintenance:"
+	@echo "  clean              - Clean all build artifacts"
+	@echo "  deps               - Download dependencies"
+	@echo "  tidy               - Tidy dependencies"
+	@echo "  update             - Update dependencies"
+	@echo "  dev                - Development workflow (fmt, vet, test, build)"
 
 # Version info
 .PHONY: version
@@ -211,7 +235,6 @@ version:
 	@echo "Commit:  $(COMMIT)"
 	@echo "Date:    $(DATE)"
 	@echo "Module:  $(MODULE_NAME)"
-	@echo "Binary:  $(BINARY_NAME)"
 
 # Create release archives (requires build-all)
 .PHONY: release

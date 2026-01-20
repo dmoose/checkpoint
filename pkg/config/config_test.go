@@ -10,7 +10,7 @@ func TestConfigConstants(t *testing.T) {
 		constant string
 		expected string
 	}{
-		{"InputFileName", InputFileName, ".checkpoint-input"},
+		{"InputFileName", InputFileName, "checkpoint-input"},
 		{"DiffFileName", DiffFileName, ".checkpoint-diff"},
 		{"ChangelogFileName", ChangelogFileName, ".checkpoint-changelog.yaml"},
 		{"StatusFileName", StatusFileName, ".checkpoint-status.yaml"},
@@ -28,7 +28,8 @@ func TestConfigConstants(t *testing.T) {
 }
 
 func TestFileNameConsistency(t *testing.T) {
-	// Ensure all checkpoint files start with .checkpoint prefix (except CHECKPOINT.md)
+	// Ensure checkpoint files contain "checkpoint" in their name
+	// InputFileName is intentionally visible (no dot prefix) since humans must review it
 	checkpointFiles := []struct {
 		name string
 		file string
@@ -42,14 +43,24 @@ func TestFileNameConsistency(t *testing.T) {
 
 	for _, file := range checkpointFiles {
 		t.Run(file.name, func(t *testing.T) {
-			if file.file[0] != '.' {
-				t.Errorf("expected %s to start with '.', got %q", file.name, file.file)
-			}
-			if len(file.file) < 2 || file.file[1:12] != "checkpoint-" {
-				t.Errorf("expected %s to have '.checkpoint-' prefix, got %q", file.name, file.file)
+			if len(file.file) < 11 || !contains(file.file, "checkpoint-") {
+				t.Errorf("expected %s to contain 'checkpoint-', got %q", file.name, file.file)
 			}
 		})
 	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && searchStr(s, substr)
+}
+
+func searchStr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
 
 func TestYamlExtensions(t *testing.T) {

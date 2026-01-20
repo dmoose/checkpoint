@@ -1,0 +1,162 @@
+package guardrail
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/dmoose/checkpoint/internal/explain"
+
+	"github.com/spf13/cobra"
+)
+
+var explainOpts struct {
+	full     bool
+	markdown bool
+	json     bool
+}
+
+func init() {
+	rootCmd.AddCommand(explainCmd)
+	explainCmd.Flags().BoolVar(&explainOpts.full, "full", false, "Show complete context dump")
+	explainCmd.Flags().BoolVar(&explainOpts.markdown, "md", false, "Output as markdown")
+	explainCmd.Flags().BoolVar(&explainOpts.json, "json", false, "Output as JSON")
+}
+
+var explainCmd = &cobra.Command{
+	Use:   "explain [topic] [skill-name]",
+	Short: "Get project context for LLMs and developers",
+	Long: `Display project context information.
+Topics: project, tools, guidelines, skills, learnings, skill <name>, history, next`,
+	Args: cobra.MaximumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		projectPath := "."
+		absPath, err := filepath.Abs(projectPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: cannot resolve path: %v\n", err)
+			os.Exit(1)
+		}
+
+		opts := ExplainOptions{
+			Full:     explainOpts.full,
+			Markdown: explainOpts.markdown,
+			JSON:     explainOpts.json,
+		}
+		if len(args) > 0 {
+			opts.Topic = args[0]
+		}
+		if len(args) > 1 {
+			opts.SkillName = args[1]
+		}
+		Explain(absPath, opts)
+	},
+}
+
+// ExplainOptions holds flags for the explain command
+type ExplainOptions struct {
+	Topic     string // project, tools, guidelines, skills, skill, history, or empty for summary
+	SkillName string // specific skill name when topic is "skill"
+	Full      bool   // --full flag
+	Markdown  bool   // --md flag
+	JSON      bool   // --json flag
+}
+
+// Explain displays project context for LLMs and developers
+func Explain(projectPath string, opts ExplainOptions) {
+	ctx, err := explain.LoadExplainContext(projectPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error loading context: %v\n", err)
+		os.Exit(1)
+	}
+
+	var output string
+
+	switch opts.Topic {
+	case "":
+		if opts.Full {
+			output = ctx.RenderFull()
+		} else {
+			output = ctx.RenderSummary()
+		}
+	case "project":
+		output = ctx.RenderProject()
+	case "tools":
+		output = ctx.RenderTools()
+	case "guidelines":
+		output = ctx.RenderGuidelines()
+	case "skills":
+		output = ctx.RenderSkills()
+	case "learnings":
+		output = ctx.RenderLearnings()
+	case "skill":
+		if opts.SkillName == "" {
+			fmt.Fprintf(os.Stderr, "error: skill name required\n")
+			fmt.Fprintf(os.Stderr, "usage: guardrail explain skill <name>\n")
+			os.Exit(1)
+		}
+		output = ctx.RenderSkill(opts.SkillName)
+	case "history":
+		output = explain.RenderHistory(projectPath, 10)
+	case "next":
+		output = explain.RenderNext(projectPath)
+	default:
+		// Check if it's a skill name directly
+		skillOutput := ctx.RenderSkill(opts.Topic)
+		if skillOutput != "" && !isSkillNotFound(skillOutput) {
+			output = skillOutput
+		} else {
+			fmt.Fprintf(os.Stderr, "unknown topic: %s\n", opts.Topic)
+			fmt.Fprintf(os.Stderr, "available: project, tools, guidelines, skills, learnings, skill <name>, history, next\n")
+			os.Exit(1)
+		}
+	}
+
+	// Handle output format
+	if opts.JSON {
+		outputJSON(ctx, opts.Topic)
+		return
+	}
+
+	fmt.Print(output)
+}
+
+func isSkillNotFound(output string) bool {
+	return len(output) > 0 && output[0:5] == "Skill"
+}
+
+func outputJSON(ctx *explain.ExplainOutput, topic string) {
+	var data interface{}
+
+	switch topic {
+	case "project":
+		data = ctx.Project
+	case "tools":
+		data = ctx.Tools
+	case "guidelines":
+		data = ctx.Guidelines
+	case "skills":
+		data = struct {
+			Config *explain.SkillsConfig `json:"config"`
+			Skills []explain.Skill       `json:"skills"`
+		}{ctx.Skills, ctx.SkillDefs}
+	case "learnings":
+		data = ctx.Learnings
+	default:
+		data = struct {
+			Project    *explain.ProjectConfig    `json:"project"`
+			Tools      *explain.ToolsConfig      `json:"tools"`
+			Guidelines *explain.GuidelinesConfig `json:"guidelines"`
+			Skills     *explain.SkillsConfig     `json:"skills_config"`
+			SkillDefs  []explain.Skill           `json:"skills"`
+			Learnings  []explain.Learning        `json:"learnings"`
+		}{ctx.Project, ctx.Tools, ctx.Guidelines, ctx.Skills, ctx.SkillDefs, ctx.Learnings}
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(data); err != nil {
+		fmt.Fprintf(os.Stderr, "error encoding JSON: %v\n", err)
+		os.Exit(1)
+	}
+}

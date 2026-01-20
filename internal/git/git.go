@@ -178,3 +178,79 @@ func Commit(path, message string) (string, error) {
 	}
 	return strings.TrimSpace(hashOut.String()), nil
 }
+
+// CommitInfo represents a parsed git log entry
+type CommitInfo struct {
+	Hash      string
+	Timestamp string // RFC3339
+	Author    string
+	Subject   string
+	Body      string
+}
+
+// GetLog returns parsed commit info for a range of commits
+// Supports: --since, --last N, specific hash ranges
+func GetLog(path string, args ...string) ([]CommitInfo, error) {
+	// Build git log command with format that's easy to parse
+	// Use %x00 as field separator and %x01 as record separator
+	format := "%H%x00%aI%x00%an%x00%s%x00%b%x01"
+	gitArgs := []string{"log", "--format=" + format, "--no-merges"}
+	gitArgs = append(gitArgs, args...)
+
+	output, err := runGit(path, gitArgs)
+	if err != nil {
+		return nil, fmt.Errorf("git log: %w", err)
+	}
+
+	output = strings.TrimSpace(output)
+	if output == "" {
+		return nil, nil
+	}
+
+	var commits []CommitInfo
+	records := strings.Split(output, "\x01")
+	for _, record := range records {
+		record = strings.TrimSpace(record)
+		if record == "" {
+			continue
+		}
+		fields := strings.SplitN(record, "\x00", 5)
+		if len(fields) < 4 {
+			continue
+		}
+		commits = append(commits, CommitInfo{
+			Hash:      fields[0],
+			Timestamp: fields[1],
+			Author:    fields[2],
+			Subject:   fields[3],
+			Body:      strings.TrimSpace(safeIndex(fields, 4)),
+		})
+	}
+
+	return commits, nil
+}
+
+func safeIndex(s []string, i int) string {
+	if i < len(s) {
+		return s[i]
+	}
+	return ""
+}
+
+// GetCommitDiff returns the diff for a specific commit
+func GetCommitDiff(path, hash string) (string, error) {
+	output, err := runGit(path, []string{"show", "--format=", "--patch", hash})
+	if err != nil {
+		return "", fmt.Errorf("git show %s: %w", hash, err)
+	}
+	return output, nil
+}
+
+// GetCommitNumStat returns file change statistics for a specific commit
+func GetCommitNumStat(path, hash string) (string, error) {
+	output, err := runGit(path, []string{"show", "--format=", "--numstat", hash})
+	if err != nil {
+		return "", fmt.Errorf("git show --numstat %s: %w", hash, err)
+	}
+	return output, nil
+}

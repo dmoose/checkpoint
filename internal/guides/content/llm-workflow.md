@@ -41,9 +41,9 @@ checkpoint check
 ### 5. LLM Fills Input File
 
 LLM reads:
-- `.checkpoint-input` - Template to fill
+- `checkpoint-input` - Template to fill
 - `.checkpoint-diff` - Full diff of changes
-- `.checkpoint-project.yml` - Project patterns to follow
+- `.checkpoint/project.yaml` - Project patterns to follow
 
 LLM fills:
 - `changes[]` - What changed (specific summaries)
@@ -60,7 +60,7 @@ Catches common mistakes before human review.
 
 ### 7. Human Reviews and Commits
 
-Human reviews `.checkpoint-input`, then:
+Human reviews `checkpoint-input`, then:
 
 ```bash
 checkpoint commit
@@ -222,7 +222,7 @@ context:
 
 Before filling checkpoint input, LLM should read:
 
-### `.checkpoint-project.yml`
+### `.checkpoint/project.yaml`
 
 Contains project-wide patterns:
 - Dependencies and their rationale
@@ -231,7 +231,7 @@ Contains project-wide patterns:
 - Error handling approaches
 - Performance considerations
 
-### `.checkpoint-context.yml`
+### `.checkpoint-context.yaml`
 
 Recent checkpoint contexts (last few entries):
 - Recent decisions
@@ -242,9 +242,9 @@ Recent checkpoint contexts (last few entries):
 
 Reference examples:
 ```bash
-checkpoint examples feature      # See feature example
-checkpoint examples context      # See context examples
-checkpoint examples anti-patterns # Avoid mistakes
+guardrail examples feature      # See feature example
+guardrail examples context      # See context examples
+guardrail examples anti-patterns # Avoid mistakes
 ```
 
 ## Common LLM Mistakes
@@ -395,8 +395,8 @@ When we're done, I'll run `checkpoint check` and you'll fill the checkpoint inpu
 I've run `checkpoint check`. Please:
 
 1. Read .checkpoint-diff to understand all changes
-2. Read .checkpoint-project.yml to understand project patterns
-3. Fill .checkpoint-input with:
+2. Read .checkpoint/project.yaml to understand project patterns
+3. Fill checkpoint-input with:
    - Specific summaries for each change (<80 chars)
    - Context explaining WHY we made these changes
    - Decisions made and alternatives considered

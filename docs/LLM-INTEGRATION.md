@@ -1,31 +1,30 @@
-# Integrating Checkpoint with LLM Tools
+# Integrating with LLM Tools
 
-This guide covers how to configure various LLM coding tools to use checkpoint effectively.
+This guide covers how to configure various LLM coding tools to use checkpoint and guardrail effectively.
 
 ## The Core Pattern
 
 Regardless of tool, the integration pattern is:
 
-1. **Session Start:** Provide project context from checkpoint
+1. **Session Start:** Provide project context from guardrail
 2. **During Work:** Follow patterns in guidelines, use established tools
 3. **Before Finishing:** User runs `checkpoint check` when they decide work is complete
-4. **Review:** User reviews and edits .checkpoint-input (what the LLM filled in)
+4. **Review:** User reviews and edits checkpoint-input (what the LLM filled in)
 5. **Commit:** User runs `checkpoint commit` after they're satisfied
 
-**Important:** The user decides when to checkpoint. This is intentional - it ensures clean handoff and gives the user opportunity to review/edit what the LLM has added.
+**Important:** The user decides when to checkpoint. This is intentional -- it ensures clean handoff and gives the user opportunity to review/edit what the LLM has added.
 
 ## Context Sources
 
-Checkpoint provides several ways to get context:
-
 | Source | Description |
 |--------|-------------|
-| `checkpoint explain` | Complete context dump for prompts |
+| `guardrail explain` | Complete context dump for prompts |
 | `checkpoint start` | Quick status + next steps |
-| `CHECKPOINT.md` | Static reference file with workflow overview |
+| `guardrail guide` | Built-in workflow guides |
 | `.checkpoint/project.yaml` | Architecture and structure |
 | `.checkpoint/guidelines.yaml` | Coding standards |
 | `.checkpoint/tools.yaml` | Build/test/lint commands |
+| `.checkpoint/skills.yaml` | Available LLM skills |
 | `.checkpoint-session.yaml` | Current planning session (if active) |
 
 ---
@@ -34,19 +33,13 @@ Checkpoint provides several ways to get context:
 
 ### Claude Code
 
-Claude Code reads `CLAUDE.md` in your project root. This file already exists in checkpoint projects created with `checkpoint init`.
-
-The `CLAUDE.md` file should contain:
-- Build and test commands
-- Architecture overview
-- Key patterns and conventions
-- Critical rules
+Claude Code reads `CLAUDE.md` in your project root. This file should contain build/test commands, architecture overview, key patterns, and critical rules.
 
 For additional context at session start:
 ```bash
-# Run this and share output with Claude
+# Run these and share output with Claude
 checkpoint start
-checkpoint explain
+guardrail explain
 ```
 
 ### Cursor
@@ -54,10 +47,11 @@ checkpoint explain
 Create a `.cursorrules` file in your project root:
 
 ```
-# Project uses checkpoint for development context
+# Project uses checkpoint + guardrail for development context
 
 ## Before Starting
 Run `checkpoint start` to see project status and pending work.
+Run `guardrail explain` for full project context.
 Read .checkpoint/guidelines.yaml for coding standards.
 
 ## Commands
@@ -78,15 +72,21 @@ Do not run these commands automatically.
 Aider can include files in context. Use command line flags:
 
 ```bash
-aider --read CHECKPOINT.md --read .checkpoint/project.yaml
+aider --read .checkpoint/project.yaml --read .checkpoint/guidelines.yaml
 ```
 
 Or create `.aider.conf.yml`:
 ```yaml
 read:
-  - CHECKPOINT.md
   - .checkpoint/project.yaml
   - .checkpoint/guidelines.yaml
+  - .checkpoint/tools.yaml
+```
+
+For full context, pipe guardrail output:
+```bash
+guardrail explain > /tmp/context.md
+aider --read /tmp/context.md
 ```
 
 ### GitHub Copilot
@@ -106,14 +106,14 @@ Copilot doesn't support custom system prompts. Options:
 
 ### Custom Scripts / API Usage
 
-For direct API usage, include checkpoint context in your system prompt:
+For direct API usage, include guardrail context in your system prompt:
 
 ```python
 import subprocess
 
-def get_checkpoint_context():
+def get_project_context():
     result = subprocess.run(
-        ['checkpoint', 'explain'],
+        ['guardrail', 'explain'],
         capture_output=True,
         text=True
     )
@@ -122,7 +122,7 @@ def get_checkpoint_context():
 system_prompt = f"""You are a coding assistant.
 
 Project Context:
-{get_checkpoint_context()}
+{get_project_context()}
 
 Follow the patterns and guidelines above.
 When you complete work, the user will run checkpoint commands to record changes.
@@ -152,7 +152,7 @@ Today I want to [GOAL]. Please review the context and let me know:
 I need to implement [FEATURE].
 
 Project context:
-$(checkpoint explain)
+$(guardrail explain)
 
 Requirements:
 - [Requirement 1]
@@ -170,8 +170,8 @@ Please:
 I'm investigating a bug: [DESCRIPTION]
 
 Project context:
-$(checkpoint explain project)
-$(checkpoint explain tools)
+$(guardrail explain project)
+$(guardrail explain tools)
 
 Please help me:
 1. Identify likely causes based on codebase patterns
@@ -202,29 +202,35 @@ checkpoint session
 checkpoint session handoff
 ```
 
-The session file is transient - it helps organize work but doesn't become part of permanent history. Delete items that are no longer relevant; ignore ones that don't apply.
+The session file is transient -- it helps organize work but doesn't become part of permanent history.
 
 ---
 
 ## What the LLM Should Know
 
-When an LLM doesn't know about checkpoint, explain:
+When an LLM doesn't know about checkpoint and guardrail, explain:
 
 ```
-This project uses 'checkpoint' for development context.
+This project uses two tools for development context:
 
-Key commands (run by the user, not you):
+'checkpoint' records development history:
 - `checkpoint start` - Shows project state and pending work
 - `checkpoint plan` - Creates planning session
 - `checkpoint check` - Creates input file for recording changes
 - `checkpoint commit` - Finalizes the checkpoint
 
+'guardrail' manages project knowledge:
+- `guardrail explain` - Shows full project context (architecture, tools, guidelines)
+- `guardrail learn` - Captures new guidelines or patterns
+- `guardrail doctor` - Checks knowledge base health
+
 The .checkpoint/ directory contains:
 - project.yaml: Architecture and key components
 - guidelines.yaml: Coding standards and patterns
 - tools.yaml: Build, test, lint commands
+- skills.yaml: Available LLM skills
 
-When I run `checkpoint check`, it creates .checkpoint-input for you to fill in:
+When I run `checkpoint check`, it creates checkpoint-input for you to fill in:
 - changes: What changed (summary, type, scope)
 - context: Why it changed (problem, decisions, insights)
 - next_steps: What remains to do
@@ -240,7 +246,7 @@ I will review and edit your input before committing.
 Checkpoint commands should be run by the user, not automated. The user decides when to checkpoint.
 
 **Stale context:**
-If the LLM seems to be using outdated patterns, re-run `checkpoint explain` and share fresh output.
+If the LLM seems to be using outdated patterns, re-run `guardrail explain` and share fresh output.
 
 **Ignoring guidelines:**
 Verify the LLM has actually read `.checkpoint/guidelines.yaml`. Include specific rules in your prompt if needed.

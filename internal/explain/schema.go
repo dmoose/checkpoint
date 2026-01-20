@@ -1,6 +1,6 @@
 package explain
 
-// ProjectConfig represents .checkpoint/project.yml
+// ProjectConfig represents .checkpoint/project.yaml
 type ProjectConfig struct {
 	SchemaVersion  string               `yaml:"schema_version"`
 	Name           string               `yaml:"name"`
@@ -85,7 +85,7 @@ type IntegrationConfig struct {
 	Interaction string `yaml:"interaction,omitempty"`
 }
 
-// ToolsConfig represents .checkpoint/tools.yml
+// ToolsConfig represents .checkpoint/tools.yaml
 type ToolsConfig struct {
 	SchemaVersion string                 `yaml:"schema_version"`
 	Build         map[string]ToolCommand `yaml:"build,omitempty"`
@@ -117,7 +117,7 @@ type ToolCommand struct {
 	Example string `yaml:"example,omitempty"`
 }
 
-// GuidelinesConfig represents .checkpoint/guidelines.yml
+// GuidelinesConfig represents .checkpoint/guidelines.yaml
 // Uses interface{} for flexible nested structures
 type GuidelinesConfig struct {
 	SchemaVersion string                 `yaml:"schema_version"`
@@ -138,7 +138,7 @@ type CollaborationConfig struct {
 	Principles []string `yaml:"principles,omitempty"`
 }
 
-// SkillsConfig represents .checkpoint/skills.yml
+// SkillsConfig represents .checkpoint/skills.yaml
 type SkillsConfig struct {
 	SchemaVersion string                 `yaml:"schema_version"`
 	Global        []string               `yaml:"global,omitempty"`
@@ -159,7 +159,7 @@ type Skill struct {
 	IsLocal bool
 }
 
-// Learning represents a captured insight from learnings.yml
+// Learning represents a captured insight from learnings.yaml
 type Learning struct {
 	Timestamp string `yaml:"timestamp"`
 	Learning  string `yaml:"learning"`

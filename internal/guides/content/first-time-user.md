@@ -19,14 +19,15 @@ Checkpoint is a tool for capturing structured development history in a way that:
 In your project directory (must be a git repository):
 
 ```bash
-checkpoint init
+checkpoint init    # Set up changelog and git tracking
+guardrail init     # Set up knowledge base (configs, prompts, guides)
 ```
 
 This creates:
 - `CHECKPOINT.md` - Workflow documentation
 - `.checkpoint-changelog.yaml` - Your append-only changelog
-- `.checkpoint-context.yml` - Decision history
-- `.checkpoint-project.yml` - Project patterns (you'll curate this)
+- `.checkpoint-context.yaml` - Decision history
+- `.checkpoint/project.yaml` - Project patterns (you'll curate this)
 - `.checkpoint/` - Examples, guides, and config files
 
 **Auto-detection:** Init automatically detects your project's language and build tools from go.mod, package.json, Makefile, etc., and pre-populates config files.
@@ -36,7 +37,7 @@ This creates:
 Check that everything is configured correctly:
 
 ```bash
-checkpoint doctor
+guardrail doctor
 ```
 
 This validates your setup and suggests fixes for any issues:
@@ -44,7 +45,7 @@ This validates your setup and suggests fixes for any issues:
 - Incomplete tool commands
 - Setup problems
 
-Use `checkpoint doctor --verbose` to see what was auto-detected.
+Use `guardrail doctor --verbose` to see what was auto-detected.
 
 ### 3. Start a Work Session
 
@@ -78,12 +79,12 @@ checkpoint check
 ```
 
 This creates:
-- `.checkpoint-input` - Template for you to fill
+- `checkpoint-input` - Template for you to fill
 - `.checkpoint-diff` - Full diff for reference
 
 ### 6. Fill the Input File
 
-Open `.checkpoint-input` and describe your changes:
+Open `checkpoint-input` and describe your changes:
 
 **Required sections:**
 - `changes[]` - What changed (be specific!)
@@ -93,7 +94,7 @@ Open `.checkpoint-input` and describe your changes:
 - Keep summaries under 80 characters
 - Use present tense ("Add feature" not "Added feature")
 - Explain WHY in context, not just WHAT
-- Run `checkpoint examples` to see good examples
+- Run `guardrail examples` to see good examples
 
 **Example:**
 ```yaml
@@ -157,12 +158,12 @@ Done! Your changes are committed with rich metadata.
 - One YAML document per checkpoint
 - Contains: changes, timestamps, commit hashes
 
-**`.checkpoint-context.yml`**
+**`.checkpoint-context.yaml`**
 - Append-only context history
 - Captures reasoning and decisions
 - Maintains development continuity
 
-**`.checkpoint-project.yml`**
+**`.checkpoint/project.yaml`**
 - Project-wide patterns and conventions
 - Human-curated (you maintain this)
 - Starts with recommendations, you review and merge
@@ -174,7 +175,7 @@ Done! Your changes are committed with rich metadata.
 
 ### Temporary Files (Not Tracked)
 
-**`.checkpoint-input`**
+**`checkpoint-input`**
 - Template you fill during checkpoint
 - Deleted after commit
 
@@ -209,12 +210,12 @@ Repeat daily or after logical units of work.
 6. `checkpoint commit` - You commit
 
 **LLM's role:**
-- Reads project patterns from `.checkpoint-project.yml`
+- Reads project patterns from `.checkpoint/project.yaml`
 - Makes code changes
-- Fills `.checkpoint-input` with changes and context
+- Fills `checkpoint-input` with changes and context
 - Runs `checkpoint lint` to validate
 
-See `checkpoint guide llm-workflow` for detailed LLM integration patterns.
+See `guardrail guide llm-workflow` for detailed LLM integration patterns.
 
 ### Team Development
 
@@ -229,7 +230,7 @@ See `checkpoint guide llm-workflow` for detailed LLM integration patterns.
 - Project patterns document grows organically
 
 **Curation:**
-- Periodically review `.checkpoint-project.yml` recommendations
+- Periodically review `.checkpoint/project.yaml` recommendations
 - Merge valuable patterns into main project document
 - Delete recommendations that don't apply
 
@@ -295,18 +296,18 @@ summary: "[FILL IN: what changed]"  # Forgot to fill!
 See what good checkpoints look like:
 
 ```bash
-checkpoint examples              # List categories
-checkpoint examples feature      # See feature example
-checkpoint examples bugfix       # See bugfix example
-checkpoint examples anti-patterns # See common mistakes
+guardrail examples              # List categories
+guardrail examples feature      # See feature example
+guardrail examples bugfix       # See bugfix example
+guardrail examples anti-patterns # See common mistakes
 ```
 
 ### Read Guides
 
 ```bash
-checkpoint guide                  # List available guides
-checkpoint guide llm-workflow     # LLM integration patterns
-checkpoint guide best-practices   # Best practices guide
+guardrail guide                  # List available guides
+guardrail guide llm-workflow     # LLM integration patterns
+guardrail guide best-practices   # Best practices guide
 ```
 
 ### Check Project Patterns
@@ -314,7 +315,7 @@ checkpoint guide best-practices   # Best practices guide
 Your project's established patterns:
 
 ```bash
-cat .checkpoint-project.yml
+cat .checkpoint/project.yaml
 ```
 
 ### View History and Next Steps
@@ -322,8 +323,8 @@ cat .checkpoint-project.yml
 See recent checkpoint history:
 
 ```bash
-checkpoint explain history    # Recent checkpoints, patterns, decisions
-checkpoint explain next       # All outstanding next steps by priority
+guardrail explain history    # Recent checkpoints, patterns, decisions
+guardrail explain next       # All outstanding next steps by priority
 ```
 
 ### Manage Sessions (LLM Handoff)
@@ -348,7 +349,7 @@ cat CHECKPOINT.md
 ## Troubleshooting
 
 **General Setup Issues**
-- Run `checkpoint doctor` to diagnose problems
+- Run `guardrail doctor` to diagnose problems
 - It validates setup and suggests specific fixes
 
 **"Not a git repository"**
@@ -356,13 +357,13 @@ cat CHECKPOINT.md
 - Run `git init` first
 
 **"Checkpoint not initialized"**
-- Run `checkpoint init` first
-- Then run `checkpoint doctor` to verify setup
+- Run `checkpoint init` and `guardrail init` first
+- Then run `guardrail doctor` to verify setup
 
 **"Checkpoint in progress"**
 - You have an unfinished checkpoint
 - Options:
-  - Continue: edit `.checkpoint-input` and `checkpoint commit`
+  - Continue: edit `checkpoint-input` and `checkpoint commit`
   - Abort: `checkpoint clean` and start over
 
 **"Validation failed"**
@@ -382,10 +383,10 @@ cat CHECKPOINT.md
 
 Once comfortable with basics:
 
-1. **Explore Examples**: `checkpoint examples` - See various checkpoint types
-2. **Learn Context Patterns**: `checkpoint examples context` - Effective context capture
-3. **LLM Integration**: `checkpoint guide llm-workflow`
-4. **Project Curation**: Review `.checkpoint-project.yml` recommendations periodically
+1. **Explore Examples**: `guardrail examples` - See various checkpoint types
+2. **Learn Context Patterns**: `guardrail examples context` - Effective context capture
+3. **LLM Integration**: `guardrail guide llm-workflow`
+4. **Project Curation**: Review `.checkpoint/project.yaml` recommendations periodically
 5. **Customize**: Add your own examples and patterns to `.checkpoint/`
 
 ## Philosophy

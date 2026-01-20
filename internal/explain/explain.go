@@ -30,8 +30,8 @@ func LoadExplainContext(projectPath string) (*ExplainOutput, error) {
 		ProjectPath: projectPath,
 	}
 
-	// Load project.yaml (with .yml fallback)
-	projectYaml := findYamlFile(checkpointDir, config.ExplainProjectYaml, config.ExplainProjectYmlLegacy)
+	// Load project.yaml
+	projectYaml := filepath.Join(checkpointDir, config.ExplainProjectYaml)
 	if data, err := os.ReadFile(projectYaml); err == nil {
 		var proj ProjectConfig
 		if err := yaml.Unmarshal(data, &proj); err == nil {
@@ -39,8 +39,8 @@ func LoadExplainContext(projectPath string) (*ExplainOutput, error) {
 		}
 	}
 
-	// Load tools.yaml (with .yml fallback)
-	toolsYaml := findYamlFile(checkpointDir, config.ExplainToolsYaml, config.ExplainToolsYmlLegacy)
+	// Load tools.yaml
+	toolsYaml := filepath.Join(checkpointDir, config.ExplainToolsYaml)
 	if data, err := os.ReadFile(toolsYaml); err == nil {
 		var tools ToolsConfig
 		if err := yaml.Unmarshal(data, &tools); err == nil {
@@ -48,8 +48,8 @@ func LoadExplainContext(projectPath string) (*ExplainOutput, error) {
 		}
 	}
 
-	// Load guidelines.yaml (with .yml fallback)
-	guidelinesYaml := findYamlFile(checkpointDir, config.ExplainGuidelinesYaml, config.ExplainGuidelinesYmlLegacy)
+	// Load guidelines.yaml
+	guidelinesYaml := filepath.Join(checkpointDir, config.ExplainGuidelinesYaml)
 	if data, err := os.ReadFile(guidelinesYaml); err == nil {
 		var guidelines GuidelinesConfig
 		if err := yaml.Unmarshal(data, &guidelines); err == nil {
@@ -57,8 +57,8 @@ func LoadExplainContext(projectPath string) (*ExplainOutput, error) {
 		}
 	}
 
-	// Load skills.yaml (with .yml fallback)
-	skillsYaml := findYamlFile(checkpointDir, config.ExplainSkillsYaml, config.ExplainSkillsYmlLegacy)
+	// Load skills.yaml
+	skillsYaml := filepath.Join(checkpointDir, config.ExplainSkillsYaml)
 	if data, err := os.ReadFile(skillsYaml); err == nil {
 		var skills SkillsConfig
 		if err := yaml.Unmarshal(data, &skills); err == nil {
@@ -69,26 +69,13 @@ func LoadExplainContext(projectPath string) (*ExplainOutput, error) {
 	// Load skill definitions
 	output.SkillDefs = loadSkills(projectPath, output.Skills)
 
-	// Load learnings.yaml (with .yml fallback)
-	learningsYaml := findYamlFile(checkpointDir, "learnings.yaml", "learnings.yml")
+	// Load learnings.yaml
+	learningsYaml := filepath.Join(checkpointDir, "learnings.yaml")
 	if data, err := os.ReadFile(learningsYaml); err == nil {
 		output.Learnings = loadLearnings(data)
 	}
 
 	return output, nil
-}
-
-// findYamlFile returns the path to a yaml file, checking primary first then legacy
-func findYamlFile(dir, primary, legacy string) string {
-	primaryPath := filepath.Join(dir, primary)
-	if _, err := os.Stat(primaryPath); err == nil {
-		return primaryPath
-	}
-	legacyPath := filepath.Join(dir, legacy)
-	if _, err := os.Stat(legacyPath); err == nil {
-		return legacyPath
-	}
-	return primaryPath // Return primary for creation
 }
 
 // loadLearnings parses multi-document YAML learnings file
@@ -169,7 +156,7 @@ func (e *ExplainOutput) RenderSummary() string {
 		}
 	} else {
 		sb.WriteString("PROJECT: (not configured)\n")
-		sb.WriteString("hint: Run 'checkpoint init' or create .checkpoint/project.yml\n")
+		sb.WriteString("hint: Run 'checkpoint init' or create .checkpoint/project.yaml\n")
 	}
 	sb.WriteString("\n")
 
@@ -188,7 +175,7 @@ func (e *ExplainOutput) RenderSummary() string {
 			sb.WriteString(fmt.Sprintf("  lint:  %s\n", cmd.Command))
 		}
 	} else {
-		sb.WriteString("  (no tools configured - create .checkpoint/tools.yml)\n")
+		sb.WriteString("  (no tools configured - create .checkpoint/tools.yaml)\n")
 	}
 	sb.WriteString("\n")
 
@@ -261,7 +248,7 @@ func (e *ExplainOutput) RenderSummary() string {
 // RenderProject returns detailed project information
 func (e *ExplainOutput) RenderProject() string {
 	if e.Project == nil {
-		return "No project configuration found.\nhint: Create .checkpoint/project.yml\n"
+		return "No project configuration found.\nhint: Create .checkpoint/project.yaml\n"
 	}
 
 	var sb strings.Builder
@@ -339,7 +326,7 @@ func (e *ExplainOutput) RenderProject() string {
 // RenderTools returns detailed tools information
 func (e *ExplainOutput) RenderTools() string {
 	if e.Tools == nil {
-		return "No tools configuration found.\nhint: Create .checkpoint/tools.yml\n"
+		return "No tools configuration found.\nhint: Create .checkpoint/tools.yaml\n"
 	}
 
 	var sb strings.Builder
@@ -380,7 +367,7 @@ func (e *ExplainOutput) RenderTools() string {
 // RenderGuidelines returns detailed guidelines information
 func (e *ExplainOutput) RenderGuidelines() string {
 	if e.Guidelines == nil {
-		return "No guidelines configuration found.\nhint: Create .checkpoint/guidelines.yml\n"
+		return "No guidelines configuration found.\nhint: Create .checkpoint/guidelines.yaml\n"
 	}
 
 	var sb strings.Builder
@@ -490,7 +477,7 @@ func (e *ExplainOutput) RenderSkills() string {
 
 	if len(e.SkillDefs) == 0 {
 		sb.WriteString("No skills configured.\n")
-		sb.WriteString("hint: Add skills to .checkpoint/skills.yml or create ~/.config/checkpoint/skills/\n")
+		sb.WriteString("hint: Add skills to .checkpoint/skills.yaml or create ~/.config/checkpoint/skills/\n")
 		return sb.String()
 	}
 

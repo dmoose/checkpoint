@@ -152,7 +152,7 @@ config.local.json
 *.rar
 
 # Checkpoint tool
-.checkpoint-input
+checkpoint-input
 .checkpoint-diff
 .checkpoint-status.yaml
 .checkpoint-lock

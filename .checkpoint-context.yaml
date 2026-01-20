@@ -1,123 +1,640 @@
 ---
 schema_version: "1"
-timestamp: "2026-01-12T20:03:05-08:00"
+timestamp: "2025-10-24T10:24:53-07:00"
 context:
-    problem_statement: Prepare checkpoint for public GitHub release with proper documentation, CI, and consistent file naming
+    problem_statement: Implementing two-tier context system to maintain LLM development continuity
     key_insights:
-        - insight: Test coverage should focus on logic that can regress, not file I/O
-          impact: Avoid mock-heavy tests for simple operations; test validation, parsing, slice operations
+        - insight: Context discontinuity is the primary challenge in LLM-assisted development
+          impact: Capturing 'why' decisions were made enables effective session resumption and consistent decision-making
           scope: project
-        - insight: FindWithFallback pattern enables non-breaking file extension changes
-          impact: Can migrate file formats without breaking existing projects
+        - insight: Two-tier context (point-in-time + project-wide) manages LLM context window size
+          impact: Project file stays small and focused while checkpoint context preserves full history
+          scope: project
+        - insight: Human curation is essential for project-level context quality
+          impact: Automated aggregation would create noise; human judgment maintains signal
+          scope: project
     decisions_made:
-        - decision: Standardize on .yaml extension instead of .yml
-          rationale: Visual consistency across project; .yaml is more explicit
+        - decision: Split context into checkpoint-specific and project-wide files
+          rationale: Keeps LLM context manageable (project + recent entries) while preserving full historical detail
           alternatives_considered:
-            - Keep .yml everywhere
-            - Force migration with no fallback
+            - Single aggregated context file
+            - Automated context summarization
+          constraints_that_influenced: LLM context window limits and need for both detail and manageability
           scope: project
-        - decision: Conservative shell completion detection - error if uncertain
-          rationale: Better to fail safely than write to wrong location and confuse users
+        - decision: Use append-only recommendations queue in project file
+          rationale: Avoids automation complexity while providing helpful suggestions that human can review and incorporate
+          alternatives_considered:
+            - Automated merging of project-scoped items
+            - Separate recommendations file
+          constraints_that_influenced: Human responsibility for curation quality, need for simple workflow
+          scope: project
+        - decision: Include commit_hash in context entries for linking
+          rationale: Allows correlation between context, changelog, and git history
           scope: checkpoint
-        - decision: Focus tests on validation logic rather than filesystem mocking
-          rationale: Mocking file I/O adds complexity without catching real bugs; validation logic is where regressions happen
-          scope: project
+        - decision: Pre-populate all project document fields with examples
+          rationale: Provides clear structure and guidance for human curators
+          scope: checkpoint
     established_patterns:
-        - pattern: Use FindWithFallback for config file paths
-          rationale: Enables backward compatibility when changing file names/extensions
-          examples: project.yaml/project.yml, tools.yaml/tools.yml, etc.
+        - pattern: Multi-document YAML for consumption doc + recommendation queue
+          rationale: First document stays clean for LLM consumption, subsequent docs provide curation suggestions
+          examples: .checkpoint-project.yml structure with main doc followed by recommendations per checkpoint
+          scope: project
+        - pattern: Context items marked with scope field to indicate checkpoint vs project applicability
+          rationale: Enables automatic extraction of project-level recommendations while keeping checkpoint-specific details separate
+          examples: key_insights, decisions_made, failed_approaches, established_patterns all support scope field
           scope: project
     conversation_context:
-        - exchange: Discussed test coverage - user wanted useful tests, not coverage for its own sake
-          outcome: Added tests for validation, parsing, slice operations. Skipped file I/O mocking.
-        - exchange: User noted .yml vs .yaml inconsistency was visually annoying
-          outcome: Standardized on .yaml with backward compatibility for existing .yml files
+        - exchange: Discussed whether context belongs in changelog or separate file - decided separate
+          outcome: Context has different lifecycle and consumption pattern than changelog; separation maintains clarity
+        - exchange: Questioned whether to automate project file updates - decided against
+          outcome: Human curation is essential for quality; tool provides recommendations as queue for review
+        - exchange: Debated context file format and line length restrictions
+          outcome: Context uses .yml extension with relaxed line lengths for detailed explanations
+        - exchange: Identified that language detection belongs in meta document as project characteristic
+          outcome: Led to understanding that some context is project-level, some is checkpoint-level
 ---
 schema_version: "1"
-timestamp: "2026-01-13T08:33:53-08:00"
+timestamp: "2025-10-24T10:57:48-07:00"
 context:
-    problem_statement: Project lacked user-facing documentation for workflows and LLM tool integration before GitHub release
+    problem_statement: Completing project schema with comprehensive structured fields and fixing context correlation mechanism
     key_insights:
-        - insight: Documentation must reflect actual code behavior - initial drafts had incorrect file paths and auto-update claims
-          impact: Always verify docs against actual implementation before publishing
-        - insight: User controls checkpoint timing - this is intentional for clean handoff and review opportunity
-          impact: Documentation must emphasize user responsibility, not automate away the review step
+        - insight: Commit hash is only needed in changelog, not context or project files
+          impact: Simplifies correlation model - timestamp alone links entries across all files
+          scope: project
+        - insight: Comprehensive project schema enables complete project understanding
+          impact: 'All aspects of project captured: dependencies, targets, testing, roles, constraints'
+          scope: project
+        - insight: Explicit examples in templates guide LLM behavior effectively
+          impact: Inline examples prevent confusion about checkpoint vs project scope
           scope: project
     decisions_made:
-        - decision: 'Three-tier documentation: QUICKSTART (5 min), USER-GUIDE (comprehensive), LLM-INTEGRATION (tool-specific)'
-          rationale: Different users need different depth - quick start for evaluation, full guide for adoption, integration for specific tools
-        - decision: Emphasize user decides when to checkpoint throughout docs
-          rationale: The review step before commit is a feature, not friction - ensures quality context capture
+        - decision: Use timestamp-only correlation instead of backfilling hashes to multiple files
+          rationale: Only changelog participates in git commit, so only it needs the hash; timestamp is sufficient for linking across files
+          alternatives_considered:
+            - Backfill commit hash to all three files
+            - Use ULID or other correlation ID
+          constraints_that_influenced: Context and project files don't stage/commit with changelog, making hash backfill complex
+          scope: project
+        - decision: Add all 10 new schema sections in single checkpoint
+          rationale: Complete schema provides full project characterization; partial implementation would leave gaps
+          alternatives_considered:
+            - Implement sections incrementally
+            - Wait to see which sections are actually needed
+          constraints_that_influenced: Schema should be comprehensive from the start for LLM understanding
+          scope: checkpoint
+        - decision: Backport complete schema to existing project file
+          rationale: Existing project file should demonstrate the full schema with real checkpoint-specific values
+          scope: checkpoint
     failed_approaches:
-        - approach: Initial LLM-INTEGRATION.md claimed CHECKPOINT.md was auto-updated and referenced non-existent .claude directory
-          why_failed: Assumptions made without verifying actual file structure and behavior
-          lessons_learned: Read actual code and list files before documenting behavior
-    conversation_context:
-        - exchange: User pointed out multiple inaccuracies in initial docs - wrong session file path, incorrect auto-update claim, missing plan command
-          outcome: Rewrote docs after re-reading plan.go, session.go, CHECKPOINT.md, and CLAUDE.md to ensure accuracy
----
-schema_version: "1"
-timestamp: "2026-01-15T13:07:34-08:00"
-context:
-    problem_statement: Checkpoint lacked formal structure for AI collaboration boundaries, pre-commit quality gates, and accumulated project wisdom. Guides only worked within the checkpoint project directory.
-    key_insights:
-        - insight: Explicit AI authority boundaries reduce back-and-forth during sessions
-          impact: LLMs can work more autonomously within defined scope
+        - approach: Initially included commit_hash in context entries
+          why_failed: Unnecessary complexity - only changelog needs hash since it's the only file staged/committed
+          lessons_learned: Correlation mechanism should match the actual workflow, not add unnecessary fields
           scope: project
-        - insight: Embedding guides in binary ensures portable documentation
-          impact: Users don't need guide files in each project
-          scope: checkpoint
-        - insight: Pre-commit verification catches issues before they enter history
-          impact: Maintains code quality with minimal friction
-          scope: project
-    decisions_made:
-        - decision: Embed guides as string constants rather than using go:embed
-          rationale: Simpler, matches existing template pattern, avoids file path issues
-          alternatives_considered:
-            - go:embed directive (more complex, directory structure dependency)
-            - External guide files (not portable)
-          scope: checkpoint
-        - decision: Make pre-commit verification automatic with --skip-verify escape hatch
-          rationale: Quality gates should be opt-out not opt-in for effectiveness
-          alternatives_considered:
-            - Optional flag to enable (too easy to skip)
-            - Git pre-commit hook (requires separate setup)
-          scope: project
-        - decision: Add ai_authority to project schema rather than separate file
-          rationale: Project configuration belongs together, reduces file proliferation
-          scope: checkpoint
     established_patterns:
-        - pattern: 'Use scope: project to mark items for project-wide application'
-          rationale: Enables automatic extraction of reusable patterns from checkpoints
-          examples: ai_authority defaults, collaboration protocol, verification approach
+        - pattern: Comprehensive structured schemas with inline examples in templates
+          rationale: Reduces LLM confusion by providing explicit guidance and examples for each field
+          examples: Context template now includes examples of checkpoint vs project scope for each field type
+          scope: project
+        - pattern: Timestamp-based correlation across append-only files
+          rationale: Single source of truth (timestamp) links entries without complex backfill mechanisms
+          examples: Changelog, context, and project files all use matching timestamps to correlate entries
           scope: project
     conversation_context:
-        - exchange: Reviewed Bebop-style development methodology for inspiration
-          outcome: Adopted decision authority matrix, communication protocol, and quality gates concepts
+        - exchange: Identified that commit_hash was incorrectly added to context entries
+          outcome: Removed hash from context schema and eliminated backfill code - only changelog needs it
+        - exchange: Discussed which project schema sections are most valuable
+          outcome: Implemented all 10 suggested sections for comprehensive project characterization
+        - exchange: Questioned whether LLM would understand new fields without context
+          outcome: Added detailed instructions, complete section list, and inline examples to context template
+        - exchange: Considered whether to backport new schema to existing project file
+          outcome: Updated existing file with all new fields and checkpoint-specific real values
 ---
 schema_version: "1"
-timestamp: "2026-01-15T13:41:32-08:00"
+timestamp: "2025-10-28T13:04:19-07:00"
 context:
-    problem_statement: Guides and skills used large Go string constants with complex backtick escaping (` + "```" + `), making them hard to edit and maintain. Content was embedded in code rather than as actual markdown files.
+    problem_statement: LLM incorrectly attempted to run 'checkpoint check' before implementing any code changes, revealing missing workflow guidance for session start
     key_insights:
-        - insight: go:embed with embed.FS provides cleaner content embedding than string constants
-          impact: Content files get proper syntax highlighting, no escaping needed, easier to edit
+        - insight: Workflow needs explicit session entry point that validates state and guides next steps
+          impact: Prevents confusion about when to run which command; makes workflow self-teaching
           scope: project
-        - insight: embed directive requires content to be in child directories of the Go file
-          impact: Content must be organized in subdirectories (e.g., content/*.md) below the embedding package
-          scope: checkpoint
+        - insight: Commands that call os.Exit are hard to test
+          impact: Extract testable internal implementation that returns success/failure bool
+          scope: project
     decisions_made:
-        - decision: Use //go:embed content/*.md pattern with embed.FS for both guides and skills
-          rationale: Consistent approach, auto-discovers files, simpler than individual file embeds
+        - decision: Create 'start' command as first command of each work session
+          rationale: Validates readiness (git repo, checkpoint init, no conflicts), shows context (next steps), guides user to next action
           alternatives_considered:
-            - Individual //go:embed directives per file (more verbose)
-            - Keep string constants (hard to maintain with escaping)
+            - Add --status flag to check command
+            - Just improve documentation
+          constraints_that_influenced: Need to catch workflow errors early; documentation alone isn't enough for LLMs
           scope: project
-        - decision: Store metadata (descriptions) separately from content files
-          rationale: Markdown files stay pure content, metadata in Go maps for flexibility
+        - decision: Show warnings but don't fail on non-critical issues
+          rationale: Pending recommendations or changes in working directory shouldn't block starting work
+          alternatives_considered:
+            - Fail on any non-clean state
+          scope: checkpoint
+    failed_approaches:
+        - approach: Initially tried to mock os.Exit in tests
+          why_failed: Mock approach is fragile and doesn't test actual behavior
+          lessons_learned: Better pattern is public wrapper that calls testable internal implementation
+          scope: project
+    established_patterns:
+        - pattern: Commands should have both public wrapper and testable internal implementation
+          rationale: Allows comprehensive testing without mocking os.Exit or other system calls
+          examples: Start() calls startInternal() which returns bool; same pattern should apply to other commands that call os.Exit
+          scope: project
+        - pattern: Start command as session entry point
+          rationale: Validates state, shows context, guides next action - makes workflow explicit
+          examples: Run 'checkpoint start' at beginning of each work session
+          scope: project
+    conversation_context:
+        - exchange: User correctly identified that I misunderstood the workflow by running 'checkpoint check' before doing any work
+          outcome: Realized need for explicit 'start' command that validates readiness and explains what to do. This is Checkpoint 0 - improving the workflow itself.
+        - exchange: Discussed whether to fail on warnings (in-progress checkpoint, pending recommendations)
+          outcome: Decided warnings shouldn't block start - they're informational. Only errors (no git, no init) should prevent starting work.
+        - exchange: Question about how to count checkpoints in changelog
+          outcome: Realized document separators (---) are the correct approach; first separator marks meta doc, subsequent ones mark checkpoints
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:31:04-07:00"
+context:
+    problem_statement: Input file was too large (460+ lines) due to embedded project context and recent context, making it difficult to edit and causing tool failures. Also needed to establish organized directory structure for supporting materials per Checkpoint 1 plan.
+    key_insights:
+        - insight: Input file should be minimal and focused on what needs to be filled
+          impact: Keeps input file manageable (~170 lines vs 460+), easier to edit, prevents tool failures. LLM can read source files directly when needed.
+          scope: project
+        - insight: Supporting materials need organized structure separate from root
+          impact: Clean separation between data files (root) and documentation/examples (.checkpoint/ directory)
+          scope: project
+    decisions_made:
+        - decision: Remove project_context, recent_context, and languages from input template
+          rationale: These are reference materials that bloat the file but aren't used by commit. LLM can read .checkpoint-project.yml and .checkpoint-context.yml directly when filling input.
+          alternatives_considered:
+            - Keep embedded but compress/summarize
+            - Move to separate reference file that check creates
+          constraints_that_influenced: Edit tool struggled with 460+ line files; human user found it unwieldy
+          scope: project
+        - decision: Create .checkpoint/ directory with subdirectories in init command
+          rationale: Provides organized location for examples, guides, prompts, and templates. Tracked in git so structure is preserved.
+          alternatives_considered:
+            - Flat .checkpoint/ directory
+            - Multiple top-level dot directories
+          constraints_that_influenced: Need clean root directory; examples and guides need logical organization
           scope: checkpoint
     established_patterns:
-        - pattern: Use internal/{feature}/content/*.md with go:embed for embedded documentation
-          rationale: Separates content from code, enables proper editing tooling, auto-discovery
-          examples: internal/guides/content/, internal/skills/content/
+        - pattern: Reference files by path in comments rather than embedding content
+          rationale: Keeps files focused and manageable; users/LLMs can read full files when needed
+          examples: Input template now has comments pointing to .checkpoint-project.yml and .checkpoint-context.yml
           scope: project
+    conversation_context:
+        - exchange: User questioned why project context was in input file and whether it was needed at commit time
+          outcome: Realized project context was only reference material for filling, not used by commit. Led to removing all embedded reference material.
+        - exchange: User noticed edit tool had difficulty with the large input file
+          outcome: Confirmed that 460+ line input file was problematic; reduced to ~170 lines by removing embedded contexts
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:41:41-07:00"
+context:
+    problem_statement: Users and LLMs need concrete examples of well-structured checkpoints to calibrate their work. Without examples, checkpoint quality varies widely and users don't know what 'good' looks like.
+    key_insights:
+        - insight: Examples teach better than instructions
+          impact: Concrete examples with annotations show exactly what to aim for; more effective than abstract guidelines
+          scope: project
+        - insight: Anti-patterns are as valuable as good patterns
+          impact: Showing common mistakes helps users avoid them; complements positive examples
+          scope: project
+        - insight: 'Examples should cover full spectrum: features, bugs, refactors, context'
+          impact: Different types of work need different checkpoint approaches; comprehensive examples cover all cases
+          scope: checkpoint
+    decisions_made:
+        - decision: Create 5 distinct example files rather than one comprehensive file
+          rationale: Easier to reference specific types; users can view just what they need; keeps each file focused
+          alternatives_considered:
+            - Single examples.yaml with all examples (rejected - too long, hard to navigate)
+            - Embed examples in CHECKPOINT.md (rejected - keeps examples separate from workflow docs)
+          constraints_that_influenced: Examples need to be easily viewable via command; file size should be manageable
+          scope: checkpoint
+        - decision: Include extensive annotations in examples explaining what makes them good
+          rationale: Self-teaching - examples explain themselves; helps users understand the 'why' behind patterns
+          scope: project
+        - decision: Use realistic scenarios (JWT auth, memory leaks, validation) not toy examples
+          rationale: Real-world examples are more relatable and show how to handle actual complexity
+          scope: checkpoint
+    established_patterns:
+        - pattern: Examples include 'what makes this good' annotations
+          rationale: Makes examples self-teaching; users learn principles not just see format
+          examples: Each example file ends with checklist of good practices demonstrated
+          scope: project
+        - pattern: Command with optional category argument for progressive disclosure
+          rationale: List categories first, then drill into specifics; reduces cognitive load
+          examples: checkpoint examples (list) vs checkpoint examples feature (show)
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether to generate examples programmatically or write manually
+          outcome: Manual writing chosen - examples need nuance and annotations that generation can't provide
+        - exchange: Questioned how much detail to include in examples
+          outcome: Decided on comprehensive detail - better to have rich examples users can simplify than sparse examples they must augment
+---
+schema_version: "1"
+timestamp: "2025-10-28T13:54:34-07:00"
+context:
+    problem_statement: Users and LLMs need comprehensive documentation to understand checkpoint workflow, best practices, and integration patterns. Examples alone aren't enough - need narrative guides explaining how and why.
+    key_insights:
+        - insight: 'Guides serve different audiences: first-time users need quick start, LLMs need workflow integration, everyone needs best practices'
+          impact: Three distinct guides cover the full spectrum of use cases without overwhelming any single audience
+          scope: project
+        - insight: Documentation should be self-contained in .checkpoint/ directory
+          impact: All resources available locally; no external dependencies or web docs needed
+          scope: project
+        - insight: Real-world examples in guides make concepts concrete
+          impact: Guides include specific scenarios, command outputs, and YAML examples throughout
+          scope: checkpoint
+    decisions_made:
+        - decision: Create three focused guides rather than one comprehensive manual
+          rationale: Different users need different information; focused guides reduce cognitive load and make specific topics easier to find
+          alternatives_considered:
+            - Single comprehensive manual (rejected - too overwhelming for new users)
+            - Many small guides (rejected - harder to find information, duplication)
+          constraints_that_influenced: Need to serve first-time users, experienced users, and LLMs with different needs
+          scope: project
+        - decision: Write guides in Markdown for readability and portability
+          rationale: Markdown is human-readable as plain text, renders nicely in editors/viewers, easy to edit
+          alternatives_considered:
+            - YAML format (rejected - less readable for long-form content)
+            - HTML (rejected - harder to edit, requires browser)
+          scope: checkpoint
+        - decision: Include extensive examples and templates in guides
+          rationale: Learn by example - show specific YAML, commands, workflows rather than just describing them
+          scope: project
+    established_patterns:
+        - pattern: Guides include both concept explanation and concrete examples
+          rationale: Theory + practice = effective learning; readers can understand why and see how
+          examples: Each major concept in guides followed by example YAML, command output, or workflow
+          scope: project
+        - pattern: Documentation organized by audience and use case
+          rationale: Makes it easy to find relevant information; reduces time to value
+          examples: first-time-user.md for newcomers, llm-workflow.md for LLM integration, best-practices.md for ongoing use
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether to include guide command in this checkpoint
+          outcome: Decided to create guides first, command in next checkpoint - establishes content before building command to display it
+        - exchange: Questioned how much detail to include in guides
+          outcome: Comprehensive detail chosen - guides are reference material, users can skim but depth available when needed
+---
+schema_version: "1"
+timestamp: "2025-10-28T14:02:26-07:00"
+context:
+    problem_statement: Guides were created but not easily accessible. Users need commands to view them, and CHECKPOINT.md should direct users to detailed resources rather than trying to be comprehensive itself.
+    key_insights:
+        - insight: Commands make documentation discoverable and accessible
+          impact: Users can easily find and view guides without knowing file paths; mirrors examples command for consistency
+          scope: project
+        - insight: CHECKPOINT.md should be quick reference, not comprehensive manual
+          impact: Restructured to point to detailed resources; users get oriented quickly then dive deeper as needed
+          scope: project
+    decisions_made:
+        - decision: Implement guide command with same pattern as examples command
+          rationale: Consistent UX - users already familiar with examples pattern can immediately use guide command
+          alternatives_considered:
+            - Different command structure (rejected - consistency more valuable)
+            - Combine with examples command (rejected - conceptually different enough to warrant separate command)
+          constraints_that_influenced: Want consistency across discovery commands
+          scope: project
+        - decision: Restructure CHECKPOINT.md as quick reference with links
+          rationale: Users need rapid orientation, not comprehensive docs; point to detailed resources for depth
+          alternatives_considered:
+            - Expand CHECKPOINT.md to be comprehensive (rejected - becomes overwhelming)
+            - Minimal CHECKPOINT.md (rejected - need enough context for basic understanding)
+          scope: checkpoint
+    established_patterns:
+        - pattern: 'Discovery commands follow consistent pattern: list all, show specific'
+          rationale: Progressive disclosure - overview first, details on demand; consistent UX across commands
+          examples: checkpoint examples [category], checkpoint guide [topic]
+          scope: project
+        - pattern: 'Documentation has layers: quick reference → guides → examples'
+          rationale: Different depth for different needs; users can choose their level of detail
+          examples: CHECKPOINT.md → .checkpoint/guides/ → .checkpoint/examples/
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether to combine guide and examples commands
+          outcome: Kept separate - conceptually different (narrative guides vs concrete examples); easier to discover with distinct commands
+---
+schema_version: "1"
+timestamp: "2025-10-28T14:08:00-07:00"
+context:
+    problem_statement: Developers and LLMs need rapid project orientation at session start. Existing 'checkpoint start' shows status checks but not historical context or recent patterns. Summary command provides comprehensive overview in one place.
+    key_insights:
+        - insight: Summary aggregates data from multiple sources for holistic view
+          impact: Single command provides project state, history, and direction without reading multiple files
+          scope: project
+        - insight: Relative time formatting makes activity timeline intuitive
+          impact: Users immediately understand recency ('4 minutes ago' vs '2025-10-28T14:02:26')
+          scope: project
+        - insight: Recent patterns from context show project evolution
+          impact: Developers see what conventions have been established recently, maintaining consistency
+          scope: checkpoint
+    decisions_made:
+        - decision: Show last 5 checkpoints in recent activity
+          rationale: Enough to show recent trajectory without overwhelming; matches typical short-term memory
+          alternatives_considered:
+            - Last 3 (rejected - too few for context)
+            - Last 10 (rejected - too many, loses focus)
+          constraints_that_influenced: Terminal screen space; typical session length
+          scope: checkpoint
+        - decision: Support --json flag for machine-readable output
+          rationale: Enables integration with other tools, scripts, and potentially macOS app
+          alternatives_considered:
+            - Human-only output (rejected - limits automation)
+            - Always JSON (rejected - poor human UX)
+          scope: project
+        - decision: Extract project-level patterns from recent context entries
+          rationale: Shows what conventions have been established; helps maintain consistency
+          scope: checkpoint
+    established_patterns:
+        - pattern: Commands support --json for machine-readable output
+          rationale: Enables scripting and integration while maintaining human-friendly default
+          examples: 'checkpoint summary --json, future: checkpoint context --json'
+          scope: project
+        - pattern: Relative time formatting for human readability
+          rationale: Humans understand 'yesterday' better than ISO timestamps
+          examples: formatTimeAgo() function converts RFC3339 to relative format
+          scope: project
+    conversation_context:
+        - exchange: Discussed how much historical data to show
+          outcome: Last 5 checkpoints balances context with brevity; patterns from last 3 context entries focuses on recent
+        - exchange: Questioned whether to include project file recommendations count
+          outcome: Yes - reminds users to curate; low-friction way to surface pending work
+---
+schema_version: "1"
+timestamp: "2025-10-28T15:39:48-07:00"
+context:
+    problem_statement: LLM-assisted development requires consistent, high-quality prompts for common tasks. Without a prompt library, developers repeatedly craft similar prompts with varying quality, leading to inconsistency and lost knowledge. Need a system to store, version, and reuse LLM prompts with variable substitution.
+    key_insights:
+        - insight: Simple regex-based variable substitution is sufficient for prompt templates rather than full templating engines
+          impact: Keeps the system simple and predictable with no hidden behaviors. Unknown variables become empty strings without errors, matching user expectations.
+          scope: project
+        - insight: Init command must be safe to run multiple times in existing projects
+          impact: Allows newer versions of checkpoint to add new resources (prompts, guides) without destroying user data or requiring manual file creation
+          scope: project
+        - insight: CHECKPOINT.md should always be updated since it's documentation, not user data
+          impact: Users get latest workflow guidance when running init, but their actual checkpoint data remains untouched
+          scope: project
+    decisions_made:
+        - decision: Use regex for variable substitution instead of text/template
+          rationale: Spec requires exact {{variable_name}} syntax and silent handling of unknown variables. text/template requires {{.variable_name}} syntax and errors on unknown variables by default. Regex gives us exact control with simpler implementation.
+          alternatives_considered:
+            - 'text/template: More powerful but overkill, requires different syntax, harder to handle missing variables gracefully'
+            - 'Simple string replacement: Would require multiple passes, less efficient'
+          scope: checkpoint
+        - decision: 'Three-tier variable priority: CLI args > global vars > automatic vars'
+          rationale: Allows project defaults in prompts.yaml to be overridden per-use with --var flags, while automatic variables like project_name are always available
+          scope: project
+        - decision: Init command checks file existence before creating
+          rationale: Makes init safe to run in existing projects to add new features (prompts, guides) without destroying user data like changelog or project files
+          constraints_that_influenced: Need to support upgrading existing checkpoint installations
+          scope: project
+    established_patterns:
+        - pattern: Follow examples/guide command patterns for new list/show commands
+          rationale: Consistent UX across similar commands - list when no arg, show specific item when arg provided
+          examples: Applied to prompt command, mirrors guide and examples commands
+          scope: project
+        - pattern: Comprehensive test coverage for new packages
+          rationale: Test-driven approach ensures correctness and makes refactoring safer
+          examples: prompts_test.go has 10+ test cases covering all major functionality
+          scope: project
+    conversation_context:
+        - exchange: Discussed whether to use regex vs text/template for variable substitution
+          outcome: Chose regex because spec explicitly shows {{variable_name}} format and requires silent handling of unknown variables, which text/template doesn't provide naturally
+        - exchange: Questioned if init should overwrite CHECKPOINT.md in existing projects
+          outcome: Decided yes - CHECKPOINT.md is documentation that should be updated, unlike user data files (changelog, project, prompts)
+---
+schema_version: "1"
+timestamp: "2025-10-29T08:05:11-07:00"
+context:
+    problem_statement: The macOS app needs to identify and deduplicate projects during discovery. Status file only had commit metadata, requiring full changelog parsing to get project_id and path_hash from meta document.
+    key_insights:
+        - insight: Status file becomes more useful when self-contained for discovery
+          impact: macOS app can identify projects without parsing multi-document YAML
+          scope: checkpoint
+    decisions_made:
+        - decision: Read meta document rather than regenerate identifiers
+          rationale: Ensures consistency with changelog - single source of truth. Treat as non-fatal if missing for backwards compatibility.
+          scope: checkpoint
+---
+schema_version: "1"
+timestamp: "2025-11-03T19:14:42-08:00"
+context:
+    problem_statement: Expose checkpoint data via MCP without breaking existing CLI behavior
+    key_insights:
+        - insight: Directory-dependent output favors stdio transport with per-call project_id
+          impact: Stable, IDE-agnostic integration; avoids connection-scoped state
+          scope: checkpoint
+    decisions_made:
+        - decision: Use mcp-go and stdio-only MVP with a single 'project' tool
+          rationale: Minimize surface area; verify end-to-end before adding transports/tools
+          alternatives_considered:
+            - Connection-scoped context (rejected due to IDE variability)
+          constraints_that_influenced: Multiple repos open in IDE; unknown process lifecycles
+          scope: checkpoint
+        - decision: 'Roots precedence: --root > CHECKPOINT_ROOTS > config; rescan on miss'
+          rationale: Deterministic resolution and robustness to project moves
+          scope: checkpoint
+        - decision: Never write .checkpoint-* from MCP
+          rationale: Preserve append-only guarantees; CLI remains sole writer
+          scope: project
+---
+schema_version: "1"
+timestamp: "2026-01-12T09:38:19-08:00"
+context:
+    problem_statement: 'Prepare checkpoint for public release: proper module path, shell completion, better onboarding, tool independence messaging'
+    key_insights:
+        - insight: 'Zsh completion requires #compdef on first line for autoloading'
+          impact: Must use specific directive format, not arbitrary comments
+          scope: project
+        - insight: Learnings captured via 'checkpoint learn' weren't being surfaced anywhere
+          impact: Added explain learnings topic to make captured insights accessible
+          scope: checkpoint
+        - insight: Tool independence is the key value proposition for LLM-assisted development
+          impact: README should emphasize that context travels with project, not locked in any tool
+          scope: project
+    decisions_made:
+        - decision: Embed completion scripts directly in Go code
+          rationale: Single binary with no external files, simpler distribution
+          alternatives_considered:
+            - External completion files
+            - Generated completions from command structure
+          scope: checkpoint
+        - decision: Auto-detect project settings in init rather than requiring templates
+          rationale: Better UX - works out of the box for common project types
+          alternatives_considered:
+            - Only template-based initialization
+            - Interactive prompts during init
+          scope: project
+    failed_approaches:
+        - approach: Used _arguments in zsh completion
+          why_failed: 'Error: _arguments:comparguments:327: can only be called from completion function'
+          lessons_learned: Zsh completion functions must use simpler patterns that work at source time
+          scope: checkpoint
+    established_patterns:
+        - pattern: internal/detect package for project auto-detection
+          rationale: Separates detection logic from init command, reusable by doctor
+          examples: DetectProject() returns ProjectInfo with language, commands, frameworks
+          scope: project
+    conversation_context:
+        - exchange: User emphasized tool independence as key value
+          outcome: README rewritten to lead with problem/solution framing about context loss in LLM sessions
+        - exchange: User called FUTURE-FEATURES.md 'LLM generated fantasy of world domination'
+          outcome: Cut from 419 to 42 lines, keeping only realistic near-term features
+---
+schema_version: "1"
+timestamp: "2026-01-12T13:20:13-08:00"
+context:
+    problem_statement: Growing CLI complexity made manual flag parsing unsustainable. Adding new commands required changes in 4+ places. A Mac management app needed JSON output and programmatic config access.
+    key_insights:
+        - insight: Cobra's self-registering init() pattern eliminates centralized command routing
+          impact: Adding new commands now requires only creating a single file with init() registration
+          scope: project
+        - insight: Manual completion scripts drift out of sync with actual commands
+          impact: Using framework-generated completions ensures consistency
+          scope: checkpoint
+    decisions_made:
+        - decision: Adopt Cobra as CLI framework
+          rationale: Industry standard for Go CLIs, eliminates boilerplate, provides built-in completions, help, and flag parsing
+          alternatives_considered:
+            - Continue manual parsing - rejected due to maintenance burden
+            - urfave/cli - less widespread, similar feature set
+          constraints_that_influenced: Need to support Mac app integration requiring consistent JSON output
+          scope: project
+        - decision: Use --json flag pattern for machine-readable output
+          rationale: Consistent flag name across commands, optional to preserve human-friendly default
+          scope: project
+    established_patterns:
+        - pattern: Cobra command registration via init()
+          rationale: Each cmd/*.go file registers itself, no central routing needed
+          examples: rootCmd.AddCommand(checkCmd) in cmd/check.go init()
+          scope: project
+        - pattern: Options struct per command for flags
+          rationale: Groups related flags, avoids global variable pollution
+          examples: var skillOpts struct { json bool } with skillCmd.Flags().BoolVar()
+          scope: project
+    conversation_context:
+        - exchange: User asked to assess Cobra value before committing to migration
+          outcome: Analysis showed 540-line main.go and 4+ touch points per flag justified the dependency
+---
+schema_version: "1"
+timestamp: "2026-01-12T14:04:16-08:00"
+context:
+    problem_statement: Session was originally designed only for emergency handoff when closing an LLM session. It needed to become a living planning document similar to Claude's plan mode - enabling explicit planning before execution and continuous tracking during work.
+    key_insights:
+        - insight: 'Session and next_steps serve different purposes: ephemeral planning vs historical record'
+          impact: Keep both - session for active planning, next_steps in checkpoint for permanent history
+          scope: project
+        - insight: Plan mode (explicit planning phase) improves complex task execution
+          impact: LLMs work better when they plan before coding; session enables this workflow
+          scope: project
+    decisions_made:
+        - decision: Session is ephemeral - cleared on commit by default
+          rationale: Completed work unit should start fresh. Historical record lives in changelog next_steps.
+          alternatives_considered:
+            - Keep session always - rejected, causes stale planning state
+            - Auto-archive sessions - rejected, adds complexity without clear value
+          scope: project
+        - decision: Handoff replaces rather than appends
+          rationale: Simpler model - session represents single handoff point, not chain of handoffs
+          scope: checkpoint
+        - decision: next_actions not auto-seeded from last checkpoint
+          rationale: User decides what's relevant for this session; prevents carrying stale tasks
+          scope: checkpoint
+    established_patterns:
+        - pattern: Session file cleared on commit, preserved with --keep-session
+          rationale: Clean slate for new work unit; explicit flag for multi-commit sessions
+          examples: checkpoint commit clears session; checkpoint commit --keep-session preserves
+          scope: project
+        - pattern: Rich task tracking with status in session next_actions
+          rationale: 'Enables progress tracking: pending → in_progress → done/blocked'
+          examples: next_actions[].status field with blocked_by for dependencies
+          scope: project
+    conversation_context:
+        - exchange: User proposed expanding session from handoff to planning document
+          outcome: 'Designed three-section schema: Planning, Active Work, Handoff'
+        - exchange: Discussed whether to auto-seed from last checkpoint next_steps
+          outcome: Decided against - user should curate what's relevant for this session
+---
+schema_version: "1"
+timestamp: "2026-01-12T14:27:04-08:00"
+context:
+    problem_statement: Session template only included planning fields, leaving execution-time fields (progress, blockers, decisions, learnings) empty. An LLM reading the session file wouldn't know these fields exist without external schema knowledge.
+    key_insights:
+        - insight: Templates should be self-documenting - include all fields with placeholder prompts
+          impact: LLMs can understand and use features without needing external documentation in context
+          scope: project
+    decisions_made:
+        - decision: Include all schema fields in template with placeholder prompts
+          rationale: Self-documenting templates reduce assumptions about what context the LLM has access to
+          alternatives_considered:
+            - Keep minimal template and document elsewhere - rejected, assumes LLM has schema in context
+          scope: project
+    established_patterns:
+        - pattern: Templates include all valid fields with placeholder prompts
+          rationale: Makes schema discoverable from the file itself without external documentation
+          examples: Session template shows progress, blockers, decisions, learnings with example structure
+          scope: project
+    conversation_context:
+        - exchange: User questioned not having execution-time fields in blank template
+          outcome: Added all fields with placeholder prompts to make template self-documenting
+---
+schema_version: "1"
+timestamp: "2026-01-13T10:53:38-08:00"
+context:
+    problem_statement: update linter
+---
+schema_version: "1"
+timestamp: "2026-03-15T12:32:05-07:00"
+context:
+    problem_statement: 'Checkpoint mixed two concerns in one binary: capturing development history and managing LLM knowledge/guardrails. The schema was overengineered with 20+ unused struct types. Documentation was duplicated across 3 locations. No way to import existing git history.'
+    key_insights:
+        - insight: Separating history capture from knowledge management makes each tool's purpose clear and lets them evolve independently
+          impact: Users understand which tool to use for what. Commands are discoverable by purpose rather than memorizing a flat list of 23.
+          scope: project
+        - insight: Most of the project schema (ProjectDocument with 15+ types) was write-only dead code never read back at runtime
+          impact: Schema should match what's actually used, not what might theoretically be useful
+          scope: project
+        - insight: Import is just the check/commit workflow in reverse — same template, same schema, same gating
+          impact: New features should reuse existing patterns rather than inventing parallel mechanisms
+          scope: project
+    decisions_made:
+        - decision: Two fully independent binaries, no cross-dependency
+          rationale: Each binary must stand alone. If guardrail isn't installed, checkpoint still works. Shared code lives in internal/ packages, not in binary-to-binary calls.
+          alternatives_considered:
+            - 'Single binary with subcommand groups (rejected: muddies the mental model)'
+            - 'Shared library with thin CLI wrappers (rejected: unnecessary complexity for 2 binaries)'
+          scope: project
+        - decision: Consolidate two project files into one at .checkpoint/project.yaml
+          rationale: Root-level .checkpoint-project.yaml was confusing alongside .checkpoint/project.yaml. One file with append-only recommendations queue is simpler.
+          alternatives_considered:
+            - 'Keep both files with different roles (rejected: users couldn''t tell which to edit)'
+          scope: project
+        - decision: Drop established_patterns from context schema, capture as decisions
+          rationale: Patterns and decisions were being duplicated. A decision with scope:project serves both purposes.
+          alternatives_considered:
+            - 'Keep patterns as separate field (rejected: LLMs restated decisions as patterns)'
+          scope: project
+        - decision: Import uses same input template as check, not a separate schema
+          rationale: LLM already knows how to fill checkpoint inputs. Reuse that knowledge for historical enrichment.
+          alternatives_considered:
+            - 'Custom import schema (rejected: unnecessary divergence)'
+            - 'Batch import with single LLM call for all commits (rejected: too much context, worse results)'
+          scope: checkpoint
+    key_exchanges:
+        - prompt_summary: Human asked to read entire codebase and evaluate against vision of structured LLM development context
+          approach_taken: Thorough review identifying 23 commands, 14.7k lines, strong core workflow but scope creep in skills/prompts/project schema
+          human_feedback: Agreed on focus but pushed back on cutting features — they have value, the issue is packaging not purpose. Proposed splitting into checkpoint and guardrail.
+        - prompt_summary: 'Human directed binary split with constraint: each must stand alone, no cross-dependency'
+          approach_taken: Planned and executed split into internal/app/checkpoint/ and internal/app/guardrail/ with shared internal/ packages
+          human_feedback: Approved. Insisted on separate init, doctor, and start for each binary.
+        - prompt_summary: Human asked to simplify schema and add prompt/response capture
+          approach_taken: Consolidated project files, gutted 442 lines of dead types, added key_exchanges with 3 fields, trimmed context template
+          human_feedback: Approved all changes. Emphasized low burden on dev — LLM fills key_exchanges, human just reviews.
+        - prompt_summary: Human asked for import command to bootstrap from existing git history
+          approach_taken: Built checkpoint import with mechanical (--no-enrich) and interactive modes, reusing existing input template pattern
+          human_feedback: Approved approach of iterative per-commit enrichment rather than batch processing.

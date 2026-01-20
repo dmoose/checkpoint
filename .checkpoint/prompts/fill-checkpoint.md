@@ -1,12 +1,12 @@
 # Fill Checkpoint Input
 
 I've run `checkpoint check` which created:
-- `.checkpoint-input` - Template for you to fill
+- `checkpoint-input` - Template for you to fill
 - `.checkpoint-diff` - Full diff of changes
 
 ## Your Task
 
-Fill `.checkpoint-input` with structured information about these changes.
+Fill `checkpoint-input` with structured information about these changes.
 
 ### Changes Section
 
@@ -59,7 +59,7 @@ What should happen next? Include:
 Project: {{project_name}}
 Language: {{primary_language}}
 
-Review `.checkpoint-project.yml` for established patterns.
+Review `.checkpoint/project.yaml` for established patterns.
 
 ## Validation
 

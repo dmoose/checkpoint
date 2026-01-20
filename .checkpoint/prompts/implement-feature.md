@@ -16,7 +16,7 @@ Language: {{primary_language}}
 
 2. **Review existing code**
    - Find similar features
-   - Check `.checkpoint-project.yml` for patterns
+   - Check `.checkpoint/project.yaml` for patterns
 
 3. **Design approach**
    - Consider alternatives

@@ -1516,7 +1516,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-01-15T13:41:32-08:00"
-commit_hash: ""
+commit_hash: 95cfef472e28b7276b09de62ec7113c3456da894
 changes:
     - summary: Refactor guides to use go:embed instead of string constants
       details: Move guide content from escaped Go strings to actual .md files in internal/guides/content/, loaded via embed.FS
@@ -1531,3 +1531,69 @@ next_steps:
       details: GitHub Actions workflow to build and release binaries for darwin/linux amd64/arm64
       priority: high
       scope: .github/workflows
+---
+schema_version: "1"
+timestamp: "2026-01-13T10:53:38-08:00"
+commit_hash: 908a8a3786f15497807a69773aa9f2338e4d4386
+import: true
+files_changed:
+    - path: LICENSE
+      additions: 2
+      deletions: 0
+    - path: Makefile
+      additions: 14
+      deletions: 3
+changes:
+    - summary: update linter
+      change_type: other
+next_steps: []
+---
+schema_version: "1"
+timestamp: "2026-03-15T12:32:05-07:00"
+commit_hash: ""
+changes:
+    - summary: Split single binary into checkpoint and guardrail
+      details: 'Separated 23-command CLI into two independent binaries: checkpoint (development history) and guardrail (LLM knowledge management). New directory structure with cmd/checkpoint/, cmd/guardrail/, internal/app/checkpoint/, internal/app/guardrail/. Both share internal/ packages and .checkpoint/ data directory.'
+      change_type: refactor
+      scope: architecture
+    - summary: Consolidate two project files into one
+      details: Eliminated root-level .checkpoint-project.yaml. Recommendations from checkpoint commit now append to .checkpoint/project.yaml (the guardrail-managed file). Gutted internal/project/project.go from 530 to 88 lines, removing 20+ unused struct types.
+      change_type: refactor
+      scope: internal/project
+    - summary: Add key_exchanges to context schema for prompt capture
+      details: Replaced conversation_context with key_exchanges capturing prompt_summary, approach_taken, human_feedback. Removed established_patterns from context (captured as decisions instead). Trimmed context template from 75 to 30 lines.
+      change_type: feature
+      scope: internal/context
+    - summary: Migrate all config files from .yml to .yaml
+      details: Renamed all 5 config files, removed legacy constants and FindWithFallback function, cleaned up fallback logic across 6 files.
+      change_type: refactor
+      scope: pkg/config
+    - summary: Add checkpoint import command for historical commits
+      details: New command imports git history into changelog. Supports --no-enrich (mechanical entries), interactive enrichment (generates input for LLM to fill), and --enrich-threshold. Adds import:true flag to schema, git log/diff functions, and import-commit subcommand for the enrichment workflow.
+      change_type: feature
+      scope: internal/app/checkpoint
+    - summary: Double test coverage from 18.5% to 37.8%
+      details: 'Added tests for 7 previously untested packages: explain (56.5%), project (84.6%), guides (81%), skills (85.7%), guardrail doctor/learn/skill commands, checkpoint search/summary/session/import functions. 24 test files total.'
+      change_type: other
+      scope: tests
+    - summary: Restructure documentation from 23 to 17 files
+      details: 'Eliminated duplicate guides, consolidated docs. New: docs/getting-started.md, docs/workflow.md, docs/schema-reference.md. Killed: CHECKPOINT.md, FUTURE-FEATURES.md, docs/QUICKSTART.md, docs/USER-GUIDE.md, .checkpoint/guides/ (duplicates of embedded), .checkpoint/README.md. Updated all remaining docs for two-binary architecture.'
+      change_type: docs
+      scope: docs
+    - summary: Update Makefile for dual-binary build
+      details: build/install/cross-compile targets now handle both checkpoint and guardrail. Added run-checkpoint and run-guardrail targets.
+      change_type: refactor
+      scope: Makefile
+next_steps:
+    - summary: Dogfood checkpoint+guardrail on this project going forward
+      priority: high
+      scope: project
+    - summary: Create CI release workflow for both binaries
+      priority: high
+      scope: .github/workflows
+    - summary: Add MCP integration for guardrail explain
+      priority: med
+      scope: guardrail
+    - summary: Add changelog archival for long-lived projects
+      priority: low
+      scope: checkpoint

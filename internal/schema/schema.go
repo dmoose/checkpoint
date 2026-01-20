@@ -29,6 +29,7 @@ type CheckpointEntry struct {
 	SchemaVersion string                    `yaml:"schema_version"`
 	Timestamp     string                    `yaml:"timestamp"`
 	CommitHash    string                    `yaml:"commit_hash,omitempty"`
+	Import        bool                      `yaml:"import,omitempty"`
 	GitStatus     string                    `yaml:"git_status,omitempty"`
 	DiffFile      string                    `yaml:"diff_file,omitempty"`
 	FilesChanged  []FileChange              `yaml:"files_changed,omitempty"`
@@ -110,8 +111,8 @@ func GenerateInputTemplateWithMetadata(gitStatus, diffFileName string, prevNextS
 
 	// Note: Language detection, project context, and recent context are no longer embedded
 	// to keep the input file manageable. Reference files directly if needed:
-	// - Project patterns: .checkpoint-project.yml
-	// - Recent decisions: .checkpoint-context.yml
+	// - Project patterns: .checkpoint/project.yaml
+	// - Recent decisions: .checkpoint-context.yaml
 	// - Run 'checkpoint start' to see next steps and project summary
 
 	// Get context template
@@ -130,8 +131,8 @@ git_status: |
 diff_file: "%s"%s
 
 # REFERENCE FILES (if needed):
-# - Project patterns and conventions: .checkpoint-project.yml
-# - Recent checkpoint decisions: .checkpoint-context.yml
+# - Project patterns and conventions: .checkpoint/project.yaml
+# - Recent checkpoint decisions: .checkpoint-context.yaml
 # - Run 'checkpoint start' to see project summary and next steps
 
 # List all changes made in this checkpoint
@@ -338,6 +339,7 @@ func RenderChangelogDocument(e *CheckpointEntry) (string, error) {
 		SchemaVersion string       `yaml:"schema_version"`
 		Timestamp     string       `yaml:"timestamp"`
 		CommitHash    string       `yaml:"commit_hash"`
+		Import        bool         `yaml:"import,omitempty"`
 		FilesChanged  []FileChange `yaml:"files_changed,omitempty"`
 		Changes       []Change     `yaml:"changes"`
 		NextSteps     []NextStep   `yaml:"next_steps"`
@@ -345,6 +347,7 @@ func RenderChangelogDocument(e *CheckpointEntry) (string, error) {
 		SchemaVersion: e.SchemaVersion,
 		Timestamp:     e.Timestamp,
 		CommitHash:    e.CommitHash,
+		Import:        e.Import,
 		FilesChanged:  e.FilesChanged,
 		Changes:       e.Changes,
 		NextSteps:     e.NextSteps,

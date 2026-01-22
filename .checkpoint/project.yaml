@@ -1,0 +1,129 @@
+schema_version: "1"
+name: checkpoint
+type: go-cli
+purpose: |
+  Append-only changelog tool for LLM-assisted development.
+  Captures what changed and why, enabling context continuity across
+  LLM sessions and daily summaries via companion macOS app.
+
+repository: github.com/user/checkpoint
+
+architecture:
+  overview: |
+    Two-binary architecture: checkpoint (development history) and guardrail
+    (project knowledge). Entry points in cmd/checkpoint/main.go and
+    cmd/guardrail/main.go dispatch to command handlers in internal/app/.
+    Core logic lives in internal/ packages. Configuration constants
+    in pkg/config/. The tool creates/manages several YAML files in
+    the project root for changelog, context, and project patterns.
+
+  key_paths:
+    entry_points:
+      checkpoint: cmd/checkpoint/main.go
+      guardrail: cmd/guardrail/main.go
+    commands:
+      checkpoint: internal/app/checkpoint/
+      guardrail: internal/app/guardrail/
+    core_logic: internal/
+    config: pkg/config/
+    checkpoint_support: .checkpoint/
+
+  data_flow: |
+    checkpoint:
+    1. User runs checkpoint check → creates .checkpoint-input + .checkpoint-diff
+    2. LLM/user fills .checkpoint-input with change descriptions
+    3. User runs checkpoint commit → validates, appends to changelog, git commits
+    4. Tool backfills commit hash into last changelog document
+
+    guardrail:
+    1. User runs guardrail init → creates .checkpoint/ project config
+    2. guardrail explain → renders project context for LLM consumption
+    3. guardrail guide/skill/learn → manages embedded knowledge and prompts
+
+  key_files:
+    - path: .checkpoint-changelog.yaml
+      purpose: Append-only changelog, one YAML document per checkpoint
+      tracked: true
+    - path: .checkpoint-context.yaml
+      purpose: Reasoning and decisions log
+      tracked: true
+    - path: .checkpoint-status.yaml
+      purpose: Last commit metadata for macOS app discovery
+      tracked: false
+    - path: .checkpoint-input
+      purpose: Temporary editable file during checkpoint
+      tracked: false
+    - path: .checkpoint-diff
+      purpose: Git diff context for LLM
+      tracked: false
+
+languages:
+  primary: go
+  version: "1.25"
+
+dependencies:
+  external:
+    - name: gopkg.in/yaml.v3
+      purpose: Multi-document YAML parsing
+    - name: github.com/oklog/ulid/v2
+      purpose: Project ID generation (ULID format)
+
+integrations:
+  - name: macOS Swift App
+    type: companion
+    interaction: |
+      Swift app discovers projects via .checkpoint-status.yaml presence.
+      Reads changelog for daily summaries. Uses project_id and path_hash
+      for deduplication and move detection.
+  - name: Git
+    type: required
+    interaction: |
+      Tool wraps git commands for status, diff, commit.
+      One checkpoint = one git commit. Backfills commit hash.
+
+# AI collaboration boundaries - what AI can do without asking
+ai_authority:
+  autonomous:
+    - "Bug fixes with clear reproduction steps"
+    - "Test additions for existing code"
+    - "Documentation updates"
+    - "Code formatting (go fmt)"
+    - "Adding error handling"
+    - "Implementing planned features from roadmap"
+  requires_approval:
+    - "New features not in roadmap"
+    - "Architecture changes"
+    - "Dependency additions"
+    - "Schema changes"
+    - "Changes to cmd/ command structure"
+  notes: "When in doubt, ask. Better to confirm than to redo."
+
+# Project-wide lessons from failed approaches
+lessons_learned: []
+
+# Project roadmap and deferred items
+roadmap:
+  planned:
+    - summary: "Create release workflow (.github/workflows)"
+      priority: "high"
+      blockers: []
+  deferred: []
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2026-03-15T12:32:05-07:00"
+recommended_additions:
+    key_insights:
+        - insight: Separating history capture from knowledge management makes each tool's purpose clear and lets them evolve independently
+          rationale: Users understand which tool to use for what. Commands are discoverable by purpose rather than memorizing a flat list of 23.
+        - insight: Most of the project schema (ProjectDocument with 15+ types) was write-only dead code never read back at runtime
+          rationale: Schema should match what's actually used, not what might theoretically be useful
+        - insight: Import is just the check/commit workflow in reverse — same template, same schema, same gating
+          rationale: New features should reuse existing patterns rather than inventing parallel mechanisms
+    design_principles:
+        - principle: Two fully independent binaries, no cross-dependency
+          rationale: Each binary must stand alone. If guardrail isn't installed, checkpoint still works. Shared code lives in internal/ packages, not in binary-to-binary calls.
+        - principle: Consolidate two project files into one at .checkpoint/project.yaml
+          rationale: Root-level .checkpoint-project.yaml was confusing alongside .checkpoint/project.yaml. One file with append-only recommendations queue is simpler.
+        - principle: Drop established_patterns from context schema, capture as decisions
+          rationale: Patterns and decisions were being duplicated. A decision with scope:project serves both purposes.

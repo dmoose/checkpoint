@@ -16,9 +16,9 @@ INSTALL_PATH := $(HOME)/.local/bin
 .PHONY: all
 all: build
 
-# Build both binaries
+# Build all binaries
 .PHONY: build
-build: build-checkpoint build-guardrail
+build: build-checkpoint build-guardrail build-mcp
 
 .PHONY: build-checkpoint
 build-checkpoint: $(BIN_DIR)/checkpoint
@@ -36,6 +36,14 @@ $(BIN_DIR)/guardrail: $(GO_FILES)
 	@echo "Building guardrail..."
 	go build $(LDFLAGS) -o $(BIN_DIR)/guardrail ./cmd/guardrail
 
+.PHONY: build-mcp
+build-mcp: $(BIN_DIR)/checkpoint-mcp
+
+$(BIN_DIR)/checkpoint-mcp: $(GO_FILES)
+	@mkdir -p $(BIN_DIR)
+	@echo "Building checkpoint-mcp..."
+	go build $(LDFLAGS) -o $(BIN_DIR)/checkpoint-mcp ./cmd/checkpoint-mcp
+
 # Build for development (with race detector and debug info)
 .PHONY: build-dev
 build-dev:
@@ -43,6 +51,7 @@ build-dev:
 	@echo "Building for development..."
 	go build -race -o $(BIN_DIR)/checkpoint ./cmd/checkpoint
 	go build -race -o $(BIN_DIR)/guardrail ./cmd/guardrail
+	go build -race -o $(BIN_DIR)/checkpoint-mcp ./cmd/checkpoint-mcp
 
 # Cross-compile for multiple platforms
 .PHONY: build-all
@@ -65,6 +74,7 @@ install:
 	@echo "Installing checkpoint and guardrail to GOPATH/bin..."
 	go install $(LDFLAGS) ./cmd/checkpoint
 	go install $(LDFLAGS) ./cmd/guardrail
+	go install $(LDFLAGS) ./cmd/checkpoint-mcp
 
 # Install to user's local bin directory (~/.local/bin)
 .PHONY: install-user
@@ -73,7 +83,8 @@ install-user: build
 	@mkdir -p $(INSTALL_PATH)
 	@cp $(BIN_DIR)/checkpoint $(INSTALL_PATH)/checkpoint
 	@cp $(BIN_DIR)/guardrail $(INSTALL_PATH)/guardrail
-	@echo "Installed checkpoint and guardrail to $(INSTALL_PATH)"
+	@cp $(BIN_DIR)/checkpoint-mcp $(INSTALL_PATH)/checkpoint-mcp
+	@echo "Installed checkpoint, guardrail, and checkpoint-mcp to $(INSTALL_PATH)"
 	@echo "Ensure $(INSTALL_PATH) is in your PATH"
 
 # Uninstall from user's local bin directory

@@ -638,3 +638,34 @@ context:
         - prompt_summary: Human asked for import command to bootstrap from existing git history
           approach_taken: Built checkpoint import with mechanical (--no-enrich) and interactive modes, reusing existing input template pattern
           human_feedback: Approved approach of iterative per-commit enrichment rather than batch processing.
+---
+schema_version: "1"
+timestamp: "2026-03-15T14:38:06-07:00"
+context:
+    problem_statement: LLMs had no way to self-serve project context — they relied on humans running CLI commands and pasting output. The input file was hidden as a dotfile despite being the primary human review artifact.
+    key_insights:
+        - insight: MCP is the read channel, CLI is the write channel with human gating
+          impact: LLMs pull context on demand via MCP; checkpoint/commit stays CLI because human approval is the point
+          scope: project
+        - insight: Skills and MCP serve different purposes and aren't mutually exclusive
+          impact: Skills are static reference docs any agent reads. MCP is dynamic query access to live project data.
+          scope: project
+    decisions_made:
+        - decision: MCP server as third binary rather than embedded in checkpoint or guardrail
+          rationale: Keeps the two main binaries independent and simple. MCP is optional — projects work fine without it.
+          alternatives_considered:
+            - 'Embed MCP in guardrail binary (rejected: adds dependency to standalone CLI)'
+            - 'Single binary with mcp subcommand (rejected: MCP needs to run as persistent server)'
+          scope: project
+        - decision: Use mark3labs/mcp-go consistent with sibling projects
+          rationale: Same dependency across catCrawl and checkpoint reduces cognitive load and maintenance
+          scope: checkpoint
+        - decision: Skills as plain markdown files in repo root, not embedded in binary
+          rationale: Any agent can read them by path without running a command. They're repo-level documentation, not tool features.
+          alternatives_considered:
+            - 'Embed in guardrail binary like guides (rejected: skills are project-portable, not tool-specific)'
+          scope: project
+    key_exchanges:
+        - prompt_summary: Human asked to build both MCP and skills, use same MCP dependency as sibling projects
+          approach_taken: Built checkpoint-mcp with 5 tools using mcp-go v0.45.0, created skills/ with 4 workflow reference docs
+          human_feedback: Approved. Caught that checkpoint-input was a hidden dotfile — fixed to be visible.

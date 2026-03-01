@@ -127,3 +127,18 @@ recommended_additions:
           rationale: Root-level .checkpoint-project.yaml was confusing alongside .checkpoint/project.yaml. One file with append-only recommendations queue is simpler.
         - principle: Drop established_patterns from context schema, capture as decisions
           rationale: Patterns and decisions were being duplicated. A decision with scope:project serves both purposes.
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2026-03-15T14:38:06-07:00"
+recommended_additions:
+    key_insights:
+        - insight: MCP is the read channel, CLI is the write channel with human gating
+          rationale: LLMs pull context on demand via MCP; checkpoint/commit stays CLI because human approval is the point
+        - insight: Skills and MCP serve different purposes and aren't mutually exclusive
+          rationale: Skills are static reference docs any agent reads. MCP is dynamic query access to live project data.
+    design_principles:
+        - principle: MCP server as third binary rather than embedded in checkpoint or guardrail
+          rationale: Keeps the two main binaries independent and simple. MCP is optional — projects work fine without it.
+        - principle: Skills as plain markdown files in repo root, not embedded in binary
+          rationale: Any agent can read them by path without running a command. They're repo-level documentation, not tool features.

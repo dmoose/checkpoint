@@ -151,6 +151,11 @@ config.local.json
 *.zip
 *.rar
 
+# Binaries (if built without -o bin/)
+/checkpoint
+/guardrail
+/checkpoint-mcp
+
 # Checkpoint tool
 checkpoint-input
 .checkpoint-diff

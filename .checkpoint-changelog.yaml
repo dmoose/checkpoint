@@ -1550,7 +1550,7 @@ next_steps: []
 ---
 schema_version: "1"
 timestamp: "2026-03-15T12:32:05-07:00"
-commit_hash: ""
+commit_hash: 99cd126dbf18443af4091780922331405178d313
 changes:
     - summary: Split single binary into checkpoint and guardrail
       details: 'Separated 23-command CLI into two independent binaries: checkpoint (development history) and guardrail (LLM knowledge management). New directory structure with cmd/checkpoint/, cmd/guardrail/, internal/app/checkpoint/, internal/app/guardrail/. Both share internal/ packages and .checkpoint/ data directory.'
@@ -1594,6 +1594,45 @@ next_steps:
     - summary: Add MCP integration for guardrail explain
       priority: med
       scope: guardrail
+    - summary: Add changelog archival for long-lived projects
+      priority: low
+      scope: checkpoint
+---
+schema_version: "1"
+timestamp: "2026-03-15T14:38:06-07:00"
+commit_hash: ""
+changes:
+    - summary: Add checkpoint-mcp server with 5 read-only tools
+      details: New MCP stdio server binary exposing explain, search, guide, status, and context_template tools. Uses mark3labs/mcp-go v0.45.0. Lets LLMs pull project context on demand without human running CLI commands.
+      change_type: feature
+      scope: cmd/checkpoint-mcp
+    - summary: Add skills directory with workflow reference docs
+      details: 'Four skill files any agent can read: checkpoint-workflow, filling-checkpoints, guardrail-context, session-handoff. Plain markdown, not embedded — designed as reference docs agents consult during work.'
+      change_type: feature
+      scope: skills
+    - summary: Add GitHub Actions release workflow for tagged builds
+      details: Builds checkpoint, guardrail, and checkpoint-mcp for 5 platform targets (linux/darwin amd64/arm64, windows amd64) on tag push. Creates GitHub release with archives.
+      change_type: feature
+      scope: .github/workflows
+    - summary: Update CI workflow for dual-binary build
+      details: CI now builds both cmd/checkpoint/ and cmd/guardrail/ instead of old single binary path.
+      change_type: fix
+      scope: .github/workflows
+    - summary: Make checkpoint-input visible (remove dot prefix)
+      details: Renamed .checkpoint-input to checkpoint-input so it appears in file listings. The input file is the human gating point — it should be visible, not hidden.
+      change_type: fix
+      scope: pkg/config
+    - summary: Update Makefile for three-binary build
+      details: Added build-mcp target. Build, install, and dev targets now include checkpoint-mcp alongside checkpoint and guardrail.
+      change_type: refactor
+      scope: Makefile
+next_steps:
+    - summary: Dogfood checkpoint+guardrail on this project going forward
+      priority: high
+      scope: project
+    - summary: Configure checkpoint-mcp in Claude Code settings for this project
+      priority: high
+      scope: integration
     - summary: Add changelog archival for long-lived projects
       priority: low
       scope: checkpoint

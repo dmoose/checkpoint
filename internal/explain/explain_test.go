@@ -548,13 +548,13 @@ func TestRenderGuidelines_Nil(t *testing.T) {
 func TestRenderGuidelines_NamingAndErrors(t *testing.T) {
 	e := &ExplainOutput{
 		Guidelines: &GuidelinesConfig{
-			Naming: map[string]interface{}{
+			Naming: map[string]any{
 				"functions": "camelCase",
 			},
-			Errors: map[string]interface{}{
+			Errors: map[string]any{
 				"pattern": "wrap with context",
 			},
-			Testing: map[string]interface{}{
+			Testing: map[string]any{
 				"style": "table-driven",
 			},
 		},

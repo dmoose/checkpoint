@@ -1,9 +1,11 @@
 package language
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -143,13 +145,7 @@ func TestDetectLanguagesSwiftProject(t *testing.T) {
 
 	expectedToFind := []string{"Swift", "Swift/Objective-C"}
 	for _, expected := range expectedToFind {
-		found := false
-		for _, actual := range languageNames {
-			if actual == expected {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(languageNames, expected)
 		if !found {
 			t.Errorf("expected to find language %s, but didn't. Found: %v", expected, languageNames)
 		}
@@ -256,12 +252,8 @@ func TestIgnorePatterns(t *testing.T) {
 	}
 
 	allFiles := make(map[string]string)
-	for k, v := range ignoredFiles {
-		allFiles[k] = v
-	}
-	for k, v := range validFiles {
-		allFiles[k] = v
-	}
+	maps.Copy(allFiles, ignoredFiles)
+	maps.Copy(allFiles, validFiles)
 
 	for filePath, content := range allFiles {
 		fullPath := filepath.Join(tmpDir, filePath)

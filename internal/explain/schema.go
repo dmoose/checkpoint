@@ -25,16 +25,16 @@ type AIAuthorityConfig struct {
 
 // LessonLearnedEntry captures project-wide lessons from failed approaches
 type LessonLearnedEntry struct {
-	Topic           string `yaml:"topic"`
-	FailedApproach  string `yaml:"failed_approach"`
-	WhyFailed       string `yaml:"why_failed"`
-	Lesson          string `yaml:"lesson"`
-	Date            string `yaml:"date,omitempty"`
+	Topic          string `yaml:"topic"`
+	FailedApproach string `yaml:"failed_approach"`
+	WhyFailed      string `yaml:"why_failed"`
+	Lesson         string `yaml:"lesson"`
+	Date           string `yaml:"date,omitempty"`
 }
 
 // RoadmapConfig captures project-level future considerations
 type RoadmapConfig struct {
-	Planned  []RoadmapItem `yaml:"planned,omitempty"`
+	Planned  []RoadmapItem  `yaml:"planned,omitempty"`
 	Deferred []DeferredItem `yaml:"deferred,omitempty"`
 }
 
@@ -118,18 +118,18 @@ type ToolCommand struct {
 }
 
 // GuidelinesConfig represents .checkpoint/guidelines.yaml
-// Uses interface{} for flexible nested structures
+// Uses any for flexible nested structures
 type GuidelinesConfig struct {
-	SchemaVersion string                 `yaml:"schema_version"`
-	Naming        map[string]interface{} `yaml:"naming,omitempty"`
-	Structure     map[string]string      `yaml:"structure,omitempty"`
-	Errors        map[string]interface{} `yaml:"errors,omitempty"`
-	Testing       map[string]interface{} `yaml:"testing,omitempty"`
-	Commits       map[string]string      `yaml:"commits,omitempty"`
-	Rules         []string               `yaml:"rules,omitempty"`
-	Avoid         []string               `yaml:"avoid,omitempty"`
-	Principles    []string               `yaml:"principles,omitempty"`
-	Collaboration CollaborationConfig    `yaml:"collaboration,omitempty"`
+	SchemaVersion string              `yaml:"schema_version"`
+	Naming        map[string]any      `yaml:"naming,omitempty"`
+	Structure     map[string]string   `yaml:"structure,omitempty"`
+	Errors        map[string]any      `yaml:"errors,omitempty"`
+	Testing       map[string]any      `yaml:"testing,omitempty"`
+	Commits       map[string]string   `yaml:"commits,omitempty"`
+	Rules         []string            `yaml:"rules,omitempty"`
+	Avoid         []string            `yaml:"avoid,omitempty"`
+	Principles    []string            `yaml:"principles,omitempty"`
+	Collaboration CollaborationConfig `yaml:"collaboration,omitempty"`
 }
 
 // CollaborationConfig defines the human-AI collaboration protocol
@@ -140,11 +140,11 @@ type CollaborationConfig struct {
 
 // SkillsConfig represents .checkpoint/skills.yaml
 type SkillsConfig struct {
-	SchemaVersion string                 `yaml:"schema_version"`
-	Global        []string               `yaml:"global,omitempty"`
-	Local         []string               `yaml:"local,omitempty"`
-	Config        map[string]interface{} `yaml:"config,omitempty"`
-	AutoDetect    AutoDetectConfig       `yaml:"auto_detect,omitempty"`
+	SchemaVersion string           `yaml:"schema_version"`
+	Global        []string         `yaml:"global,omitempty"`
+	Local         []string         `yaml:"local,omitempty"`
+	Config        map[string]any   `yaml:"config,omitempty"`
+	AutoDetect    AutoDetectConfig `yaml:"auto_detect,omitempty"`
 }
 
 type AutoDetectConfig struct {

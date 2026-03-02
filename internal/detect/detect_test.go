@@ -3,6 +3,7 @@ package detect
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -262,13 +263,7 @@ func TestDetectProjectNode(t *testing.T) {
 	}
 
 	// Should detect express framework
-	foundExpress := false
-	for _, fw := range info.Frameworks {
-		if fw == "express" {
-			foundExpress = true
-			break
-		}
-	}
+	foundExpress := slices.Contains(info.Frameworks, "express")
 	if !foundExpress {
 		t.Errorf("Frameworks = %v, should contain 'express'", info.Frameworks)
 	}

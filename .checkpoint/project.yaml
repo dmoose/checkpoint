@@ -59,7 +59,7 @@ architecture:
 
 languages:
   primary: go
-  version: "1.25"
+  version: "1.26"
 
 dependencies:
   external:
@@ -142,3 +142,11 @@ recommended_additions:
           rationale: Keeps the two main binaries independent and simple. MCP is optional — projects work fine without it.
         - principle: Skills as plain markdown files in repo root, not embedded in binary
           rationale: Any agent can read them by path without running a command. They're repo-level documentation, not tool features.
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2026-03-15T16:02:00-07:00"
+recommended_additions:
+    key_insights:
+        - insight: go fix does not cover all modernizations -- interface{} to any, SplitSeq, and CutPrefix required manual or tooling-assisted replacement
+          rationale: Future Go version bumps should include a pass with golangci-lint modernize checks, not just go fix

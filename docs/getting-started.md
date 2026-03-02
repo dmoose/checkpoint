@@ -4,7 +4,7 @@ Complete setup guide for checkpoint and guardrail.
 
 ## Prerequisites
 
-- **Go 1.25+** -- [install](https://go.dev/doc/install)
+- **Go 1.26+** -- [install](https://go.dev/doc/install)
 - **git** -- any recent version
 
 ## Install both binaries
@@ -14,7 +14,7 @@ Complete setup guide for checkpoint and guardrail.
 ```bash
 git clone https://github.com/dmoose/checkpoint.git
 cd checkpoint
-make install-user    # Installs to ~/.local/bin
+make install-user    # Installs all binaries to ~/.local/bin
 ```
 
 ### With go install
@@ -22,6 +22,7 @@ make install-user    # Installs to ~/.local/bin
 ```bash
 go install github.com/dmoose/checkpoint/cmd/checkpoint@latest
 go install github.com/dmoose/checkpoint/cmd/guardrail@latest
+go install github.com/dmoose/checkpoint/cmd/checkpoint-mcp@latest  # optional, for MCP integration
 ```
 
 Verify both are available:

@@ -31,7 +31,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.26"
 
       - name: Build binaries
         env:
@@ -49,9 +49,10 @@ jobs:
           mkdir -p dist
           go build -ldflags="${LDFLAGS}" -o "dist/checkpoint${EXT}" ./cmd/checkpoint/
           go build -ldflags="${LDFLAGS}" -o "dist/guardrail${EXT}" ./cmd/guardrail/
+          go build -ldflags="${LDFLAGS}" -o "dist/checkpoint-mcp${EXT}" ./cmd/checkpoint-mcp/
 
           cd dist
-          tar -czf "checkpoint-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz" checkpoint${EXT} guardrail${EXT}
+          tar -czf "checkpoint-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz" checkpoint${EXT} guardrail${EXT} checkpoint-mcp${EXT}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

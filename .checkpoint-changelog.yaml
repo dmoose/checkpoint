@@ -1600,7 +1600,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-03-15T14:38:06-07:00"
-commit_hash: ""
+commit_hash: 09a08bbd882075e6ca3b1644108451a6917cdc27
 changes:
     - summary: Add checkpoint-mcp server with 5 read-only tools
       details: New MCP stdio server binary exposing explain, search, guide, status, and context_template tools. Uses mark3labs/mcp-go v0.45.0. Lets LLMs pull project context on demand without human running CLI commands.
@@ -1626,6 +1626,138 @@ changes:
       details: Added build-mcp target. Build, install, and dev targets now include checkpoint-mcp alongside checkpoint and guardrail.
       change_type: refactor
       scope: Makefile
+next_steps:
+    - summary: Dogfood checkpoint+guardrail on this project going forward
+      priority: high
+      scope: project
+    - summary: Configure checkpoint-mcp in Claude Code settings for this project
+      priority: high
+      scope: integration
+    - summary: Add changelog archival for long-lived projects
+      priority: low
+      scope: checkpoint
+---
+schema_version: "1"
+timestamp: "2026-03-15T16:02:00-07:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: .checkpoint/project.yaml
+      additions: 1
+      deletions: 1
+    - path: .checkpoint/skills.yaml
+      additions: 1
+      deletions: 1
+    - path: .github/workflows/ci.yml
+      additions: 5
+      deletions: 4
+    - path: .github/workflows/release.yml
+      additions: 3
+      deletions: 2
+    - path: README.md
+      additions: 7
+      deletions: 3
+    - path: docs/LLM-INTEGRATION.md
+      additions: 33
+      deletions: 0
+    - path: docs/getting-started.md
+      additions: 3
+      deletions: 2
+    - path: go.mod
+      additions: 1
+      deletions: 1
+    - path: internal/app/checkpoint/importcmd.go
+      additions: 5
+      deletions: 10
+    - path: internal/app/checkpoint/search.go
+      additions: 21
+      deletions: 29
+    - path: internal/app/checkpoint/search_test.go
+      additions: 13
+      deletions: 13
+    - path: internal/app/checkpoint/session.go
+      additions: 8
+      deletions: 9
+    - path: internal/app/checkpoint/start.go
+      additions: 2
+      deletions: 2
+    - path: internal/app/checkpoint/summary.go
+      additions: 11
+      deletions: 11
+    - path: internal/app/guardrail/explain.go
+      additions: 1
+      deletions: 1
+    - path: internal/app/guardrail/learn.go
+      additions: 11
+      deletions: 16
+    - path: internal/app/guardrail/prompt.go
+      additions: 3
+      deletions: 6
+    - path: internal/app/guardrail/skill.go
+      additions: 7
+      deletions: 10
+    - path: internal/changelog/changelog.go
+      additions: 3
+      deletions: 3
+    - path: internal/context/context.go
+      additions: 4
+      deletions: 3
+    - path: internal/detect/detect.go
+      additions: 8
+      deletions: 12
+    - path: internal/detect/detect_test.go
+      additions: 2
+      deletions: 7
+    - path: internal/explain/explain.go
+      additions: 5
+      deletions: 5
+    - path: internal/explain/explain_test.go
+      additions: 3
+      deletions: 3
+    - path: internal/explain/history.go
+      additions: 22
+      deletions: 22
+    - path: internal/explain/schema.go
+      additions: 22
+      deletions: 22
+    - path: internal/git/git.go
+      additions: 2
+      deletions: 2
+    - path: internal/language/detect_test.go
+      additions: 5
+      deletions: 13
+    - path: internal/schema/schema.go
+      additions: 2
+      deletions: 2
+    - path: internal/templates/templates.go
+      additions: 6
+      deletions: 6
+    - path: pkg/config/config.go
+      additions: 6
+      deletions: 6
+changes:
+    - summary: Bump Go version to 1.26 across CI, docs, and config
+      details: Updated go.mod, CI workflows (ci.yml, release.yml), getting-started.md, project.yaml, and skills.yaml from Go 1.25 to 1.26
+      change_type: other
+      scope: .github/workflows, docs, .checkpoint
+    - summary: Add checkpoint-mcp to CI builds and release artifacts
+      details: CI now builds all three binaries; release workflow packages checkpoint-mcp alongside checkpoint and guardrail in tarballs
+      change_type: feature
+      scope: .github/workflows
+    - summary: Fix lint errors in importcmd.go
+      details: Removed dead enrichable variable (ineffassign) and replaced unnecessary fmt.Sprintf with string literal (staticcheck S1039)
+      change_type: fix
+      scope: internal/app/checkpoint
+    - summary: Apply Go 1.26 modernizations across codebase
+      details: Replaced interface{} with any (50 occurrences across 10 files), applied strings.SplitSeq and strings.CutPrefix where flagged by modernize linter, fixed unused parameters
+      change_type: refactor
+      scope: internal
+    - summary: Document checkpoint-mcp in README, getting-started, and LLM integration guide
+      details: Added MCP server description with tool table (explain, search, guide, status, context_template), install instructions, and .mcp.json config example. Added import command to README command table.
+      change_type: docs
+      scope: docs, README
 next_steps:
     - summary: Dogfood checkpoint+guardrail on this project going forward
       priority: high

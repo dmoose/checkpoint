@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/dmoose/checkpoint/internal/explain"
@@ -299,11 +300,9 @@ func addSkill(projectPath string, name string) {
 	}
 
 	// Check if already added
-	for _, existing := range skillsConfig.Global {
-		if existing == name {
-			fmt.Printf("skill '%s' is already configured\n", name)
-			return
-		}
+	if slices.Contains(skillsConfig.Global, name) {
+		fmt.Printf("skill '%s' is already configured\n", name)
+		return
 	}
 
 	// Add skill
@@ -390,11 +389,9 @@ func createSkill(projectPath string, name string) {
 	skillsConfig.SchemaVersion = "1"
 
 	// Check if already in local
-	for _, existing := range skillsConfig.Local {
-		if existing == name {
-			fmt.Printf("✓ Created skill at %s\n", skillPath)
-			return
-		}
+	if slices.Contains(skillsConfig.Local, name) {
+		fmt.Printf("✓ Created skill at %s\n", skillPath)
+		return
 	}
 
 	skillsConfig.Local = append(skillsConfig.Local, name)

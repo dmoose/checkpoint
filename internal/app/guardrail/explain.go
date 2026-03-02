@@ -126,7 +126,7 @@ func isSkillNotFound(output string) bool {
 }
 
 func outputJSON(ctx *explain.ExplainOutput, topic string) {
-	var data interface{}
+	var data any
 
 	switch topic {
 	case "project":

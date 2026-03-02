@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -153,10 +154,10 @@ func detectGoInfo(projectPath string, info *ProjectInfo) {
 		return
 	}
 
-	lines := strings.Split(string(data), "\n")
-	for _, line := range lines {
-		if strings.HasPrefix(line, "module ") {
-			moduleName := strings.TrimPrefix(line, "module ")
+	lines := strings.SplitSeq(string(data), "\n")
+	for line := range lines {
+		if after, ok := strings.CutPrefix(line, "module "); ok {
+			moduleName := after
 			moduleName = strings.TrimSpace(moduleName)
 			// Use last part of module path as name if it looks better
 			parts := strings.Split(moduleName, "/")
@@ -264,8 +265,8 @@ func detectPythonInfo(projectPath string, info *ProjectInfo) {
 	// Check for pyproject.toml (modern Python)
 	if data, err := os.ReadFile(filepath.Join(projectPath, "pyproject.toml")); err == nil {
 		// Simple extraction of project name
-		lines := strings.Split(string(data), "\n")
-		for _, line := range lines {
+		lines := strings.SplitSeq(string(data), "\n")
+		for line := range lines {
 			if strings.HasPrefix(strings.TrimSpace(line), "name") {
 				re := regexp.MustCompile(`name\s*=\s*"([^"]+)"`)
 				if matches := re.FindStringSubmatch(line); len(matches) > 1 {
@@ -489,10 +490,5 @@ func detectCommonCommands(projectPath string, info *ProjectInfo) {
 }
 
 func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, item)
 }

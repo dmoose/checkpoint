@@ -46,7 +46,7 @@ changes:
 }
 
 func TestMatchesSearch_MatchingQuery(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"summary":     "add user authentication",
 		"change_type": "feature",
 		"scope":       "auth",
@@ -58,7 +58,7 @@ func TestMatchesSearch_MatchingQuery(t *testing.T) {
 }
 
 func TestMatchesSearch_NonMatchingQuery(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"summary":     "add user authentication",
 		"change_type": "feature",
 		"scope":       "auth",
@@ -70,7 +70,7 @@ func TestMatchesSearch_NonMatchingQuery(t *testing.T) {
 }
 
 func TestMatchesSearch_ScopeFilter(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"summary":     "add user authentication",
 		"change_type": "feature",
 		"scope":       "auth",
@@ -90,7 +90,7 @@ func TestMatchesSearch_ScopeFilter(t *testing.T) {
 }
 
 func TestMatchesSearch_ScopeFilterMissing(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"summary": "some change without scope",
 	}
 	opts := SearchOptions{Scope: "auth"}
@@ -100,7 +100,7 @@ func TestMatchesSearch_ScopeFilterMissing(t *testing.T) {
 }
 
 func TestMatchesSearch_NoQueryNoScope(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"summary": "anything",
 	}
 	opts := SearchOptions{}
@@ -119,7 +119,7 @@ func TestMatchesQuery_StringValue(t *testing.T) {
 }
 
 func TestMatchesQuery_MapValue(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"description": "implement caching layer",
 		"scope":       "performance",
 	}
@@ -171,7 +171,7 @@ func TestMatchesQueryString_EmptyQuery(t *testing.T) {
 }
 
 func TestFormatChangeContent(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"summary":     "add login endpoint",
 		"details":     "implemented JWT-based auth",
 		"change_type": "feature",
@@ -195,7 +195,7 @@ func TestFormatChangeContent(t *testing.T) {
 }
 
 func TestFormatChangeContent_PartialFields(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"summary": "quick fix",
 	}
 	result := formatChangeContent(m)
@@ -208,7 +208,7 @@ func TestFormatChangeContent_PartialFields(t *testing.T) {
 }
 
 func TestFormatStepContent(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"summary":  "refactor database layer",
 		"priority": "high",
 		"scope":    "database",
@@ -234,7 +234,7 @@ func TestFormatContextItem_StringItem(t *testing.T) {
 }
 
 func TestFormatContextItem_MapWithInsight(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"insight": "caching reduces latency by 50%",
 		"scope":   "performance",
 	}
@@ -248,7 +248,7 @@ func TestFormatContextItem_MapWithInsight(t *testing.T) {
 }
 
 func TestFormatContextItem_MapWithPattern(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"pattern":   "use table-driven tests",
 		"rationale": "better test coverage",
 	}
@@ -262,7 +262,7 @@ func TestFormatContextItem_MapWithPattern(t *testing.T) {
 }
 
 func TestFormatContextItem_MapWithDecision(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"decision":  "use PostgreSQL over MySQL",
 		"rationale": "better JSON support",
 	}
@@ -273,7 +273,7 @@ func TestFormatContextItem_MapWithDecision(t *testing.T) {
 }
 
 func TestFormatContextItem_MapWithFailedApproach(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"approach":   "tried using global state",
 		"why_failed": "caused race conditions",
 	}

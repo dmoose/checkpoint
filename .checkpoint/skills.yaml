@@ -20,7 +20,7 @@ config:
     config_file: null  # Uses defaults
 
   go:
-    version: "1.25"
+    version: "1.26"
     module: go-llm
 
 # Auto-detect settings

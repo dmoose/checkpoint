@@ -15,11 +15,13 @@ Checkpoint and guardrail solve this by storing structured development history an
 
 ## Two tools, one knowledge base
 
-This project provides two independent CLI binaries that share the same `.checkpoint/` directory:
+This project provides three binaries that share the same `.checkpoint/` directory:
 
 **checkpoint** records what happened. It captures structured change history linked to git commits -- what changed, why, what was tried, and what comes next.
 
 **guardrail** manages what the LLM knows. It provides project context, coding guidelines, tool commands, and skills to any LLM-assisted workflow.
+
+**checkpoint-mcp** exposes project context over the [Model Context Protocol](https://modelcontextprotocol.io). It provides read-only MCP tools for explain, search, guide, status, and context_template -- letting MCP-compatible editors query checkpoint data directly.
 
 Together they create a feedback loop: guardrail gives the LLM context before work begins, checkpoint captures context after work completes.
 
@@ -54,7 +56,7 @@ next_steps:
 ```bash
 git clone https://github.com/dmoose/checkpoint.git
 cd checkpoint
-make install-user    # Installs both binaries to ~/.local/bin
+make install-user    # Installs all binaries to ~/.local/bin
 ```
 
 ### With Go
@@ -62,6 +64,7 @@ make install-user    # Installs both binaries to ~/.local/bin
 ```bash
 go install github.com/dmoose/checkpoint/cmd/checkpoint@latest
 go install github.com/dmoose/checkpoint/cmd/guardrail@latest
+go install github.com/dmoose/checkpoint/cmd/checkpoint-mcp@latest  # optional, for MCP integration
 ```
 
 ### Verify
@@ -104,7 +107,8 @@ checkpoint commit    # Validates, appends to changelog, git commits
 | `lint` -- Validate input before commit | `guide` -- Show built-in guides |
 | `search` -- Search changelog history | `examples` -- Show example checkpoints |
 | `summary` -- Show changelog summary | `config` -- Get/set configuration values |
-| `clean` -- Remove temporary files | `completion` -- Shell completions |
+| `import` -- Backfill history from existing commits | `completion` -- Shell completions |
+| `clean` -- Remove temporary files | |
 | `completion` -- Shell completions | |
 
 ## Files

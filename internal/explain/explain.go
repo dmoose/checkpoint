@@ -442,21 +442,21 @@ func (e *ExplainOutput) RenderGuidelines() string {
 	return sb.String()
 }
 
-// renderFlexibleValue renders interface{} values in a readable way
-func renderFlexibleValue(sb *strings.Builder, val interface{}, indent string) {
+// renderFlexibleValue renders any values in a readable way
+func renderFlexibleValue(sb *strings.Builder, val any, indent string) {
 	switch v := val.(type) {
 	case string:
 		fmt.Fprintf(sb, "%s%s\n", indent, v)
-	case []interface{}:
+	case []any:
 		for _, item := range v {
 			fmt.Fprintf(sb, "%s- %v\n", indent, item)
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		for key, subval := range v {
 			switch sv := subval.(type) {
 			case string:
 				fmt.Fprintf(sb, "%s**%s**: %s\n", indent, key, sv)
-			case []interface{}:
+			case []any:
 				fmt.Fprintf(sb, "%s**%s**:\n", indent, key)
 				for _, item := range sv {
 					fmt.Fprintf(sb, "%s  - %v\n", indent, item)

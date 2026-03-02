@@ -173,10 +173,10 @@ func ReadMetaDocument(changelogPath string) (*MetaDocument, error) {
 	}
 
 	// Extract first document
-	firstDocEnd := strings.Index(contentStr, "\n---\n")
+	before, _, ok := strings.Cut(contentStr, "\n---\n")
 	var firstDoc string
-	if firstDocEnd != -1 {
-		firstDoc = contentStr[:firstDocEnd]
+	if ok {
+		firstDoc = before
 	} else {
 		firstDoc = contentStr
 	}

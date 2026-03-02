@@ -154,13 +154,6 @@ func Search(projectPath string, opts SearchOptions) {
 	}
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // searchChangelog searches the changelog file
 func searchChangelog(path string, opts SearchOptions) ([]SearchResult, error) {
 	data, err := os.ReadFile(path)
@@ -179,7 +172,7 @@ func searchChangelog(path string, opts SearchOptions) ([]SearchResult, error) {
 
 	for i := startIdx; i < len(docs); i++ {
 		doc := docs[i]
-		var entry map[string]interface{}
+		var entry map[string]any
 		if err := yaml.Unmarshal([]byte(doc), &entry); err != nil {
 			continue
 		}
@@ -193,9 +186,9 @@ func searchChangelog(path string, opts SearchOptions) ([]SearchResult, error) {
 		commitHash, _ := entry["commit_hash"].(string)
 
 		// Search changes
-		if changes, ok := entry["changes"].([]interface{}); ok {
+		if changes, ok := entry["changes"].([]any); ok {
 			for _, change := range changes {
-				if changeMap, ok := change.(map[string]interface{}); ok {
+				if changeMap, ok := change.(map[string]any); ok {
 					if matchesSearch(changeMap, opts) {
 						content := formatChangeContent(changeMap)
 						results = append(results, SearchResult{
@@ -211,9 +204,9 @@ func searchChangelog(path string, opts SearchOptions) ([]SearchResult, error) {
 		}
 
 		// Search next_steps
-		if steps, ok := entry["next_steps"].([]interface{}); ok {
+		if steps, ok := entry["next_steps"].([]any); ok {
 			for _, step := range steps {
-				if stepMap, ok := step.(map[string]interface{}); ok {
+				if stepMap, ok := step.(map[string]any); ok {
 					if matchesSearch(stepMap, opts) {
 						content := formatStepContent(stepMap)
 						results = append(results, SearchResult{
@@ -250,7 +243,7 @@ func searchContext(path string, opts SearchOptions) ([]SearchResult, error) {
 
 	for i := startIdx; i < len(docs); i++ {
 		doc := docs[i]
-		var entry map[string]interface{}
+		var entry map[string]any
 		if err := yaml.Unmarshal([]byte(doc), &entry); err != nil {
 			continue
 		}
@@ -259,14 +252,14 @@ func searchContext(path string, opts SearchOptions) ([]SearchResult, error) {
 		commitHash, _ := entry["commit_hash"].(string)
 
 		// Get context section
-		context, ok := entry["context"].(map[string]interface{})
+		context, ok := entry["context"].(map[string]any)
 		if !ok {
 			continue
 		}
 
 		// Search failed approaches
 		if opts.Failed || (opts.Query != "" && !opts.Pattern && !opts.Decision) {
-			if failed, ok := context["failed_approaches"].([]interface{}); ok {
+			if failed, ok := context["failed_approaches"].([]any); ok {
 				for _, item := range failed {
 					if matchesQuery(item, opts.Query) || opts.Failed {
 						content := formatContextItem("failed_approach", item)
@@ -285,7 +278,7 @@ func searchContext(path string, opts SearchOptions) ([]SearchResult, error) {
 
 		// Search patterns
 		if opts.Pattern || (opts.Query != "" && !opts.Failed && !opts.Decision) {
-			if patterns, ok := context["established_patterns"].([]interface{}); ok {
+			if patterns, ok := context["established_patterns"].([]any); ok {
 				for _, item := range patterns {
 					if matchesQuery(item, opts.Query) || opts.Pattern {
 						content := formatContextItem("pattern", item)
@@ -304,7 +297,7 @@ func searchContext(path string, opts SearchOptions) ([]SearchResult, error) {
 
 		// Search decisions
 		if opts.Decision || (opts.Query != "" && !opts.Failed && !opts.Pattern) {
-			if decisions, ok := context["decisions_made"].([]interface{}); ok {
+			if decisions, ok := context["decisions_made"].([]any); ok {
 				for _, item := range decisions {
 					if matchesQuery(item, opts.Query) || opts.Decision {
 						content := formatContextItem("decision", item)
@@ -323,7 +316,7 @@ func searchContext(path string, opts SearchOptions) ([]SearchResult, error) {
 
 		// Search key insights
 		if opts.Query != "" && !opts.Failed && !opts.Pattern && !opts.Decision {
-			if insights, ok := context["key_insights"].([]interface{}); ok {
+			if insights, ok := context["key_insights"].([]any); ok {
 				for _, item := range insights {
 					if matchesQuery(item, opts.Query) {
 						content := formatContextItem("insight", item)
@@ -362,8 +355,7 @@ func searchContext(path string, opts SearchOptions) ([]SearchResult, error) {
 
 func splitYAMLDocuments(content string) []string {
 	var docs []string
-	parts := strings.Split(content, "\n---")
-	for _, part := range parts {
+	for part := range strings.SplitSeq(content, "\n---") {
 		part = strings.TrimSpace(part)
 		if part != "" && part != "---" {
 			docs = append(docs, part)
@@ -372,7 +364,7 @@ func splitYAMLDocuments(content string) []string {
 	return docs
 }
 
-func matchesSearch(m map[string]interface{}, opts SearchOptions) bool {
+func matchesSearch(m map[string]any, opts SearchOptions) bool {
 	// Check scope filter
 	if opts.Scope != "" {
 		if scope, ok := m["scope"].(string); ok {
@@ -392,7 +384,7 @@ func matchesSearch(m map[string]interface{}, opts SearchOptions) bool {
 	return true
 }
 
-func matchesMapQuery(m map[string]interface{}, query string) bool {
+func matchesMapQuery(m map[string]any, query string) bool {
 	query = strings.ToLower(query)
 	for _, v := range m {
 		switch val := v.(type) {
@@ -400,7 +392,7 @@ func matchesMapQuery(m map[string]interface{}, query string) bool {
 			if strings.Contains(strings.ToLower(val), query) {
 				return true
 			}
-		case []interface{}:
+		case []any:
 			for _, item := range val {
 				if str, ok := item.(string); ok {
 					if strings.Contains(strings.ToLower(str), query) {
@@ -413,7 +405,7 @@ func matchesMapQuery(m map[string]interface{}, query string) bool {
 	return false
 }
 
-func matchesQuery(item interface{}, query string) bool {
+func matchesQuery(item any, query string) bool {
 	if query == "" {
 		return true
 	}
@@ -422,7 +414,7 @@ func matchesQuery(item interface{}, query string) bool {
 	switch v := item.(type) {
 	case string:
 		return strings.Contains(strings.ToLower(v), query)
-	case map[string]interface{}:
+	case map[string]any:
 		return matchesMapQuery(v, query)
 	}
 	return false
@@ -441,7 +433,7 @@ func matchesQueryString(s, query string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(query))
 }
 
-func formatChangeContent(m map[string]interface{}) string {
+func formatChangeContent(m map[string]any) string {
 	var sb strings.Builder
 	if summary, ok := m["summary"].(string); ok {
 		sb.WriteString(fmt.Sprintf("Summary: %s\n", summary))
@@ -458,7 +450,7 @@ func formatChangeContent(m map[string]interface{}) string {
 	return sb.String()
 }
 
-func formatStepContent(m map[string]interface{}) string {
+func formatStepContent(m map[string]any) string {
 	var sb strings.Builder
 	if summary, ok := m["summary"].(string); ok {
 		sb.WriteString(fmt.Sprintf("Summary: %s\n", summary))
@@ -475,11 +467,11 @@ func formatStepContent(m map[string]interface{}) string {
 	return sb.String()
 }
 
-func formatContextItem(itemType string, item interface{}) string {
+func formatContextItem(_ string, item any) string {
 	switch v := item.(type) {
 	case string:
 		return v
-	case map[string]interface{}:
+	case map[string]any:
 		var sb strings.Builder
 		// Common fields
 		for _, key := range []string{"insight", "pattern", "decision", "approach", "description"} {

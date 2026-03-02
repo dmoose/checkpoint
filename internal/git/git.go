@@ -208,8 +208,8 @@ func GetLog(path string, args ...string) ([]CommitInfo, error) {
 	}
 
 	var commits []CommitInfo
-	records := strings.Split(output, "\x01")
-	for _, record := range records {
+	records := strings.SplitSeq(output, "\x01")
+	for record := range records {
 		record = strings.TrimSpace(record)
 		if record == "" {
 			continue

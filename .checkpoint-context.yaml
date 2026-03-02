@@ -669,3 +669,30 @@ context:
         - prompt_summary: Human asked to build both MCP and skills, use same MCP dependency as sibling projects
           approach_taken: Built checkpoint-mcp with 5 tools using mcp-go v0.45.0, created skills/ with 4 workflow reference docs
           human_feedback: Approved. Caught that checkpoint-input was a hidden dotfile — fixed to be visible.
+---
+schema_version: "1"
+timestamp: "2026-03-15T16:02:00-07:00"
+context:
+    problem_statement: Preparing for first push after major refactor -- Go 1.26 bump needed propagating to CI/docs/config, lint errors blocked make check, and the new checkpoint-mcp binary was missing from CI builds, release artifacts, and all user-facing documentation.
+    key_insights:
+        - insight: go fix does not cover all modernizations -- interface{} to any, SplitSeq, and CutPrefix required manual or tooling-assisted replacement
+          impact: Future Go version bumps should include a pass with golangci-lint modernize checks, not just go fix
+          scope: project
+        - insight: The enrichable variable in importcmd.go was dead code -- incremented then function returned before the summary that read it
+          impact: Linter caught a logic bug, not just a style issue
+          scope: checkpoint
+    decisions_made:
+        - decision: Minimal MCP documentation -- tool table and config example, not full usage guide
+          rationale: MCP server is functional but the integration patterns are still evolving; lightweight docs avoid premature commitment
+          alternatives_considered:
+            - Full documentation with per-tool usage examples and multi-editor setup guides
+          scope: checkpoint
+        - decision: Bulk replace interface{} with any across all Go files
+          rationale: Go 1.18+ alias, no semantic change, eliminates all modernize lint hints at once
+          alternatives_considered:
+            - Leave as-is and suppress lint hints
+          scope: checkpoint
+    key_exchanges:
+        - prompt_summary: User asked to check LSP hints, confirm docs are current, confirm CI works with Go 1.26, and prepare for push to main
+          approach_taken: Ran make check to find lint errors, audited all docs for stale Go version references and missing checkpoint-mcp coverage, fixed issues in a single pass
+          human_feedback: Approved minimal MCP docs approach, confirmed import command only needs README table entry

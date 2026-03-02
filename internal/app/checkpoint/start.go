@@ -159,7 +159,7 @@ func countCheckpoints(changelogContent string) int {
 	// Format: --- (meta doc) --- (checkpoint 1) --- (checkpoint 2) ...
 	// So: separators - 1 = checkpoint count (first separator is for meta doc)
 	separatorCount := 0
-	for _, line := range strings.Split(changelogContent, "\n") {
+	for line := range strings.SplitSeq(changelogContent, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "---" {
 			separatorCount++
@@ -188,7 +188,7 @@ func countPendingRecommendations(projectPath string) int {
 	decoder := yaml.NewDecoder(strings.NewReader(content))
 	count := 0
 	for {
-		var doc map[string]interface{}
+		var doc map[string]any
 		if err := decoder.Decode(&doc); err != nil {
 			break
 		}

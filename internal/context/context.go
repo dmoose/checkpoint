@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -116,16 +117,16 @@ func RenderRecentContextForLLM(contextPath string, count int) (string, error) {
 	}
 
 	// Render as YAML for LLM consumption
-	var result string
+	var result strings.Builder
 	for _, entry := range entries {
 		yamlData, err := yaml.Marshal(entry)
 		if err != nil {
 			continue
 		}
-		result += "---\n" + string(yamlData)
+		result.WriteString("---\n" + string(yamlData))
 	}
 
-	return result, nil
+	return result.String(), nil
 }
 
 // GenerateContextTemplate generates the context input template section

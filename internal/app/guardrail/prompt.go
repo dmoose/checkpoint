@@ -3,6 +3,7 @@ package guardrail
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -202,14 +203,10 @@ func buildVariables(projectPath string, globalVars map[string]string, userVars m
 	vars["project_path"] = projectPath
 
 	// 2. Global variables from prompts.yaml (medium priority)
-	for key, value := range globalVars {
-		vars[key] = value
-	}
+	maps.Copy(vars, globalVars)
 
 	// 3. User-provided variables from --var flags (highest priority)
-	for key, value := range userVars {
-		vars[key] = value
-	}
+	maps.Copy(vars, userVars)
 
 	return vars
 }

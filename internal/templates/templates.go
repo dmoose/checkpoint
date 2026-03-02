@@ -74,9 +74,9 @@ func loadTemplateDescription(templateDir string) string {
 	templateYaml := filepath.Join(templateDir, "template.yaml")
 	if data, err := os.ReadFile(templateYaml); err == nil {
 		// Simple extraction - look for description: line
-		for _, line := range strings.Split(string(data), "\n") {
-			if strings.HasPrefix(line, "description:") {
-				return strings.TrimSpace(strings.TrimPrefix(line, "description:"))
+		for line := range strings.SplitSeq(string(data), "\n") {
+			if after, ok := strings.CutPrefix(line, "description:"); ok {
+				return strings.TrimSpace(after)
 			}
 		}
 	}
@@ -84,9 +84,9 @@ func loadTemplateDescription(templateDir string) string {
 	// Fall back to project.yaml purpose field
 	projectYml := filepath.Join(templateDir, "project.yaml")
 	if data, err := os.ReadFile(projectYml); err == nil {
-		for _, line := range strings.Split(string(data), "\n") {
-			if strings.HasPrefix(line, "purpose:") {
-				purpose := strings.TrimSpace(strings.TrimPrefix(line, "purpose:"))
+		for line := range strings.SplitSeq(string(data), "\n") {
+			if after, ok := strings.CutPrefix(line, "purpose:"); ok {
+				purpose := strings.TrimSpace(after)
 				if len(purpose) > 60 {
 					purpose = purpose[:57] + "..."
 				}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -147,11 +148,9 @@ func addGuideline(checkpointDir, content string) error {
 	guidelines.SchemaVersion = "1"
 
 	// Check if already exists
-	for _, rule := range guidelines.Rules {
-		if rule == content {
-			fmt.Printf("Rule already exists: %s\n", content)
-			return nil
-		}
+	if slices.Contains(guidelines.Rules, content) {
+		fmt.Printf("Rule already exists: %s\n", content)
+		return nil
 	}
 
 	guidelines.Rules = append(guidelines.Rules, content)
@@ -174,11 +173,9 @@ func addAvoid(checkpointDir, content string) error {
 	guidelines.SchemaVersion = "1"
 
 	// Check if already exists
-	for _, item := range guidelines.Avoid {
-		if item == content {
-			fmt.Printf("Anti-pattern already exists: %s\n", content)
-			return nil
-		}
+	if slices.Contains(guidelines.Avoid, content) {
+		fmt.Printf("Anti-pattern already exists: %s\n", content)
+		return nil
 	}
 
 	guidelines.Avoid = append(guidelines.Avoid, content)
@@ -201,11 +198,9 @@ func addPrinciple(checkpointDir, content string) error {
 	guidelines.SchemaVersion = "1"
 
 	// Check if already exists
-	for _, p := range guidelines.Principles {
-		if p == content {
-			fmt.Printf("Principle already exists: %s\n", content)
-			return nil
-		}
+	if slices.Contains(guidelines.Principles, content) {
+		fmt.Printf("Principle already exists: %s\n", content)
+		return nil
 	}
 
 	guidelines.Principles = append(guidelines.Principles, content)
@@ -229,7 +224,7 @@ func addPattern(checkpointDir, content string) error {
 
 	// For patterns, we'll add to a patterns section in naming (flexible structure)
 	// Actually, let's create a separate patterns array if not exists
-	// Since the schema uses interface{}, we need to handle this carefully
+	// Since the schema uses any, we need to handle this carefully
 
 	// For simplicity, add patterns to principles with a prefix
 	patternContent := fmt.Sprintf("Pattern: %s", content)

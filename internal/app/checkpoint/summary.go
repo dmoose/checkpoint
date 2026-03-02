@@ -136,7 +136,7 @@ func gatherSummaryData(projectPath, changelogPath string) summaryData {
 
 func countCheckpointsInChangelog(content string) int {
 	separatorCount := 0
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if strings.TrimSpace(line) == "---" {
 			separatorCount++
 		}
@@ -153,12 +153,12 @@ func extractRecentCheckpoints(content string, count int) []recentCheckpoint {
 	decoder := yaml.NewDecoder(strings.NewReader(content))
 
 	// Skip meta document
-	var metaDoc map[string]interface{}
+	var metaDoc map[string]any
 	_ = decoder.Decode(&metaDoc)
 
 	// Parse checkpoint documents
 	for {
-		var doc map[string]interface{}
+		var doc map[string]any
 		if err := decoder.Decode(&doc); err != nil {
 			break
 		}
@@ -174,8 +174,8 @@ func extractRecentCheckpoints(content string, count int) []recentCheckpoint {
 			}
 
 			// Extract first change summary
-			if changes, ok := doc["changes"].([]interface{}); ok && len(changes) > 0 {
-				if change, ok := changes[0].(map[string]interface{}); ok {
+			if changes, ok := doc["changes"].([]any); ok && len(changes) > 0 {
+				if change, ok := changes[0].(map[string]any); ok {
 					if summary, ok := change["summary"].(string); ok {
 						cp.summary = summary
 					}
@@ -232,7 +232,7 @@ func countRecommendations(projectPath string) int {
 	decoder := yaml.NewDecoder(strings.NewReader(content))
 	count := 0
 	for {
-		var doc map[string]interface{}
+		var doc map[string]any
 		if err := decoder.Decode(&doc); err != nil {
 			break
 		}
@@ -253,9 +253,9 @@ func extractRecentPatterns(contextPath string, maxPatterns int) []string {
 	decoder := yaml.NewDecoder(strings.NewReader(content))
 
 	// Parse all context documents
-	var allDocs []map[string]interface{}
+	var allDocs []map[string]any
 	for {
-		var doc map[string]interface{}
+		var doc map[string]any
 		if err := decoder.Decode(&doc); err != nil {
 			break
 		}
@@ -270,11 +270,11 @@ func extractRecentPatterns(contextPath string, maxPatterns int) []string {
 
 	for i := startIdx; i < len(allDocs) && len(patterns) < maxPatterns; i++ {
 		doc := allDocs[i]
-		if ctx, ok := doc["context"].(map[string]interface{}); ok {
+		if ctx, ok := doc["context"].(map[string]any); ok {
 			// Extract established patterns
-			if patternsData, ok := ctx["established_patterns"].([]interface{}); ok {
+			if patternsData, ok := ctx["established_patterns"].([]any); ok {
 				for _, p := range patternsData {
-					if patternMap, ok := p.(map[string]interface{}); ok {
+					if patternMap, ok := p.(map[string]any); ok {
 						if pattern, ok := patternMap["pattern"].(string); ok {
 							if scope, ok := patternMap["scope"].(string); ok && scope == "project" {
 								if len(patterns) < maxPatterns {

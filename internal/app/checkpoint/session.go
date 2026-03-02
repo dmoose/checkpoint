@@ -63,11 +63,11 @@ type SessionState struct {
 	Updated       string `yaml:"updated" json:"updated"`
 
 	// Planning section
-	Goals         []string        `yaml:"goals,omitempty" json:"goals,omitempty"`
-	Approach      string          `yaml:"approach,omitempty" json:"approach,omitempty"`
-	NextActions   []NextAction    `yaml:"next_actions,omitempty" json:"next_actions,omitempty"`
-	Risks         []string        `yaml:"risks,omitempty" json:"risks,omitempty"`
-	OpenQuestions []string        `yaml:"open_questions,omitempty" json:"open_questions,omitempty"`
+	Goals         []string     `yaml:"goals,omitempty" json:"goals,omitempty"`
+	Approach      string       `yaml:"approach,omitempty" json:"approach,omitempty"`
+	NextActions   []NextAction `yaml:"next_actions,omitempty" json:"next_actions,omitempty"`
+	Risks         []string     `yaml:"risks,omitempty" json:"risks,omitempty"`
+	OpenQuestions []string     `yaml:"open_questions,omitempty" json:"open_questions,omitempty"`
 
 	// Active work section
 	CurrentFocus  string            `yaml:"current_focus,omitempty" json:"current_focus,omitempty"`
@@ -324,7 +324,7 @@ func renderSession(session *SessionState) {
 	}
 }
 
-func saveSession(projectPath string, opts SessionOptions) {
+func saveSession(projectPath string, _ SessionOptions) {
 	sessionPath := filepath.Join(projectPath, sessionFileName)
 
 	// Load existing session or create new one
@@ -377,7 +377,7 @@ func clearSession(projectPath string) {
 	fmt.Println("Session cleared.")
 }
 
-func handoffSession(projectPath string, opts SessionOptions) {
+func handoffSession(projectPath string, _ SessionOptions) {
 	sessionPath := filepath.Join(projectPath, sessionFileName)
 
 	// Load existing session
@@ -474,8 +474,7 @@ func getModifiedFiles(projectPath string) []string {
 	}
 
 	var files []string
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
+	for line := range strings.SplitSeq(string(output), "\n") {
 		line = strings.TrimSpace(line)
 		if len(line) > 3 {
 			// Status is first 2 chars, then space, then filename

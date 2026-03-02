@@ -378,9 +378,9 @@ func indent(s string) string {
 // ParseNumStat parses git diff --numstat output into FileChange structs
 func ParseNumStat(numstat string) []FileChange {
 	var files []FileChange
-	lines := strings.Split(strings.TrimSpace(numstat), "\n")
+	lines := strings.SplitSeq(strings.TrimSpace(numstat), "\n")
 
-	for _, line := range lines {
+	for line := range lines {
 		if line == "" {
 			continue
 		}

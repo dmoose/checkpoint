@@ -102,7 +102,6 @@ func runImport(projectPath string, args []string) {
 
 	imported := 0
 	skipped := 0
-	enrichable := 0
 
 	for i, commit := range commits {
 		// Skip already-imported commits
@@ -175,7 +174,6 @@ func runImport(projectPath string, args []string) {
 				continue
 			}
 
-			enrichable++
 			fmt.Printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 			fmt.Printf("IMPORT %d/%d: %s\n", i+1, len(commits), shortHash)
 			fmt.Printf("Date:    %s\n", commit.Timestamp)
@@ -201,9 +199,6 @@ func runImport(projectPath string, args []string) {
 	}
 
 	fmt.Printf("\nImport complete: %d imported, %d skipped (already in changelog)\n", imported, skipped)
-	if enrichable > 0 {
-		fmt.Printf("  %d commit(s) ready for enrichment\n", enrichable)
-	}
 }
 
 // import-commit: append the filled input for a historical commit, then continue import
@@ -325,10 +320,10 @@ func getExistingCommitHashes(changelogPath string) map[string]bool {
 	}
 
 	// Simple scan for commit_hash fields
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "commit_hash:") {
-			hash := strings.TrimSpace(strings.TrimPrefix(line, "commit_hash:"))
+		if rest, ok := strings.CutPrefix(line, "commit_hash:"); ok {
+			hash := strings.TrimSpace(rest)
 			hash = strings.Trim(hash, "\"' ")
 			if hash != "" {
 				hashes[hash] = true
@@ -413,7 +408,7 @@ func generateImportInput(commit git.CommitInfo, filesChanged []schema.FileChange
 	}
 
 	// Context template for enrichment
-	b.WriteString(fmt.Sprintf(`
+	b.WriteString(`
 context:
   problem_statement: "[Infer from diff: what problem was this commit solving?]"
 
@@ -433,7 +428,7 @@ context:
   key_exchanges: []
 
 next_steps: []
-`))
+`)
 
 	return b.String()
 }

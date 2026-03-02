@@ -11,12 +11,12 @@ const (
 	CheckpointMdFileName = "CHECKPOINT.md"
 
 	// Checkpoint directory and schema files
-	CheckpointDir           = ".checkpoint"
-	ExplainProjectYaml      = "project.yaml"
-	ExplainToolsYaml        = "tools.yaml"
-	ExplainGuidelinesYaml   = "guidelines.yaml"
-	ExplainSkillsYaml       = "skills.yaml"
-	SkillsDir               = "skills"
+	CheckpointDir         = ".checkpoint"
+	ExplainProjectYaml    = "project.yaml"
+	ExplainToolsYaml      = "tools.yaml"
+	ExplainGuidelinesYaml = "guidelines.yaml"
+	ExplainSkillsYaml     = "skills.yaml"
+	SkillsDir             = "skills"
 
 	// Global config directory
 	GlobalConfigDir    = ".config/checkpoint"

@@ -29,6 +29,39 @@ Regardless of tool, the integration pattern is:
 
 ---
 
+## MCP Server
+
+`checkpoint-mcp` exposes project context over the Model Context Protocol, letting MCP-compatible editors query checkpoint data directly instead of piping CLI output.
+
+```bash
+checkpoint-mcp -project /path/to/your/project
+```
+
+The server provides 5 tools:
+
+| Tool | Description |
+|------|-------------|
+| `explain` | Project context -- architecture, patterns, guidelines, tools, skills |
+| `search` | Search changelog history for decisions, patterns, failed approaches |
+| `guide` | Built-in guides for workflow, best practices, LLM integration |
+| `status` | Recent activity, next steps, pending work |
+| `context_template` | YAML template for filling checkpoint input |
+
+Configure it in your editor's MCP settings (e.g. `.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "checkpoint": {
+      "command": "checkpoint-mcp",
+      "args": ["-project", "."]
+    }
+  }
+}
+```
+
+---
+
 ## Tool-Specific Setup
 
 ### Claude Code

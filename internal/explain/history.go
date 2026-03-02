@@ -14,12 +14,12 @@ import (
 
 // CheckpointEntry represents a checkpoint from the changelog
 type CheckpointEntry struct {
-	SchemaVersion string                 `yaml:"schema_version"`
-	Timestamp     string                 `yaml:"timestamp"`
-	CommitHash    string                 `yaml:"commit_hash"`
-	Changes       []ChangeEntry          `yaml:"changes"`
-	NextSteps     []NextStepEntry        `yaml:"next_steps"`
-	Context       map[string]interface{} `yaml:"context"`
+	SchemaVersion string          `yaml:"schema_version"`
+	Timestamp     string          `yaml:"timestamp"`
+	CommitHash    string          `yaml:"commit_hash"`
+	Changes       []ChangeEntry   `yaml:"changes"`
+	NextSteps     []NextStepEntry `yaml:"next_steps"`
+	Context       map[string]any  `yaml:"context"`
 }
 
 // ChangeEntry represents a change in a checkpoint
@@ -40,14 +40,14 @@ type NextStepEntry struct {
 
 // ContextEntry represents a context document
 type ContextEntry struct {
-	SchemaVersion       string        `yaml:"schema_version"`
-	Timestamp           string        `yaml:"timestamp"`
-	CommitHash          string        `yaml:"commit_hash"`
-	ProblemStatement    string        `yaml:"problem_statement"`
-	KeyInsights         []interface{} `yaml:"key_insights"`
-	DecisionsMade       []interface{} `yaml:"decisions_made"`
-	EstablishedPatterns []interface{} `yaml:"established_patterns"`
-	FailedApproaches    []interface{} `yaml:"failed_approaches"`
+	SchemaVersion       string `yaml:"schema_version"`
+	Timestamp           string `yaml:"timestamp"`
+	CommitHash          string `yaml:"commit_hash"`
+	ProblemStatement    string `yaml:"problem_statement"`
+	KeyInsights         []any  `yaml:"key_insights"`
+	DecisionsMade       []any  `yaml:"decisions_made"`
+	EstablishedPatterns []any  `yaml:"established_patterns"`
+	FailedApproaches    []any  `yaml:"failed_approaches"`
 }
 
 // HistoryData holds aggregated history data
@@ -192,8 +192,8 @@ func loadContextEntries(path string, limit int) ([]ContextEntry, error) {
 
 func splitYAMLDocs(content string) []string {
 	var docs []string
-	parts := strings.Split(content, "\n---")
-	for _, part := range parts {
+	parts := strings.SplitSeq(content, "\n---")
+	for part := range parts {
 		part = strings.TrimSpace(part)
 		if part != "" && part != "---" {
 			docs = append(docs, part)
@@ -202,11 +202,11 @@ func splitYAMLDocs(content string) []string {
 	return docs
 }
 
-func extractPatternContent(item interface{}) PatternWithSource {
+func extractPatternContent(item any) PatternWithSource {
 	switch v := item.(type) {
 	case string:
 		return PatternWithSource{Content: v}
-	case map[string]interface{}:
+	case map[string]any:
 		p := PatternWithSource{}
 		if pattern, ok := v["pattern"].(string); ok {
 			p.Content = pattern
@@ -219,11 +219,11 @@ func extractPatternContent(item interface{}) PatternWithSource {
 	return PatternWithSource{}
 }
 
-func extractDecisionContent(item interface{}) DecisionWithSource {
+func extractDecisionContent(item any) DecisionWithSource {
 	switch v := item.(type) {
 	case string:
 		return DecisionWithSource{Content: v}
-	case map[string]interface{}:
+	case map[string]any:
 		d := DecisionWithSource{}
 		if decision, ok := v["decision"].(string); ok {
 			d.Content = decision
@@ -238,11 +238,11 @@ func extractDecisionContent(item interface{}) DecisionWithSource {
 	return DecisionWithSource{}
 }
 
-func extractFailedContent(item interface{}) FailedWithSource {
+func extractFailedContent(item any) FailedWithSource {
 	switch v := item.(type) {
 	case string:
 		return FailedWithSource{Approach: v}
-	case map[string]interface{}:
+	case map[string]any:
 		f := FailedWithSource{}
 		if approach, ok := v["approach"].(string); ok {
 			f.Approach = approach

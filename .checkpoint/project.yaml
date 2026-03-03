@@ -150,3 +150,11 @@ recommended_additions:
     key_insights:
         - insight: go fix does not cover all modernizations -- interface{} to any, SplitSeq, and CutPrefix required manual or tooling-assisted replacement
           rationale: Future Go version bumps should include a pass with golangci-lint modernize checks, not just go fix
+---
+schema_version: "1"
+document_type: recommendations
+timestamp: "2026-03-15T16:12:19-07:00"
+recommended_additions:
+    key_insights:
+        - insight: golangci-lint versions are tied to the Go version they were built with -- bumping Go may require bumping the linter too
+          rationale: Always check linter compatibility when bumping Go versions

@@ -275,14 +275,14 @@ func RenderHistory(projectPath string, limit int) string {
 			if cp.CommitHash != "" {
 				commit = fmt.Sprintf(" [%s]", cp.CommitHash[:minInt(8, len(cp.CommitHash))])
 			}
-			sb.WriteString(fmt.Sprintf("### %s%s\n\n", cp.Timestamp, commit))
+			fmt.Fprintf(&sb, "### %s%s\n\n", cp.Timestamp, commit)
 
 			for _, change := range cp.Changes {
 				typeStr := ""
 				if change.ChangeType != "" {
 					typeStr = fmt.Sprintf(" (%s)", change.ChangeType)
 				}
-				sb.WriteString(fmt.Sprintf("- %s%s\n", change.Summary, typeStr))
+				fmt.Fprintf(&sb, "- %s%s\n", change.Summary, typeStr)
 			}
 			sb.WriteString("\n")
 		}
@@ -309,7 +309,7 @@ func RenderHistory(projectPath string, limit int) string {
 			if step.Scope != "" {
 				scope = fmt.Sprintf(" (%s)", step.Scope)
 			}
-			sb.WriteString(fmt.Sprintf("- %s%s%s\n", step.Summary, priority, scope))
+			fmt.Fprintf(&sb, "- %s%s%s\n", step.Summary, priority, scope)
 		}
 		sb.WriteString("\n")
 	}
@@ -323,9 +323,9 @@ func RenderHistory(projectPath string, limit int) string {
 				continue
 			}
 			seen[p.Content] = true
-			sb.WriteString(fmt.Sprintf("- %s\n", p.Content))
+			fmt.Fprintf(&sb, "- %s\n", p.Content)
 			if p.Rationale != "" {
-				sb.WriteString(fmt.Sprintf("  *%s*\n", p.Rationale))
+				fmt.Fprintf(&sb, "  *%s*\n", p.Rationale)
 			}
 		}
 		sb.WriteString("\n")
@@ -342,9 +342,9 @@ func RenderHistory(projectPath string, limit int) string {
 			}
 			seen[d.Content] = true
 			count++
-			sb.WriteString(fmt.Sprintf("- %s\n", d.Content))
+			fmt.Fprintf(&sb, "- %s\n", d.Content)
 			if d.Rationale != "" {
-				sb.WriteString(fmt.Sprintf("  *%s*\n", d.Rationale))
+				fmt.Fprintf(&sb, "  *%s*\n", d.Rationale)
 			}
 		}
 		sb.WriteString("\n")
@@ -359,9 +359,9 @@ func RenderHistory(projectPath string, limit int) string {
 				continue
 			}
 			seen[f.Approach] = true
-			sb.WriteString(fmt.Sprintf("- %s\n", f.Approach))
+			fmt.Fprintf(&sb, "- %s\n", f.Approach)
 			if f.WhyFailed != "" {
-				sb.WriteString(fmt.Sprintf("  *Why: %s*\n", f.WhyFailed))
+				fmt.Fprintf(&sb, "  *Why: %s*\n", f.WhyFailed)
 			}
 		}
 		sb.WriteString("\n")

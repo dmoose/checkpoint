@@ -142,7 +142,7 @@ func (e *ExplainOutput) RenderSummary() string {
 
 	// Header
 	if e.Project != nil {
-		sb.WriteString(fmt.Sprintf("PROJECT: %s (%s)\n", e.Project.Name, e.Project.Type))
+		fmt.Fprintf(&sb, "PROJECT: %s (%s)\n", e.Project.Name, e.Project.Type)
 		if e.Project.Purpose != "" {
 			purpose := strings.TrimSpace(e.Project.Purpose)
 			// Truncate to first line or 100 chars for summary
@@ -152,7 +152,7 @@ func (e *ExplainOutput) RenderSummary() string {
 			if len(purpose) > 100 {
 				purpose = purpose[:97] + "..."
 			}
-			sb.WriteString(fmt.Sprintf("PURPOSE: %s\n", purpose))
+			fmt.Fprintf(&sb, "PURPOSE: %s\n", purpose)
 		}
 	} else {
 		sb.WriteString("PROJECT: (not configured)\n")
@@ -164,15 +164,15 @@ func (e *ExplainOutput) RenderSummary() string {
 	sb.WriteString("QUICK START:\n")
 	if e.Tools != nil {
 		if cmd, ok := e.Tools.Build["default"]; ok {
-			sb.WriteString(fmt.Sprintf("  build: %s\n", cmd.Command))
+			fmt.Fprintf(&sb, "  build: %s\n", cmd.Command)
 		}
 		if cmd, ok := e.Tools.Test["default"]; ok {
-			sb.WriteString(fmt.Sprintf("  test:  %s\n", cmd.Command))
+			fmt.Fprintf(&sb, "  test:  %s\n", cmd.Command)
 		}
 		if cmd, ok := e.Tools.Check["default"]; ok {
-			sb.WriteString(fmt.Sprintf("  check: %s\n", cmd.Command))
+			fmt.Fprintf(&sb, "  check: %s\n", cmd.Command)
 		} else if cmd, ok := e.Tools.Lint["default"]; ok {
-			sb.WriteString(fmt.Sprintf("  lint:  %s\n", cmd.Command))
+			fmt.Fprintf(&sb, "  lint:  %s\n", cmd.Command)
 		}
 	} else {
 		sb.WriteString("  (no tools configured - create .checkpoint/tools.yaml)\n")
@@ -183,7 +183,7 @@ func (e *ExplainOutput) RenderSummary() string {
 	if e.Project != nil && len(e.Project.Architecture.KeyPaths) > 0 {
 		sb.WriteString("KEY PATHS:\n")
 		for name, path := range e.Project.Architecture.KeyPaths {
-			sb.WriteString(fmt.Sprintf("  %s: %s\n", name, path))
+			fmt.Fprintf(&sb, "  %s: %s\n", name, path)
 		}
 		sb.WriteString("\n")
 	}
@@ -195,7 +195,7 @@ func (e *ExplainOutput) RenderSummary() string {
 		for _, s := range e.SkillDefs {
 			skillNames = append(skillNames, s.Name)
 		}
-		sb.WriteString(fmt.Sprintf("  %s\n", strings.Join(skillNames, ", ")))
+		fmt.Fprintf(&sb, "  %s\n", strings.Join(skillNames, ", "))
 		sb.WriteString("\n")
 	}
 
@@ -204,17 +204,17 @@ func (e *ExplainOutput) RenderSummary() string {
 		sb.WriteString("KEY RULES:\n")
 		for i, rule := range e.Guidelines.Rules {
 			if i >= 3 {
-				sb.WriteString(fmt.Sprintf("  ... and %d more (see: checkpoint explain guidelines)\n", len(e.Guidelines.Rules)-3))
+				fmt.Fprintf(&sb, "  ... and %d more (see: checkpoint explain guidelines)\n", len(e.Guidelines.Rules)-3)
 				break
 			}
-			sb.WriteString(fmt.Sprintf("  - %s\n", rule))
+			fmt.Fprintf(&sb, "  - %s\n", rule)
 		}
 		sb.WriteString("\n")
 	}
 
 	// Learnings summary if any
 	if len(e.Learnings) > 0 {
-		sb.WriteString(fmt.Sprintf("LEARNINGS: %d captured insights\n", len(e.Learnings)))
+		fmt.Fprintf(&sb, "LEARNINGS: %d captured insights\n", len(e.Learnings))
 		// Show most recent
 		if len(e.Learnings) > 0 {
 			recent := e.Learnings[len(e.Learnings)-1]
@@ -222,7 +222,7 @@ func (e *ExplainOutput) RenderSummary() string {
 			if len(learning) > 60 {
 				learning = learning[:57] + "..."
 			}
-			sb.WriteString(fmt.Sprintf("  latest: %s\n", learning))
+			fmt.Fprintf(&sb, "  latest: %s\n", learning)
 		}
 		sb.WriteString("\n")
 	}
@@ -252,10 +252,10 @@ func (e *ExplainOutput) RenderProject() string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("# %s\n\n", e.Project.Name))
-	sb.WriteString(fmt.Sprintf("Type: %s\n", e.Project.Type))
+	fmt.Fprintf(&sb, "# %s\n\n", e.Project.Name)
+	fmt.Fprintf(&sb, "Type: %s\n", e.Project.Type)
 	if e.Project.Repository != "" {
-		sb.WriteString(fmt.Sprintf("Repository: %s\n", e.Project.Repository))
+		fmt.Fprintf(&sb, "Repository: %s\n", e.Project.Repository)
 	}
 	sb.WriteString("\n")
 
@@ -272,7 +272,7 @@ func (e *ExplainOutput) RenderProject() string {
 	if len(e.Project.Architecture.KeyPaths) > 0 {
 		sb.WriteString("\n### Key Paths\n\n")
 		for name, path := range e.Project.Architecture.KeyPaths {
-			sb.WriteString(fmt.Sprintf("- **%s**: %s\n", name, path))
+			fmt.Fprintf(&sb, "- **%s**: %s\n", name, path)
 		}
 	}
 
@@ -289,15 +289,15 @@ func (e *ExplainOutput) RenderProject() string {
 			if !f.Tracked {
 				tracked = " (untracked)"
 			}
-			sb.WriteString(fmt.Sprintf("- `%s`%s - %s\n", f.Path, tracked, f.Purpose))
+			fmt.Fprintf(&sb, "- `%s`%s - %s\n", f.Path, tracked, f.Purpose)
 		}
 	}
 
 	if e.Project.Languages.Primary != "" {
 		sb.WriteString("\n## Languages\n\n")
-		sb.WriteString(fmt.Sprintf("Primary: %s", e.Project.Languages.Primary))
+		fmt.Fprintf(&sb, "Primary: %s", e.Project.Languages.Primary)
 		if e.Project.Languages.Version != "" {
-			sb.WriteString(fmt.Sprintf(" %s", e.Project.Languages.Version))
+			fmt.Fprintf(&sb, " %s", e.Project.Languages.Version)
 		}
 		sb.WriteString("\n")
 	}
@@ -305,14 +305,14 @@ func (e *ExplainOutput) RenderProject() string {
 	if len(e.Project.Dependencies.External) > 0 {
 		sb.WriteString("\n## Dependencies\n\n")
 		for _, dep := range e.Project.Dependencies.External {
-			sb.WriteString(fmt.Sprintf("- **%s**: %s\n", dep.Name, dep.Purpose))
+			fmt.Fprintf(&sb, "- **%s**: %s\n", dep.Name, dep.Purpose)
 		}
 	}
 
 	if len(e.Project.Integrations) > 0 {
 		sb.WriteString("\n## Integrations\n\n")
 		for _, integ := range e.Project.Integrations {
-			sb.WriteString(fmt.Sprintf("### %s (%s)\n\n", integ.Name, integ.Type))
+			fmt.Fprintf(&sb, "### %s (%s)\n\n", integ.Name, integ.Type)
 			if integ.Interaction != "" {
 				sb.WriteString(integ.Interaction)
 				sb.WriteString("\n\n")
@@ -336,18 +336,18 @@ func (e *ExplainOutput) RenderTools() string {
 		if len(cmds) == 0 {
 			return
 		}
-		sb.WriteString(fmt.Sprintf("## %s\n\n", title))
+		fmt.Fprintf(&sb, "## %s\n\n", title)
 		for name, cmd := range cmds {
-			sb.WriteString(fmt.Sprintf("### %s\n", name))
-			sb.WriteString(fmt.Sprintf("```\n%s\n```\n", cmd.Command))
+			fmt.Fprintf(&sb, "### %s\n", name)
+			fmt.Fprintf(&sb, "```\n%s\n```\n", cmd.Command)
 			if cmd.Output != "" {
-				sb.WriteString(fmt.Sprintf("Output: %s\n", cmd.Output))
+				fmt.Fprintf(&sb, "Output: %s\n", cmd.Output)
 			}
 			if cmd.Notes != "" {
-				sb.WriteString(fmt.Sprintf("Notes: %s\n", cmd.Notes))
+				fmt.Fprintf(&sb, "Notes: %s\n", cmd.Notes)
 			}
 			if cmd.Example != "" {
-				sb.WriteString(fmt.Sprintf("Example: `%s`\n", cmd.Example))
+				fmt.Fprintf(&sb, "Example: `%s`\n", cmd.Example)
 			}
 			sb.WriteString("\n")
 		}
@@ -376,7 +376,7 @@ func (e *ExplainOutput) RenderGuidelines() string {
 	if len(e.Guidelines.Naming) > 0 {
 		sb.WriteString("## Naming Conventions\n\n")
 		for name, rule := range e.Guidelines.Naming {
-			sb.WriteString(fmt.Sprintf("### %s\n", name))
+			fmt.Fprintf(&sb, "### %s\n", name)
 			renderFlexibleValue(&sb, rule, "")
 			sb.WriteString("\n")
 		}
@@ -385,14 +385,14 @@ func (e *ExplainOutput) RenderGuidelines() string {
 	if len(e.Guidelines.Structure) > 0 {
 		sb.WriteString("## Code Structure\n\n")
 		for name, desc := range e.Guidelines.Structure {
-			sb.WriteString(fmt.Sprintf("### %s\n\n%s\n\n", name, desc))
+			fmt.Fprintf(&sb, "### %s\n\n%s\n\n", name, desc)
 		}
 	}
 
 	if len(e.Guidelines.Errors) > 0 {
 		sb.WriteString("## Error Handling\n\n")
 		for name, val := range e.Guidelines.Errors {
-			sb.WriteString(fmt.Sprintf("### %s\n", name))
+			fmt.Fprintf(&sb, "### %s\n", name)
 			renderFlexibleValue(&sb, val, "")
 			sb.WriteString("\n")
 		}
@@ -401,7 +401,7 @@ func (e *ExplainOutput) RenderGuidelines() string {
 	if len(e.Guidelines.Testing) > 0 {
 		sb.WriteString("## Testing\n\n")
 		for name, val := range e.Guidelines.Testing {
-			sb.WriteString(fmt.Sprintf("### %s\n", name))
+			fmt.Fprintf(&sb, "### %s\n", name)
 			renderFlexibleValue(&sb, val, "")
 			sb.WriteString("\n")
 		}
@@ -410,7 +410,7 @@ func (e *ExplainOutput) RenderGuidelines() string {
 	if len(e.Guidelines.Commits) > 0 {
 		sb.WriteString("## Commits\n\n")
 		for name, desc := range e.Guidelines.Commits {
-			sb.WriteString(fmt.Sprintf("- **%s**: %s\n", name, desc))
+			fmt.Fprintf(&sb, "- **%s**: %s\n", name, desc)
 		}
 		sb.WriteString("\n")
 	}
@@ -418,7 +418,7 @@ func (e *ExplainOutput) RenderGuidelines() string {
 	if len(e.Guidelines.Rules) > 0 {
 		sb.WriteString("## Rules\n\n")
 		for _, rule := range e.Guidelines.Rules {
-			sb.WriteString(fmt.Sprintf("- %s\n", rule))
+			fmt.Fprintf(&sb, "- %s\n", rule)
 		}
 		sb.WriteString("\n")
 	}
@@ -426,7 +426,7 @@ func (e *ExplainOutput) RenderGuidelines() string {
 	if len(e.Guidelines.Avoid) > 0 {
 		sb.WriteString("## Avoid\n\n")
 		for _, item := range e.Guidelines.Avoid {
-			sb.WriteString(fmt.Sprintf("- %s\n", item))
+			fmt.Fprintf(&sb, "- %s\n", item)
 		}
 		sb.WriteString("\n")
 	}
@@ -434,7 +434,7 @@ func (e *ExplainOutput) RenderGuidelines() string {
 	if len(e.Guidelines.Principles) > 0 {
 		sb.WriteString("## Design Principles\n\n")
 		for _, p := range e.Guidelines.Principles {
-			sb.WriteString(fmt.Sprintf("- %s\n", p))
+			fmt.Fprintf(&sb, "- %s\n", p)
 		}
 		sb.WriteString("\n")
 	}
@@ -486,7 +486,7 @@ func (e *ExplainOutput) RenderSkills() string {
 	for _, s := range e.SkillDefs {
 		if s.IsLocal {
 			hasLocal = true
-			sb.WriteString(fmt.Sprintf("- **%s** - `checkpoint explain skill %s`\n", s.Name, s.Name))
+			fmt.Fprintf(&sb, "- **%s** - `checkpoint explain skill %s`\n", s.Name, s.Name)
 		}
 	}
 	if !hasLocal {
@@ -499,7 +499,7 @@ func (e *ExplainOutput) RenderSkills() string {
 	for _, s := range e.SkillDefs {
 		if !s.IsLocal {
 			hasGlobal = true
-			sb.WriteString(fmt.Sprintf("- **%s** - `checkpoint explain skill %s`\n", s.Name, s.Name))
+			fmt.Fprintf(&sb, "- **%s** - `checkpoint explain skill %s`\n", s.Name, s.Name)
 		}
 	}
 	if !hasGlobal {
@@ -533,7 +533,7 @@ func (e *ExplainOutput) RenderLearnings() string {
 		return sb.String()
 	}
 
-	sb.WriteString(fmt.Sprintf("Total: %d learnings\n\n", len(e.Learnings)))
+	fmt.Fprintf(&sb, "Total: %d learnings\n\n", len(e.Learnings))
 
 	// Show most recent first (reverse order)
 	for i := len(e.Learnings) - 1; i >= 0; i-- {
@@ -543,7 +543,7 @@ func (e *ExplainOutput) RenderLearnings() string {
 		if len(ts) > 10 {
 			ts = ts[:10] // Just the date
 		}
-		sb.WriteString(fmt.Sprintf("- [%s] %s\n", ts, l.Learning))
+		fmt.Fprintf(&sb, "- [%s] %s\n", ts, l.Learning)
 	}
 
 	sb.WriteString("\nTo add: checkpoint learn \"your insight\"\n")
@@ -566,7 +566,7 @@ func (e *ExplainOutput) RenderFull() string {
 
 	// Include skill contents
 	for _, s := range e.SkillDefs {
-		sb.WriteString(fmt.Sprintf("\n---\n\n## Skill: %s\n\n", s.Name))
+		fmt.Fprintf(&sb, "\n---\n\n## Skill: %s\n\n", s.Name)
 		sb.WriteString(s.Content)
 	}
 

@@ -127,7 +127,7 @@ fmt:
 	go fmt ./...
 
 # Required tool versions (keep in sync with CI)
-GOLANGCI_LINT_VERSION := v2.8.0
+GOLANGCI_LINT_VERSION := v2.11.3
 
 # Run linter (requires golangci-lint v2)
 .PHONY: lint

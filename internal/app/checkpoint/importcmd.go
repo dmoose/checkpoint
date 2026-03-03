@@ -363,7 +363,7 @@ func buildMechanicalEntry(commit git.CommitInfo, filesChanged []schema.FileChang
 func generateImportInput(commit git.CommitInfo, filesChanged []schema.FileChange) string {
 	var b strings.Builder
 
-	b.WriteString(fmt.Sprintf(`# IMPORT MODE: Enriching historical commit %s
+	fmt.Fprintf(&b, `# IMPORT MODE: Enriching historical commit %s
 # Date: %s | Author: %s
 # Original message: %s
 #
@@ -377,18 +377,18 @@ func generateImportInput(commit git.CommitInfo, filesChanged []schema.FileChange
 # When done, run: checkpoint import-commit
 # To skip: checkpoint clean
 
-`, commit.Hash[:min(8, len(commit.Hash))], commit.Timestamp, commit.Author, commit.Subject))
+`, commit.Hash[:min(8, len(commit.Hash))], commit.Timestamp, commit.Author, commit.Subject)
 
-	b.WriteString(fmt.Sprintf("schema_version: \"%s\"\n", schema.SchemaVersion))
-	b.WriteString(fmt.Sprintf("timestamp: \"%s\"\n", commit.Timestamp))
-	b.WriteString(fmt.Sprintf("commit_hash: \"%s\"\n", commit.Hash))
+	fmt.Fprintf(&b, "schema_version: \"%s\"\n", schema.SchemaVersion)
+	fmt.Fprintf(&b, "timestamp: \"%s\"\n", commit.Timestamp)
+	fmt.Fprintf(&b, "commit_hash: \"%s\"\n", commit.Hash)
 	b.WriteString("import: true\n\n")
 
 	// File changes
 	if len(filesChanged) > 0 {
 		b.WriteString("files_changed:\n")
 		for _, f := range filesChanged {
-			b.WriteString(fmt.Sprintf("  - path: \"%s\"\n    additions: %d\n    deletions: %d\n", f.Path, f.Additions, f.Deletions))
+			fmt.Fprintf(&b, "  - path: \"%s\"\n    additions: %d\n    deletions: %d\n", f.Path, f.Additions, f.Deletions)
 		}
 		b.WriteString("\n")
 	}
@@ -398,13 +398,13 @@ func generateImportInput(commit git.CommitInfo, filesChanged []schema.FileChange
 	scope := inferScope(filesChanged)
 
 	b.WriteString("changes:\n")
-	b.WriteString(fmt.Sprintf("  - summary: \"%s\"\n", truncate(commit.Subject, schema.MaxSummaryLength)))
+	fmt.Fprintf(&b, "  - summary: \"%s\"\n", truncate(commit.Subject, schema.MaxSummaryLength))
 	if commit.Body != "" {
-		b.WriteString(fmt.Sprintf("    details: \"%s\"\n", strings.ReplaceAll(commit.Body, "\"", "'")))
+		fmt.Fprintf(&b, "    details: \"%s\"\n", strings.ReplaceAll(commit.Body, "\"", "'"))
 	}
-	b.WriteString(fmt.Sprintf("    change_type: \"%s\"\n", changeType))
+	fmt.Fprintf(&b, "    change_type: \"%s\"\n", changeType)
 	if scope != "" {
-		b.WriteString(fmt.Sprintf("    scope: \"%s\"\n", scope))
+		fmt.Fprintf(&b, "    scope: \"%s\"\n", scope)
 	}
 
 	// Context template for enrichment

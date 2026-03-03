@@ -384,18 +384,18 @@ func generateStatusFile(entry *schema.CheckpointEntry, commitMsg string, project
 
 	// Project metadata (if available)
 	if projectID != "" {
-		b.WriteString(fmt.Sprintf("project_id: \"%s\"\n", projectID))
+		fmt.Fprintf(&b, "project_id: \"%s\"\n", projectID)
 	}
 	if pathHash != "" {
-		b.WriteString(fmt.Sprintf("path_hash: \"%s\"\n", pathHash))
+		fmt.Fprintf(&b, "path_hash: \"%s\"\n", pathHash)
 	}
 
 	// Commit metadata
-	b.WriteString(fmt.Sprintf("last_commit_hash: \"%s\"\n", entry.CommitHash))
-	b.WriteString(fmt.Sprintf("last_commit_timestamp: \"%s\"\n", entry.Timestamp))
-	b.WriteString(fmt.Sprintf("last_commit_message: \"%s\"\n", commitMsg))
+	fmt.Fprintf(&b, "last_commit_hash: \"%s\"\n", entry.CommitHash)
+	fmt.Fprintf(&b, "last_commit_timestamp: \"%s\"\n", entry.Timestamp)
+	fmt.Fprintf(&b, "last_commit_message: \"%s\"\n", commitMsg)
 	b.WriteString("status: \"success\"\n")
-	b.WriteString(fmt.Sprintf("changes_count: %d\n", len(entry.Changes)))
+	fmt.Fprintf(&b, "changes_count: %d\n", len(entry.Changes))
 	if len(entry.NextSteps) > 0 {
 		b.WriteString("next_steps:\n")
 		for _, ns := range entry.NextSteps {

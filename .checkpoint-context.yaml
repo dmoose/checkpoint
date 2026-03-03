@@ -696,3 +696,31 @@ context:
         - prompt_summary: User asked to check LSP hints, confirm docs are current, confirm CI works with Go 1.26, and prepare for push to main
           approach_taken: Ran make check to find lint errors, audited all docs for stale Go version references and missing checkpoint-mcp coverage, fixed issues in a single pass
           human_feedback: Approved minimal MCP docs approach, confirmed import command only needs README table entry
+---
+schema_version: "1"
+timestamp: "2026-03-15T16:12:19-07:00"
+context:
+    problem_statement: CI failed after push because golangci-lint v2.8.0 was built with Go 1.25 and cannot lint Go 1.26 modules. After bumping the linter, the stricter v2.11.3 flagged QF1012 (WriteString+Sprintf) violations across the codebase.
+    key_insights:
+        - insight: golangci-lint versions are tied to the Go version they were built with -- bumping Go may require bumping the linter too
+          impact: Always check linter compatibility when bumping Go versions
+          scope: project
+        - insight: golangci-lint reports max 3 issues per linter by default, masking the true scope of violations
+          impact: When fixing a new lint category, grep for the pattern rather than iterating on linter output
+          scope: checkpoint
+    decisions_made:
+        - decision: Bulk-replace all WriteString(fmt.Sprintf()) instances, not just the flagged ones
+          rationale: Avoids whack-a-mole with the 3-per-linter default limit; consistent style across codebase
+          alternatives_considered:
+            - Fix only the 3 reported per run and iterate
+            - Configure golangci-lint to suppress QF1012
+          scope: checkpoint
+    failed_approaches:
+        - approach: Perl regex to bulk-convert WriteString(fmt.Sprintf(...)) to fmt.Fprintf(&sb, ...)
+          why_failed: Simple regex left trailing ) on lines with nested function calls in args (e.g. len(), strings.Join())
+          lessons_learned: This transformation has two closing parens to remove -- a greedy regex only catches the simple case. Required manual fixup for multi-arg lines.
+          scope: checkpoint
+    key_exchanges:
+        - prompt_summary: Push to GitHub and tag a release
+          approach_taken: Checked CI status first, found lint failure due to golangci-lint/Go version mismatch, fixed linter version and new violations before proceeding
+          human_feedback: Approved approach, reminded to always use checkpoint workflow

@@ -1639,7 +1639,7 @@ next_steps:
 ---
 schema_version: "1"
 timestamp: "2026-03-15T16:02:00-07:00"
-commit_hash: ""
+commit_hash: 3b4e93ce519073311ad245965af269360ce4041b
 files_changed:
     - path: .checkpoint-changelog.yaml
       additions: 1
@@ -1760,6 +1760,60 @@ changes:
       scope: docs, README
 next_steps:
     - summary: Dogfood checkpoint+guardrail on this project going forward
+      priority: high
+      scope: project
+    - summary: Configure checkpoint-mcp in Claude Code settings for this project
+      priority: high
+      scope: integration
+    - summary: Add changelog archival for long-lived projects
+      priority: low
+      scope: checkpoint
+---
+schema_version: "1"
+timestamp: "2026-03-15T16:12:19-07:00"
+commit_hash: ""
+files_changed:
+    - path: .checkpoint-changelog.yaml
+      additions: 1
+      deletions: 1
+    - path: .github/workflows/ci.yml
+      additions: 1
+      deletions: 1
+    - path: Makefile
+      additions: 1
+      deletions: 1
+    - path: internal/app/checkpoint/commit.go
+      additions: 6
+      deletions: 6
+    - path: internal/app/checkpoint/importcmd.go
+      additions: 10
+      deletions: 10
+    - path: internal/app/checkpoint/search.go
+      additions: 12
+      deletions: 12
+    - path: internal/app/guardrail/init.go
+      additions: 11
+      deletions: 11
+    - path: internal/explain/explain.go
+      additions: 40
+      deletions: 40
+    - path: internal/explain/history.go
+      additions: 9
+      deletions: 9
+    - path: internal/mcpserver/server.go
+      additions: 5
+      deletions: 5
+changes:
+    - summary: Bump golangci-lint from v2.8.0 to v2.11.3
+      details: v2.8.0 was built with Go 1.25 and refused to lint Go 1.26 code, failing CI
+      change_type: fix
+      scope: Makefile, .github/workflows
+    - summary: Replace WriteString(fmt.Sprintf()) with fmt.Fprintf() across codebase
+      details: Fixed QF1012 staticcheck violations in 7 files -- golangci-lint v2.11.3 enforces this pattern
+      change_type: refactor
+      scope: internal
+next_steps:
+    - summary: Tag release on GitHub
       priority: high
       scope: project
     - summary: Configure checkpoint-mcp in Claude Code settings for this project

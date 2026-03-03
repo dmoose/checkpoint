@@ -186,19 +186,19 @@ func addStatusTool(s *server.MCPServer, projectPath string) {
 		changelogPath := filepath.Join(projectPath, config.ChangelogFileName)
 		if data, err := os.ReadFile(changelogPath); err == nil {
 			entries := parseChangelogEntries(data)
-			sb.WriteString(fmt.Sprintf("Total checkpoints: %d\n", len(entries)))
+			fmt.Fprintf(&sb, "Total checkpoints: %d\n", len(entries))
 
 			// Show last entry info
 			if len(entries) > 0 {
 				last := entries[len(entries)-1]
-				sb.WriteString(fmt.Sprintf("Last checkpoint: %s\n", last.Timestamp))
+				fmt.Fprintf(&sb, "Last checkpoint: %s\n", last.Timestamp)
 				if last.CommitHash != "" {
-					sb.WriteString(fmt.Sprintf("Last commit: %s\n", last.CommitHash))
+					fmt.Fprintf(&sb, "Last commit: %s\n", last.CommitHash)
 				}
 				if len(last.Changes) > 0 {
 					sb.WriteString("\nLast changes:\n")
 					for _, c := range last.Changes {
-						sb.WriteString(fmt.Sprintf("  - [%s] %s\n", c.ChangeType, c.Summary))
+						fmt.Fprintf(&sb, "  - [%s] %s\n", c.ChangeType, c.Summary)
 					}
 				}
 			}
@@ -217,7 +217,7 @@ func addStatusTool(s *server.MCPServer, projectPath string) {
 					if step.Priority != "" {
 						priority = fmt.Sprintf(" [%s]", step.Priority)
 					}
-					sb.WriteString(fmt.Sprintf("  - %s%s\n", step.Summary, priority))
+					fmt.Fprintf(&sb, "  - %s%s\n", step.Summary, priority)
 				}
 			}
 		}

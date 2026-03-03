@@ -436,16 +436,16 @@ func matchesQueryString(s, query string) bool {
 func formatChangeContent(m map[string]any) string {
 	var sb strings.Builder
 	if summary, ok := m["summary"].(string); ok {
-		sb.WriteString(fmt.Sprintf("Summary: %s\n", summary))
+		fmt.Fprintf(&sb, "Summary: %s\n", summary)
 	}
 	if details, ok := m["details"].(string); ok && details != "" {
-		sb.WriteString(fmt.Sprintf("Details: %s\n", details))
+		fmt.Fprintf(&sb, "Details: %s\n", details)
 	}
 	if changeType, ok := m["change_type"].(string); ok {
-		sb.WriteString(fmt.Sprintf("Type: %s\n", changeType))
+		fmt.Fprintf(&sb, "Type: %s\n", changeType)
 	}
 	if scope, ok := m["scope"].(string); ok {
-		sb.WriteString(fmt.Sprintf("Scope: %s\n", scope))
+		fmt.Fprintf(&sb, "Scope: %s\n", scope)
 	}
 	return sb.String()
 }
@@ -453,16 +453,16 @@ func formatChangeContent(m map[string]any) string {
 func formatStepContent(m map[string]any) string {
 	var sb strings.Builder
 	if summary, ok := m["summary"].(string); ok {
-		sb.WriteString(fmt.Sprintf("Summary: %s\n", summary))
+		fmt.Fprintf(&sb, "Summary: %s\n", summary)
 	}
 	if details, ok := m["details"].(string); ok && details != "" {
-		sb.WriteString(fmt.Sprintf("Details: %s\n", details))
+		fmt.Fprintf(&sb, "Details: %s\n", details)
 	}
 	if priority, ok := m["priority"].(string); ok {
-		sb.WriteString(fmt.Sprintf("Priority: %s\n", priority))
+		fmt.Fprintf(&sb, "Priority: %s\n", priority)
 	}
 	if scope, ok := m["scope"].(string); ok {
-		sb.WriteString(fmt.Sprintf("Scope: %s\n", scope))
+		fmt.Fprintf(&sb, "Scope: %s\n", scope)
 	}
 	return sb.String()
 }
@@ -483,16 +483,16 @@ func formatContextItem(_ string, item any) string {
 		}
 		// Additional details
 		if rationale, ok := v["rationale"].(string); ok {
-			sb.WriteString(fmt.Sprintf("Rationale: %s\n", rationale))
+			fmt.Fprintf(&sb, "Rationale: %s\n", rationale)
 		}
 		if why, ok := v["why_failed"].(string); ok {
-			sb.WriteString(fmt.Sprintf("Why failed: %s\n", why))
+			fmt.Fprintf(&sb, "Why failed: %s\n", why)
 		}
 		if lessons, ok := v["lessons_learned"].(string); ok {
-			sb.WriteString(fmt.Sprintf("Lessons: %s\n", lessons))
+			fmt.Fprintf(&sb, "Lessons: %s\n", lessons)
 		}
 		if scope, ok := v["scope"].(string); ok {
-			sb.WriteString(fmt.Sprintf("Scope: %s\n", scope))
+			fmt.Fprintf(&sb, "Scope: %s\n", scope)
 		}
 		return sb.String()
 	default:

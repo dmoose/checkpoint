@@ -457,24 +457,24 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 	} else {
 		var sb strings.Builder
 		sb.WriteString("schema_version: \"1\"\n\n")
-		sb.WriteString(fmt.Sprintf("name: %s\n", info.Name))
+		fmt.Fprintf(&sb, "name: %s\n", info.Name)
 		if info.Description != "" {
-			sb.WriteString(fmt.Sprintf("purpose: %s\n", info.Description))
+			fmt.Fprintf(&sb, "purpose: %s\n", info.Description)
 		} else {
 			sb.WriteString("purpose: \"\" # TODO: Add project purpose/description\n")
 		}
 		sb.WriteString("languages:\n")
-		sb.WriteString(fmt.Sprintf("  primary: %s\n", info.Language))
+		fmt.Fprintf(&sb, "  primary: %s\n", info.Language)
 		if len(info.Languages) > 1 {
 			sb.WriteString("  additional:\n")
 			for _, lang := range info.Languages[1:] {
-				sb.WriteString(fmt.Sprintf("    - %s\n", lang))
+				fmt.Fprintf(&sb, "    - %s\n", lang)
 			}
 		}
 		if len(info.Frameworks) > 0 {
 			sb.WriteString("frameworks:\n")
 			for _, fw := range info.Frameworks {
-				sb.WriteString(fmt.Sprintf("  - %s\n", fw))
+				fmt.Fprintf(&sb, "  - %s\n", fw)
 			}
 		}
 		sb.WriteString("\narchitecture:\n")
@@ -504,7 +504,7 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 			sb.WriteString("# Build commands\n")
 			sb.WriteString("build:\n")
 			sb.WriteString("  default:\n")
-			sb.WriteString(fmt.Sprintf("    command: %s\n", info.BuildCmd))
+			fmt.Fprintf(&sb, "    command: %s\n", info.BuildCmd)
 			sb.WriteString("    notes: Build the project\n\n")
 			cmdCount++
 		}
@@ -512,7 +512,7 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 			sb.WriteString("# Test commands\n")
 			sb.WriteString("test:\n")
 			sb.WriteString("  default:\n")
-			sb.WriteString(fmt.Sprintf("    command: %s\n", info.TestCmd))
+			fmt.Fprintf(&sb, "    command: %s\n", info.TestCmd)
 			sb.WriteString("    notes: Run tests\n\n")
 			cmdCount++
 		}
@@ -520,20 +520,20 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 			sb.WriteString("# Lint commands\n")
 			sb.WriteString("lint:\n")
 			sb.WriteString("  default:\n")
-			sb.WriteString(fmt.Sprintf("    command: %s\n", info.LintCmd))
+			fmt.Fprintf(&sb, "    command: %s\n", info.LintCmd)
 			sb.WriteString("    notes: Run linter\n\n")
 			cmdCount++
 		}
 		if info.FormatCmd != "" {
 			sb.WriteString("  format:\n")
-			sb.WriteString(fmt.Sprintf("    command: %s\n", info.FormatCmd))
+			fmt.Fprintf(&sb, "    command: %s\n", info.FormatCmd)
 			sb.WriteString("    notes: Format code\n\n")
 		}
 		if info.DevCmd != "" {
 			sb.WriteString("# Run commands\n")
 			sb.WriteString("run:\n")
 			sb.WriteString("  dev:\n")
-			sb.WriteString(fmt.Sprintf("    command: %s\n", info.DevCmd))
+			fmt.Fprintf(&sb, "    command: %s\n", info.DevCmd)
 			sb.WriteString("    notes: Run in development mode\n\n")
 			cmdCount++
 		}
@@ -541,7 +541,7 @@ func createAutoDetectedConfigs(checkpointDir string, projectPath string) {
 			sb.WriteString("# Maintenance commands\n")
 			sb.WriteString("maintenance:\n")
 			sb.WriteString("  clean:\n")
-			sb.WriteString(fmt.Sprintf("    command: %s\n", info.CleanCmd))
+			fmt.Fprintf(&sb, "    command: %s\n", info.CleanCmd)
 			sb.WriteString("    notes: Clean build artifacts\n")
 			cmdCount++
 		}
